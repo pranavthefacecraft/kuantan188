@@ -1,0 +1,55 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\CountryController;
+use App\Http\Controllers\API\EventController;
+use App\Http\Controllers\API\TicketController;
+use App\Http\Controllers\API\BookingController;
+use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\PublicEventController;
+
+// Authentication routes
+Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::get('/auth/user', [AuthController::class, 'user'])->middleware('auth:sanctum');
+
+// Public routes
+Route::get('/countries', [CountryController::class, 'index']);
+Route::get('/events', [EventController::class, 'index']);
+Route::get('/events/{event}', [EventController::class, 'show']);
+
+// Public events for frontend website
+Route::get('/public/events', [PublicEventController::class, 'index']);
+Route::get('/public/events/featured', [PublicEventController::class, 'featured']);
+Route::get('/public/events/{id}', [PublicEventController::class, 'show']);
+Route::get('/tickets', [TicketController::class, 'index']);
+Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
+Route::get('/events/{event}/countries/{country}/tickets', [TicketController::class, 'getByEventAndCountry']);
+
+// Booking routes
+Route::post('/bookings', [BookingController::class, 'store']);
+Route::get('/bookings/reference/{reference}', [BookingController::class, 'getByReference']);
+
+// Protected routes (require authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    
+    // Admin routes for countries
+    Route::apiResource('countries', CountryController::class)->except(['index']);
+    
+    // Admin routes for events
+    Route::apiResource('events', EventController::class)->except(['index', 'show']);
+    
+    // Admin routes for tickets
+    Route::apiResource('tickets', TicketController::class)->except(['index', 'show']);
+    
+    // Admin routes for bookings
+    Route::get('/bookings', [BookingController::class, 'index']);
+    Route::get('/bookings/{booking}', [BookingController::class, 'show']);
+    Route::put('/bookings/{booking}', [BookingController::class, 'update']);
+    Route::delete('/bookings/{booking}', [BookingController::class, 'destroy']);
+});
