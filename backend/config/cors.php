@@ -20,9 +20,12 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://kuantan188.tfcmockup.com',
-        'http://localhost:3000',
-        'http://localhost:3001',
+        'https://tickets.tfcmockup.com',      // Production: React frontend subdomain
+        'https://kuantan188.tfcmockup.com',   // Existing staging domain
+        'http://localhost:3000',              // Development
+        'http://localhost:3001',              // Development alternative port
+        'http://127.0.0.1:3000',             // Development alternative
+        'http://127.0.0.1:3001',             // Development alternative
     ],
 
     'allowed_origins_patterns' => [],
