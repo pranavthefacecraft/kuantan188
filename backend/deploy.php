@@ -5,6 +5,21 @@
 
 echo "Starting deployment...\n";
 
+// Install composer dependencies if vendor folder doesn't exist
+if (!is_dir(__DIR__ . '/vendor') || !file_exists(__DIR__ . '/vendor/autoload.php')) {
+    echo "Installing composer dependencies...\n";
+    exec('composer install --no-dev --optimize-autoloader --no-interaction 2>&1', $composer_output, $composer_return);
+    
+    if ($composer_return === 0) {
+        echo "✓ Composer dependencies installed successfully\n";
+    } else {
+        echo "⚠ Composer installation failed. Output:\n";
+        echo implode("\n", $composer_output) . "\n";
+    }
+} else {
+    echo "✓ Composer dependencies already installed\n";
+}
+
 // Create storage link manually if it doesn't exist
 $public_storage = __DIR__ . '/public/storage';
 $storage_public = __DIR__ . '/storage/app/public';

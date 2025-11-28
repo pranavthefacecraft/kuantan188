@@ -82,18 +82,3 @@ jobs:
           **/.env.example
           **/README.md
           **/composer.lock
-          
-    - name: Run post-deployment commands
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        script: |
-          cd /home/${{ secrets.SSH_USERNAME }}/domains/tfcmockup.com/public_html/ticketsadmin
-          composer install --no-dev --optimize-autoloader --no-interaction
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-          php deploy.php
-          php artisan migrate --force
