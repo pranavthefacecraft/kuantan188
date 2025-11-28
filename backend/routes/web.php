@@ -56,3 +56,60 @@ Route::get('/debug/clear-session', function () {
     session()->regenerate();
     return response()->json(['message' => 'Session cleared and regenerated']);
 });
+
+// Debug route to check users and authentication
+Route::get('/debug/users', function () {
+    $users = \App\Models\User::all(['id', 'name', 'email', 'email_verified_at']);
+    $authUser = auth()->user();
+    
+    return response()->json([
+        'users_count' => $users->count(),
+        'users' => $users->toArray(),
+        'authenticated_user' => $authUser ? $authUser->toArray() : null,
+        'auth_check' => auth()->check(),
+        'auth_guard' => config('auth.defaults.guard'),
+        'auth_provider' => config('auth.providers.users.driver'),
+    ]);
+});
+
+// Debug route to test login manually
+Route::post('/debug/test-login', function () {
+    $credentials = request()->only('email', 'password');
+    
+    $attempt = auth()->attempt($credentials);
+    
+    return response()->json([
+        'credentials_provided' => $credentials,
+        'login_attempt_result' => $attempt,
+        'auth_after_attempt' => auth()->check(),
+        'user_after_attempt' => auth()->user() ? auth()->user()->toArray() : null,
+    ]);
+});
+
+// Debug route to create admin user if it doesn't exist
+Route::get('/debug/create-admin', function () {
+    $existingUser = \App\Models\User::where('email', 'admin@kuantan188.com')->first();
+    
+    if ($existingUser) {
+        return response()->json([
+            'message' => 'Admin user already exists',
+            'user' => $existingUser->toArray()
+        ]);
+    }
+    
+    $user = \App\Models\User::create([
+        'name' => 'Admin User',
+        'email' => 'admin@kuantan188.com',
+        'password' => bcrypt('password123'),
+        'email_verified_at' => now(),
+    ]);
+    
+    return response()->json([
+        'message' => 'Admin user created successfully',
+        'user' => $user->toArray(),
+        'login_credentials' => [
+            'email' => 'admin@kuantan188.com',
+            'password' => 'password123'
+        ]
+    ]);
+});
