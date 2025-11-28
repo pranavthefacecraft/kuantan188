@@ -1,0 +1,51 @@
+name: Deploy Frontend to tickets.tfcmockup.com
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+      
+    - name: Build React app
+      working-directory: ./frontend
+      run: |
+        npm run build
+        
+    - name: Deploy to server via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_HOST_TICKETS }}
+        username: ${{ secrets.FTP_USERNAME_TICKETS }}
+        password: ${{ secrets.FTP_PASSWORD_TICKETS }}
+        local-dir: ./frontend/build/
+        server-dir: /public_html/tickets/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          
+    - name: Verify deployment
+      run: |
+        echo "Frontend deployed successfully to https://tickets.tfcmockup.com/"
+        echo "Testing homepage..."
+        curl -f https://tickets.tfcmockup.com/ || exit 1

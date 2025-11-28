@@ -1,0 +1,70 @@
+name: Deploy Backend to admin.tfcmockup.com
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, iconv, json, mbstring, pdo
+        
+    - name: Install Composer dependencies
+      working-directory: ./backend
+      run: |
+        composer install --no-dev --optimize-autoloader --no-interaction
+        
+    - name: Create production .env
+      working-directory: ./backend
+      run: |
+        cp .env.production .env
+        # You'll need to add your actual database credentials as GitHub secrets
+        sed -i 's/your_db_username/${{ secrets.DB_USERNAME }}/g' .env
+        sed -i 's/your_db_password/${{ secrets.DB_PASSWORD }}/g' .env
+        sed -i 's/GENERATE_NEW_KEY_FOR_PRODUCTION/${{ secrets.LARAVEL_APP_KEY }}/g' .env
+        
+    - name: Optimize Laravel
+      working-directory: ./backend
+      run: |
+        php artisan config:cache
+        php artisan route:cache
+        php artisan view:cache
+        
+    - name: Deploy to server via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
+        username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
+        password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
+        local-dir: ./backend/
+        server-dir: /public_html/ticketsadmin/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/tests/**
+          **/.env.example
+          **/README.md
+          
+    - name: Run post-deployment commands
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          cd /home/${{ secrets.SSH_USERNAME }}/domains/tfcmockup.com/public_html/ticketsadmin
+          php deploy.php
+          php artisan migrate --force
