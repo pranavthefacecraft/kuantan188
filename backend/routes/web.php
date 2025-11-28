@@ -141,10 +141,18 @@ Route::post('/debug/simple-login', function () {
     return response()->json(['success' => false, 'message' => 'Invalid credentials']);
 });
 
-// GET version of simple login for testing
+// GET version of simple login for testing with URL parameters
 Route::get('/debug/simple-login-test', function () {
-    $email = 'pranav@thefacecraft.com';
-    $password = 'Admin@123'; // Use your actual password
+    $email = request('email', 'pranav@thefacecraft.com');
+    $password = request('password');
+    
+    if (!$password) {
+        return response()->json([
+            'error' => 'Password required',
+            'usage' => 'Add ?password=yourpassword to URL',
+            'example' => '/debug/simple-login-test?password=yourpassword'
+        ]);
+    }
     
     if (Auth::attempt(['email' => $email, 'password' => $password])) {
         session()->save();
@@ -160,6 +168,33 @@ Route::get('/debug/simple-login-test', function () {
     }
     
     return response()->json(['success' => false, 'message' => 'Invalid credentials']);
+});
+
+// Manual auth login bypassing password check
+Route::get('/debug/force-login', function () {
+    $user = \App\Models\User::where('email', 'pranav@thefacecraft.com')->first();
+    
+    if (!$user) {
+        return response()->json(['error' => 'User not found']);
+    }
+    
+    Auth::login($user);
+    session()->save();
+    
+    \Log::info('Force login executed', [
+        'user_id' => Auth::id(),
+        'session_id' => session()->getId(),
+        'session_data' => session()->all(),
+    ]);
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Force login successful - no password required',
+        'user_id' => Auth::id(),
+        'session_id' => session()->getId(),
+        'authenticated' => Auth::check(),
+        'session_data' => session()->all(),
+    ]);
 });
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
