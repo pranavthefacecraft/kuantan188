@@ -38,7 +38,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME_TICKETS }}
         password: ${{ secrets.FTP_PASSWORD_TICKETS }}
         local-dir: ./frontend/build/
-        server-dir: /public_html/tickets/
+        server-dir: /
         exclude: |
           **/.git*
           **/.git*/**

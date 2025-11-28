@@ -1,0 +1,2 @@
+Frontend deployment test - If you see this, React frontend deployment is working!
+Deployed at: <%= new Date().toISOString() %>
