@@ -8,22 +8,27 @@ echo "Starting deployment...\n";
 // DEBUG: Show server paths and directory info FIRST
 echo "\n=== SERVER PATH INFORMATION ===\n";
 echo "Current directory (__DIR__): " . __DIR__ . "\n";
+echo "Parent directory: " . dirname(__DIR__) . "\n";
 echo "Document root: " . (isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : 'N/A') . "\n";
 echo "Script filename: " . (isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 'N/A') . "\n";
 echo "Request URI: " . (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'N/A') . "\n";
-echo "\nDirectory contents:\n";
-echo "Files in current directory:\n";
+echo "\nDirectory contents (current - public):\n";
 foreach (scandir(__DIR__) as $file) {
     if ($file != '.' && $file != '..') {
         echo "- $file\n";
     }
 }
-echo "\nLaravel folders check:\n";
-echo "vendor/ exists: " . (is_dir(__DIR__ . '/vendor') ? 'YES' : 'NO') . "\n";
-echo "storage/ exists: " . (is_dir(__DIR__ . '/storage') ? 'YES' : 'NO') . "\n";
-echo "bootstrap/ exists: " . (is_dir(__DIR__ . '/bootstrap') ? 'YES' : 'NO') . "\n";
-echo "public/ exists: " . (is_dir(__DIR__ . '/public') ? 'YES' : 'NO') . "\n";
-echo "composer.json exists: " . (file_exists(__DIR__ . '/composer.json') ? 'YES' : 'NO') . "\n";
+echo "\nDirectory contents (parent - Laravel root):\n";
+foreach (scandir(dirname(__DIR__)) as $file) {
+    if ($file != '.' && $file != '..') {
+        echo "- $file\n";
+    }
+}
+echo "\nLaravel folders check (from parent):\n";
+echo "vendor/ exists: " . (is_dir(dirname(__DIR__) . '/vendor') ? 'YES' : 'NO') . "\n";
+echo "storage/ exists: " . (is_dir(dirname(__DIR__) . '/storage') ? 'YES' : 'NO') . "\n";
+echo "bootstrap/ exists: " . (is_dir(dirname(__DIR__) . '/bootstrap') ? 'YES' : 'NO') . "\n";
+echo "composer.json exists: " . (file_exists(dirname(__DIR__) . '/composer.json') ? 'YES' : 'NO') . "\n";
 echo "=== END DEBUG INFO ===\n\n";
 
 // Only proceed with composer if not in debug mode
@@ -33,10 +38,11 @@ if (isset($_GET['debug']) || isset($_GET['info'])) {
     exit;
 }
 
-// Install composer dependencies if vendor folder doesn't exist
-if (!is_dir(__DIR__ . '/vendor') || !file_exists(__DIR__ . '/vendor/autoload.php')) {
+// Install composer dependencies if vendor folder doesn't exist (check parent directory)
+$laravel_root = dirname(__DIR__);
+if (!is_dir($laravel_root . '/vendor') || !file_exists($laravel_root . '/vendor/autoload.php')) {
     echo "Installing composer dependencies...\n";
-    exec('composer install --no-dev --optimize-autoloader --no-interaction 2>&1', $composer_output, $composer_return);
+    exec('cd ' . $laravel_root . ' && composer install --no-dev --optimize-autoloader --no-interaction 2>&1', $composer_output, $composer_return);
     
     if ($composer_return === 0) {
         echo "✓ Composer dependencies installed successfully\n";
@@ -49,8 +55,8 @@ if (!is_dir(__DIR__ . '/vendor') || !file_exists(__DIR__ . '/vendor/autoload.php
 }
 
 // Create storage link manually if it doesn't exist
-$public_storage = __DIR__ . '/public/storage';
-$storage_public = __DIR__ . '/storage/app/public';
+$public_storage = __DIR__ . '/storage';
+$storage_public = $laravel_root . '/storage/app/public';
 
 if (!file_exists($public_storage)) {
     if (function_exists('symlink')) {
@@ -70,19 +76,19 @@ if (!file_exists($public_storage)) {
 
 // Check database connection
 try {
-    require_once __DIR__ . '/vendor/autoload.php';
-    $app = require_once __DIR__ . '/bootstrap/app.php';
+    require_once $laravel_root . '/vendor/autoload.php';
+    $app = require_once $laravel_root . '/bootstrap/app.php';
     
     echo "✓ Database connection successful\n";
     
     // Run optimizations
-    exec('php artisan config:cache 2>&1', $output);
+    exec('cd ' . $laravel_root . ' && php artisan config:cache 2>&1', $output);
     echo "✓ Config cached\n";
     
-    exec('php artisan route:cache 2>&1', $output);
+    exec('cd ' . $laravel_root . ' && php artisan route:cache 2>&1', $output);
     echo "✓ Routes cached\n";
     
-    exec('php artisan view:cache 2>&1', $output);
+    exec('cd ' . $laravel_root . ' && php artisan view:cache 2>&1', $output);
     echo "✓ Views cached\n";
     
 } catch (Exception $e) {
