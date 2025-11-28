@@ -93,6 +93,49 @@ Route::get('/debug/session-test', function () {
     ]);
 });
 
+// Check server session configuration
+Route::get('/debug/server-session-config', function () {
+    $config = [
+        'SESSION_DRIVER' => env('SESSION_DRIVER', 'default_not_set'),
+        'SESSION_DOMAIN' => env('SESSION_DOMAIN', 'default_not_set'),
+        'SESSION_SECURE_COOKIE' => env('SESSION_SECURE_COOKIE', 'default_not_set'),
+        'config_session_driver' => config('session.driver'),
+        'config_session_domain' => config('session.domain'),
+        'config_session_secure' => config('session.secure'),
+        'current_session_id' => session()->getId(),
+        'php_session_name' => session_name(),
+        'php_session_cookie_params' => session_get_cookie_params(),
+        'request_cookies' => request()->cookies->all(),
+    ];
+    
+    \Log::info('Server session config check', $config);
+    
+    return response()->json($config);
+});
+
+// Force a simple login without redirect to test session
+Route::post('/debug/simple-login', function () {
+    $credentials = request()->only('email', 'password');
+    
+    if (Auth::attempt($credentials)) {
+        // Don't redirect, just return success
+        \Log::info('Simple login success', [
+            'user_id' => Auth::id(),
+            'session_id' => session()->getId(),
+            'session_data' => session()->all(),
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Login successful - no redirect',
+            'user_id' => Auth::id(),
+            'session_id' => session()->getId(),
+        ]);
+    }
+    
+    return response()->json(['success' => false, 'message' => 'Invalid credentials']);
+});
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // Admin Dashboard Routes (protected by auth middleware)
