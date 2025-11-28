@@ -29,11 +29,46 @@ jobs:
     - name: Create production .env
       working-directory: ./backend
       run: |
-        cp .env.production .env
-        # You'll need to add your actual database credentials as GitHub secrets
-        sed -i 's/your_db_username/${{ secrets.DB_USERNAME }}/g' .env
-        sed -i 's/your_db_password/${{ secrets.DB_PASSWORD }}/g' .env
-        sed -i 's/GENERATE_NEW_KEY_FOR_PRODUCTION/${{ secrets.LARAVEL_APP_KEY }}/g' .env
+        cat > .env << 'EOF'
+        APP_NAME="Kuantan188 Admin"
+        APP_ENV=production
+        APP_KEY=${{ secrets.LARAVEL_APP_KEY || 'base64:TEMP_KEY_WILL_BE_GENERATED' }}
+        APP_DEBUG=false
+        APP_URL=https://admin.tfcmockup.com
+        APP_TIMEZONE=UTC
+        
+        DB_CONNECTION=mysql
+        DB_HOST=srv1317.hstgr.io
+        DB_PORT=3306
+        DB_DATABASE=u706445394_kuantanticket
+        DB_USERNAME=${{ secrets.DB_USERNAME }}
+        DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+        
+        CACHE_DRIVER=file
+        FILESYSTEM_DISK=local
+        QUEUE_CONNECTION=sync
+        SESSION_DRIVER=file
+        SESSION_LIFETIME=120
+        
+        MAIL_MAILER=smtp
+        MAIL_HOST=mailpit
+        MAIL_PORT=1025
+        MAIL_USERNAME=null
+        MAIL_PASSWORD=null
+        MAIL_ENCRYPTION=null
+        MAIL_FROM_ADDRESS="hello@admin.tfcmockup.com"
+        MAIL_FROM_NAME="${APP_NAME}"
+        
+        SANCTUM_STATEFUL_DOMAINS=tickets.tfcmockup.com,admin.tfcmockup.com
+        SESSION_DOMAIN=.tfcmockup.com
+        
+        FILESYSTEM_DISK=public
+        EOF
+        
+        # Generate APP_KEY if not provided as secret
+        if [[ "${{ secrets.LARAVEL_APP_KEY }}" == "" ]]; then
+          php artisan key:generate
+        fi
         
     - name: Optimize Laravel
       working-directory: ./backend
