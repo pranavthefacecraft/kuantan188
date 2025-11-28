@@ -92,6 +92,7 @@ const Calendar: React.FC<CalendarProps> = ({
     let days = [];
     let day = startDate;
     let formattedDate = '';
+    let rowIndex = 0;
 
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
@@ -101,12 +102,14 @@ const Calendar: React.FC<CalendarProps> = ({
         const isSelected = selectedDate && isSameDay(day, selectedDate);
         const isPast = isBefore(day, startOfDay(minDate));
         const isTodayDate = isToday(day);
+        // eslint-disable-next-line no-loop-func
         const isDisabled = disabledDates.some(disabledDate => isSameDay(day, disabledDate)) || 
                           isPast || 
                           (maxDate && day > maxDate);
 
+        // eslint-disable-next-line no-loop-func
         days.push(
-          <div key={day.getTime()} className="col p-1">
+          <div key={cloneDay.getTime()} className="col p-1">
             <button
               className={`btn w-100 rounded-circle d-flex align-items-center justify-content-center ${
                 !isCurrentMonth 
@@ -125,7 +128,12 @@ const Calendar: React.FC<CalendarProps> = ({
                 cursor: isDisabled ? 'not-allowed' : 'pointer',
                 opacity: !isCurrentMonth ? 0.3 : isDisabled ? 0.5 : 1
               }}
-              onClick={() => !isDisabled && isCurrentMonth && onDateSelect(cloneDay)}
+              onClick={(e) => {
+                e.preventDefault();
+                if (!isDisabled && isCurrentMonth) {
+                  onDateSelect(cloneDay);
+                }
+              }}
               disabled={isDisabled || !isCurrentMonth}
             >
               {formattedDate}
@@ -135,11 +143,12 @@ const Calendar: React.FC<CalendarProps> = ({
         day = addDays(day, 1);
       }
       rows.push(
-        <div className="row" key={day.getTime()}>
+        <div className="row" key={`row-${rowIndex}`}>
           {days}
         </div>
       );
       days = [];
+      rowIndex++;
     }
 
     return <div>{rows}</div>;
