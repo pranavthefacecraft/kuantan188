@@ -196,27 +196,34 @@ Route::get('/debug/simple-login-test', function () {
 });
 
 // Manual auth login bypassing password check
-Route::get('/debug/force-login', function () {
+Route::get('/debug/force-login-current-session', function () {
     $user = \App\Models\User::where('email', 'pranav@thefacecraft.com')->first();
     
     if (!$user) {
         return response()->json(['error' => 'User not found']);
     }
     
-    Auth::login($user);
+    // Login to the CURRENT session (don't create new one)
+    $currentSessionId = session()->getId();
+    Auth::login($user, false); // false = don't remember
+    
+    // Ensure we're still using the same session
+    session()->put('login_web_' . sha1(config('auth.defaults.guard') . config('app.key')), $user->id);
     session()->save();
     
-    \Log::info('Force login executed', [
+    \Log::info('Force login to current session', [
         'user_id' => Auth::id(),
-        'session_id' => session()->getId(),
+        'session_id_before' => $currentSessionId,
+        'session_id_after' => session()->getId(),
         'session_data' => session()->all(),
     ]);
     
     return response()->json([
         'success' => true,
-        'message' => 'Force login successful - no password required',
+        'message' => 'Force login to current session - no new session created',
         'user_id' => Auth::id(),
-        'session_id' => session()->getId(),
+        'session_id_before' => $currentSessionId,
+        'session_id_after' => session()->getId(),
         'authenticated' => Auth::check(),
         'session_data' => session()->all(),
     ]);
