@@ -5,26 +5,32 @@
 
 echo "Starting deployment...\n";
 
-// DEBUG: Show server paths and directory info
-if (isset($_GET['debug']) || isset($_GET['info'])) {
-    echo "\n=== SERVER PATH INFORMATION ===\n";
-    echo "Current directory (__DIR__): " . __DIR__ . "\n";
-    echo "Document root: " . $_SERVER['DOCUMENT_ROOT'] . "\n";
-    echo "Script filename: " . $_SERVER['SCRIPT_FILENAME'] . "\n";
-    echo "Request URI: " . $_SERVER['REQUEST_URI'] . "\n";
-    echo "\nDirectory contents:\n";
-    echo "Files in current directory:\n";
-    foreach (scandir(__DIR__) as $file) {
-        if ($file != '.' && $file != '..') {
-            echo "- $file\n";
-        }
+// DEBUG: Show server paths and directory info FIRST
+echo "\n=== SERVER PATH INFORMATION ===\n";
+echo "Current directory (__DIR__): " . __DIR__ . "\n";
+echo "Document root: " . (isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : 'N/A') . "\n";
+echo "Script filename: " . (isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 'N/A') . "\n";
+echo "Request URI: " . (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'N/A') . "\n";
+echo "\nDirectory contents:\n";
+echo "Files in current directory:\n";
+foreach (scandir(__DIR__) as $file) {
+    if ($file != '.' && $file != '..') {
+        echo "- $file\n";
     }
-    echo "\nLaravel folders check:\n";
-    echo "vendor/ exists: " . (is_dir(__DIR__ . '/vendor') ? 'YES' : 'NO') . "\n";
-    echo "storage/ exists: " . (is_dir(__DIR__ . '/storage') ? 'YES' : 'NO') . "\n";
-    echo "bootstrap/ exists: " . (is_dir(__DIR__ . '/bootstrap') ? 'YES' : 'NO') . "\n";
-    echo "public/ exists: " . (is_dir(__DIR__ . '/public') ? 'YES' : 'NO') . "\n";
-    echo "=== END DEBUG INFO ===\n\n";
+}
+echo "\nLaravel folders check:\n";
+echo "vendor/ exists: " . (is_dir(__DIR__ . '/vendor') ? 'YES' : 'NO') . "\n";
+echo "storage/ exists: " . (is_dir(__DIR__ . '/storage') ? 'YES' : 'NO') . "\n";
+echo "bootstrap/ exists: " . (is_dir(__DIR__ . '/bootstrap') ? 'YES' : 'NO') . "\n";
+echo "public/ exists: " . (is_dir(__DIR__ . '/public') ? 'YES' : 'NO') . "\n";
+echo "composer.json exists: " . (file_exists(__DIR__ . '/composer.json') ? 'YES' : 'NO') . "\n";
+echo "=== END DEBUG INFO ===\n\n";
+
+// Only proceed with composer if not in debug mode
+if (isset($_GET['debug']) || isset($_GET['info'])) {
+    echo "Debug mode - skipping composer installation.\n";
+    echo "Visit without ?debug=1 parameter to run full deployment.\n";
+    exit;
 }
 
 // Install composer dependencies if vendor folder doesn't exist
