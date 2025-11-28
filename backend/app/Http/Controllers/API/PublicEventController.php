@@ -44,7 +44,7 @@ class PublicEventController extends Controller
                 'image_url' => $event->image_url 
                     ? (str_starts_with($event->image_url, 'http') 
                         ? $event->image_url 
-                        : asset($event->image_url))
+                        : asset('storage/' . $event->image_url))
                     : 'https://via.placeholder.com/400x250/6c63ff/ffffff?text=' . urlencode($event->title),
                 'price' => $event->price ?? 'From RM50',
                 'price_display' => $event->price ? "From RM{$event->price}" : 'From RM50',
@@ -84,7 +84,7 @@ class PublicEventController extends Controller
                               'image_url' => $event->image_url 
                                   ? (str_starts_with($event->image_url, 'http') 
                                       ? $event->image_url 
-                                      : asset($event->image_url))
+                                      : asset('storage/' . $event->image_url))
                                   : 'https://picsum.photos/400/250?random=' . $event->id,
                               'price' => $event->price ?? 'From RM50',
                               'price_display' => $event->price ? "From RM{$event->price}" : 'From RM50',
@@ -127,7 +127,7 @@ class PublicEventController extends Controller
                 'image_url' => $event->image_url 
                     ? (str_starts_with($event->image_url, 'http') 
                         ? $event->image_url 
-                        : asset($event->image_url))
+                        : asset('storage/' . $event->image_url))
                     : 'https://picsum.photos/400/250?random=' . $event->id,
                 'price' => $event->price ?? 'From RM50',
                 'price_display' => $event->price ? "From RM{$event->price}" : 'From RM50',
