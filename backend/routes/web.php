@@ -73,6 +73,26 @@ Route::get('/debug/admin-bypass', function () {
     }
 });
 
+// Test session persistence
+Route::get('/debug/session-test', function () {
+    $counter = session('test_counter', 0) + 1;
+    session(['test_counter' => $counter]);
+    session()->save(); // Force save
+    
+    \Log::info('Session test', [
+        'counter' => $counter,
+        'session_id' => session()->getId(),
+        'session_driver' => config('session.driver'),
+        'session_path' => session_save_path(),
+    ]);
+    
+    return response()->json([
+        'counter' => $counter,
+        'session_id' => session()->getId(),
+        'message' => 'Refresh this page to test if sessions persist'
+    ]);
+});
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // Admin Dashboard Routes (protected by auth middleware)

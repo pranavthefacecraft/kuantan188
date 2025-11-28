@@ -152,12 +152,31 @@ class LoginController extends Controller
      */
     protected function sendLoginResponse(Request $request)
     {
-        Log::info('Sending login response', [
+        Log::info('Sending login response - before session operations', [
             'intended' => $this->redirectPath(),
             'authenticated_user' => Auth::id(),
+            'auth_check' => Auth::check(),
+            'session_id_before' => session()->getId(),
         ]);
 
+        // Force session save before regeneration
+        session()->save();
+        
+        // Regenerate session ID for security
         $request->session()->regenerate();
+        
+        // Ensure authentication persists after regeneration
+        Auth::login($this->guard()->user(), $request->boolean('remember'));
+        
+        // Force session save again
+        session()->save();
+
+        Log::info('Sending login response - after session operations', [
+            'authenticated_user' => Auth::id(),
+            'auth_check' => Auth::check(),
+            'session_id_after' => session()->getId(),
+            'session_data' => session()->all(),
+        ]);
 
         $this->clearLoginAttempts($request);
 
