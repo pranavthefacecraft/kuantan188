@@ -58,10 +58,25 @@ Route::get('/debug/auth-state', function () {
     ]);
 });
 
+// Test admin access without auth middleware
+Route::get('/debug/admin-bypass', function () {
+    \Log::info('Admin bypass test', [
+        'authenticated' => Auth::check(),
+        'user_id' => Auth::id(),
+        'session_id' => session()->getId(),
+    ]);
+    
+    if (Auth::check()) {
+        return "✅ You are authenticated as user " . Auth::id() . " - " . Auth::user()->email;
+    } else {
+        return "❌ You are not authenticated";
+    }
+});
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // Admin Dashboard Routes (protected by auth middleware)
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['log.auth', 'auth'])->group(function () {
     Route::get('/', function () {
         \Log::info('Admin dashboard accessed', [
             'authenticated' => Auth::check(),
