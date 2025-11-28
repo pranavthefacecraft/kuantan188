@@ -159,17 +159,9 @@ class LoginController extends Controller
             'session_id_before' => session()->getId(),
         ]);
 
-        // Force session save before regeneration
-        session()->save();
-        
-        // Regenerate session ID for security
-        $request->session()->regenerate();
-        
-        // Ensure authentication persists after regeneration
-        Auth::login($this->guard()->user(), $request->boolean('remember'));
-        
-        // Force session save again
-        session()->save();
+        // DON'T regenerate session - this is causing the issue!
+        // Just clear login attempts and redirect with existing session
+        $this->clearLoginAttempts($request);
 
         Log::info('Sending login response - after session operations', [
             'authenticated_user' => Auth::id(),
@@ -177,8 +169,6 @@ class LoginController extends Controller
             'session_id_after' => session()->getId(),
             'session_data' => session()->all(),
         ]);
-
-        $this->clearLoginAttempts($request);
 
         if ($response = $this->authenticated($request, $this->guard()->user())) {
             return $response;
