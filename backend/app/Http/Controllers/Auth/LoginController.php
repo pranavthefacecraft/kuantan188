@@ -69,54 +69,55 @@ class LoginController extends Controller
      */
     public function login(Request $request)
     {
+        $currentSessionId = session()->getId();
+        
         Log::info('Login attempt started', [
             'email' => $request->input('email'),
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'session_id' => session()->getId(),
+            'session_id' => $currentSessionId,
             'csrf_token' => $request->input('_token'),
             'all_input' => $request->except('password'),
         ]);
 
         $this->validateLogin($request);
-
         Log::info('Login validation passed');
 
-        // If the class is using the ThrottlesLogins trait, we can automatically throttle
-        // the login attempts for this application. We'll key this by the username and
-        // the IP address of the client making these requests into this application.
+        // Throttle check
         if (method_exists($this, 'hasTooManyLoginAttempts') &&
             $this->hasTooManyLoginAttempts($request)) {
             Log::warning('Too many login attempts', ['email' => $request->input('email')]);
             $this->fireLockoutEvent($request);
-
             return $this->sendLockoutResponse($request);
         }
 
-        if ($this->attemptLogin($request)) {
-            Log::info('Login successful', [
+        // Manual authentication to avoid session regeneration
+        $credentials = $this->credentials($request);
+        $user = \App\Models\User::where('email', $credentials['email'])->first();
+        
+        if ($user && \Hash::check($credentials['password'], $user->password)) {
+            // Login using existing session - NO session regeneration
+            Auth::login($user, $request->boolean('remember'));
+            
+            // Force save to current session
+            session()->save();
+            
+            Log::info('Manual login successful', [
                 'user_id' => Auth::id(),
                 'email' => $request->input('email'),
+                'session_id_stayed_same' => session()->getId() === $currentSessionId,
+                'session_id' => session()->getId(),
+                'session_data' => session()->all(),
             ]);
             
-            if ($request->hasSession()) {
-                $request->session()->regenerate();
-            }
-
             $this->clearLoginAttempts($request);
-
-            return $this->sendLoginResponse($request);
+            
+            // Direct redirect without session regeneration
+            return redirect()->intended($this->redirectPath());
         }
 
-        Log::warning('Login failed - invalid credentials', [
-            'email' => $request->input('email'),
-        ]);
-
-        // If the login attempt was unsuccessful we will increment the number of attempts
-        // to login and redirect the user back to the login form. Of course, when this
-        // user surpasses their maximum number of attempts they will get locked out.
+        Log::warning('Login failed - invalid credentials', ['email' => $request->input('email')]);
         $this->incrementLoginAttempts($request);
-
         return $this->sendFailedLoginResponse($request);
     }
 
@@ -133,13 +134,22 @@ class LoginController extends Controller
         Log::info('Attempting login with credentials', [
             'email' => $credentials['email'],
             'remember' => $request->boolean('remember'),
+            'current_session_id' => session()->getId(),
         ]);
 
+        // Store current session ID before attempt
+        $currentSessionId = session()->getId();
+        
         $attempt = $this->guard()->attempt(
             $credentials, $request->boolean('remember')
         );
 
-        Log::info('Auth attempt result', ['success' => $attempt]);
+        Log::info('Auth attempt result', [
+            'success' => $attempt,
+            'session_id_before' => $currentSessionId,
+            'session_id_after' => session()->getId(),
+            'session_changed' => $currentSessionId !== session()->getId(),
+        ]);
 
         return $attempt;
     }
