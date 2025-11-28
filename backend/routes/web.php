@@ -32,6 +32,15 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/countries', [AdminDashboardController::class, 'countries'])->name('countries');
 });
 
+// Simple test route
+Route::get('/test-route', function () {
+    return response()->json([
+        'message' => 'New routes are working!',
+        'timestamp' => now()->toDateTimeString(),
+        'routes_cached' => app()->routesAreCached(),
+    ]);
+});
+
 // Debug route to check CSRF token and session
 Route::get('/debug/csrf', function () {
     return response()->json([

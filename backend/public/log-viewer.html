@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Log Viewer</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #f5f5f5; }
+        .container { background: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .log-line { margin: 2px 0; padding: 5px; border-radius: 3px; font-size: 12px; }
+        .error { background-color: #ffebee; color: #c62828; }
+        .warning { background-color: #fff3e0; color: #ef6c00; }
+        .info { background-color: #e3f2fd; color: #1565c0; }
+        button { padding: 10px 20px; margin: 5px; background: #2196f3; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #1976d2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔍 Simple Log Viewer</h2>
+        <div>
+            <button onclick="loadLogs(25)">Last 25</button>
+            <button onclick="loadLogs(50)">Last 50</button>
+            <button onclick="loadLogs(100)">Last 100</button>
+            <button onclick="loadLogs()">Refresh</button>
+        </div>
+        <hr>
+        <div id="logs">Loading logs...</div>
+    </div>
+
+    <script>
+        function loadLogs(lines = 50) {
+            fetch("debug-logs.php?lines=" + lines)
+                .then(response => response.json())
+                .then(data => {
+                    const logsDiv = document.getElementById("logs");
+                    
+                    if (data.error) {
+                        logsDiv.innerHTML = "<div class='error'>Error: " + data.error + "</div>";
+                        return;
+                    }
+                    
+                    let html = "<h4>Showing " + data.showing_lines + " of " + data.total_lines + " total lines</h4>";
+                    html += "<small>Last updated: " + data.timestamp + "</small><br><br>";
+                    
+                    data.last_lines.forEach(line => {
+                        let className = "";
+                        if (line.includes("ERROR") || line.includes("Exception")) className = "error";
+                        else if (line.includes("WARNING")) className = "warning";
+                        else if (line.includes("INFO")) className = "info";
+                        
+                        html += "<div class='log-line " + className + "'>" + escapeHtml(line) + "</div>";
+                    });
+                    
+                    logsDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById("logs").innerHTML = "<div class='error'>Error loading logs: " + error + "</div>";
+                });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Auto refresh every 5 seconds
+        setInterval(() => loadLogs(), 5000);
+        
+        // Load logs on page load
+        loadLogs();
+    </script>
+</body>
+</html>
