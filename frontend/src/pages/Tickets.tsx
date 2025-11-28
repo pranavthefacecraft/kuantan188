@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge, Spinner } from 'react-bootstrap';
 import { testTickets } from '../data/testTickets';
 
 const Tickets: React.FC = () => {
@@ -49,23 +49,7 @@ const Tickets: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <Container className="py-5">
-        <Row className="justify-content-center">
-          <Col md={8}>
-            <Alert variant="danger">
-              <Alert.Heading>Error Loading Tickets</Alert.Heading>
-              <p>{error}</p>
-              <Button variant="outline-danger" onClick={() => window.location.reload()}>
-                Try Again
-              </Button>
-            </Alert>
-          </Col>
-        </Row>
-      </Container>
-    );
-  }
+
 
   return (
     <div>
