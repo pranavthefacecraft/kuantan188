@@ -18,7 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         
         $middleware->validateCsrfTokens(except: [
-            // Temporarily exclude nothing to ensure CSRF is working
+            'login', // Temporarily disable CSRF for login to test
+            'register',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

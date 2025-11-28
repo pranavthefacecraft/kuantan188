@@ -49,3 +49,10 @@ Route::get('/debug/csrf', function () {
         'session_data' => session()->all(),
     ]);
 });
+
+// Debug route to clear all sessions
+Route::get('/debug/clear-session', function () {
+    session()->flush();
+    session()->regenerate();
+    return response()->json(['message' => 'Session cleared and regenerated']);
+});
