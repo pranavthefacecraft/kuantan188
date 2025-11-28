@@ -113,6 +113,31 @@ Route::get('/debug/server-session-config', function () {
     return response()->json($config);
 });
 
+// Check user details and password hash
+Route::get('/debug/check-user', function () {
+    $user = \App\Models\User::where('email', 'pranav@thefacecraft.com')->first();
+    
+    if (!$user) {
+        return response()->json(['error' => 'User not found']);
+    }
+    
+    // Test if specific passwords work
+    $testPasswords = ['password', 'password123', 'Momilu@99', 'admin', 'Admin@123'];
+    $passwordTests = [];
+    
+    foreach ($testPasswords as $testPassword) {
+        $passwordTests[$testPassword] = \Hash::check($testPassword, $user->password);
+    }
+    
+    return response()->json([
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'password_hash_length' => strlen($user->password),
+        'password_tests' => $passwordTests,
+        'created_at' => $user->created_at,
+    ]);
+});
+
 // Force a simple login without redirect to test session
 Route::post('/debug/simple-login', function () {
     $credentials = request()->only('email', 'password');
