@@ -81,6 +81,12 @@ export const eventsApi = {
   async getEvent(id: number): Promise<ApiResponse<Event>> {
     const response = await apiClient.get(`/public/events/${id}`);
     return response.data;
+  },
+
+  // Get user tickets/bookings
+  async getTickets(): Promise<ApiResponse<any[]>> {
+    const response = await apiClient.get('/public/tickets');
+    return response.data;
   }
 };
 

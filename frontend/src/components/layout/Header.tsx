@@ -31,6 +31,13 @@ const Header: React.FC = () => {
             </Nav.Link>
             <Nav.Link 
               as={Link} 
+              to="/tickets" 
+              className={location.pathname === '/tickets' ? 'active fw-semibold' : ''}
+            >
+              My Tickets
+            </Nav.Link>
+            <Nav.Link 
+              as={Link} 
               to="/about" 
               className={location.pathname === '/about' ? 'active fw-semibold' : ''}
             >

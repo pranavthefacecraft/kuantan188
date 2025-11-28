@@ -24,6 +24,7 @@ Route::get('/events/{event}', [EventController::class, 'show']);
 Route::get('/public/events', [PublicEventController::class, 'index']);
 Route::get('/public/events/featured', [PublicEventController::class, 'featured']);
 Route::get('/public/events/{id}', [PublicEventController::class, 'show']);
+Route::get('/public/tickets', [PublicEventController::class, 'getTickets']);
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
 Route::get('/events/{event}/countries/{country}/tickets', [TicketController::class, 'getByEventAndCountry']);

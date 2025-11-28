@@ -163,4 +163,36 @@ class PublicEventController extends Controller
         
         return 'Events';
     }
+
+    /**
+     * Get all bookings/tickets for public display
+     */
+    public function getTickets(): JsonResponse
+    {
+        $bookings = \App\Models\Booking::with(['event', 'ticket'])
+                                     ->where('status', '!=', 'cancelled')
+                                     ->orderBy('created_at', 'desc')
+                                     ->get()
+                                     ->map(function ($booking) {
+            return [
+                'id' => $booking->booking_reference ?: 'TKT' . str_pad($booking->id, 3, '0', STR_PAD_LEFT),
+                'eventTitle' => $booking->event->title ?? 'Unknown Event',
+                'eventDate' => $booking->event ? $booking->event->event_date->format('F j, Y \a\t g:i A') : 'TBD',
+                'location' => $booking->event->location ?? 'TBD',
+                'quantity' => ($booking->adult_tickets ?? 0) + ($booking->child_tickets ?? 0),
+                'totalAmount' => number_format($booking->total_amount ?? 0, 2),
+                'bookingDate' => $booking->created_at->format('M j, Y'),
+                'status' => ucfirst($booking->status ?? 'pending'),
+                'customerName' => $booking->customer_name,
+                'customerEmail' => $booking->customer_email,
+                'paymentStatus' => ucfirst($booking->payment_status ?? 'pending')
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $bookings,
+            'total' => $bookings->count()
+        ]);
+    }
 }

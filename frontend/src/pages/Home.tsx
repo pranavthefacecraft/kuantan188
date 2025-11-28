@@ -10,6 +10,7 @@ const Home: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
+
   useEffect(() => {
     const fetchFeaturedEvents = async () => {
       try {
@@ -79,16 +80,15 @@ const Home: React.FC = () => {
       {/* Featured Events Section */}
       <section className="py-5">
         <Container>
-          <Row className="mb-5">
+          <Row className="mb-4">
             <Col>
-              <h2 className="text-center fw-bold mb-3">Featured Events</h2>
-              <p className="text-center text-muted mb-0">
+              <h2 className="text-center fw-bold mb-4">Featured Events</h2>
+              <p className="text-center text-muted">
                 Don't miss these amazing upcoming events in Kuantan
               </p>
             </Col>
           </Row>
-          
-          <Row>
+                <Row>
             {loading ? (
               <Col className="text-center">
                 <Spinner animation="border" role="status" variant="primary">
@@ -152,7 +152,7 @@ const Home: React.FC = () => {
                   </Card>
                 </Col>
               ))}
-              {featuredEvents.length === 0 && (
+              {featuredEvents.length === 0 && !loading && (
                 <Col className="text-center">
                   <div className="py-5">
                     <h5 className="text-muted">No events available at the moment</h5>
