@@ -91,55 +91,54 @@ class LoginController extends Controller
             return $this->sendLockoutResponse($request);
         }
 
-        // Authentication without session regeneration
+        // Authentication with proper Laravel methods
         $credentials = $this->credentials($request);
-        $user = \App\Models\User::where('email', $credentials['email'])->first();
         
-        if ($user && \Hash::check($credentials['password'], $user->password)) {
-            // Manually authenticate user in CURRENT session (no regeneration)
-            $guardName = config('auth.defaults.guard');
-            $hashedGuardName = sha1(get_class(Auth::getProvider()) . $guardName);
-            $sessionKey = 'login_' . $guardName . '_' . $hashedGuardName;
+        \DB::beginTransaction();
+        try {
+            $user = \App\Models\User::where('email', $credentials['email'])->first();
             
-            // Set authentication data in current session
-            session()->put($sessionKey, $user->getAuthIdentifier());
-            session()->put('password_hash_' . $guardName, $user->getAuthPassword());
-            
-            // Handle remember functionality if requested
-            if ($request->boolean('remember')) {
-                // Create remember token
-                $rememberToken = \Str::random(60);
-                $user->setRememberToken($rememberToken);
+            if ($user && \Hash::check($credentials['password'], $user->password)) {
+                // Ensure user is fresh and persisted
+                $user->refresh();
+                $user->updated_at = now();
                 $user->save();
                 
-                // Set remember cookie
-                $recaller = $user->getAuthIdentifier() . '|' . $rememberToken . '|' . $user->getAuthPassword();
-                $cookieName = 'remember_' . $guardName . '_' . $hashedGuardName;
+                // Commit before authentication
+                \DB::commit();
                 
-                cookie()->queue(cookie($cookieName, $recaller, 2628000, null, null, true, true));
+                Log::info('User verified, attempting proper Laravel login', [
+                    'user_id' => $user->id,
+                    'session_id_before' => session()->getId(),
+                ]);
+                
+                // Use Laravel's proper loginUsingId method
+                // This sets both session data AND guard's current user
+                Auth::loginUsingId($user->id, $request->boolean('remember'));
+                
+                // DO NOT regenerate session - this is what was causing the issue!
+                // $request->session()->regenerate(); // Comment this out
+                
+                Log::info('Laravel loginUsingId completed', [
+                    'user_id' => Auth::id(),
+                    'auth_check' => Auth::check(),
+                    'session_id_after' => session()->getId(),
+                    'session_stayed_same' => session()->getId() === $currentSessionId,
+                    'session_data' => session()->all(),
+                ]);
+                
+                $this->clearLoginAttempts($request);
+                
+                return redirect()->intended($this->redirectPath());
+            } else {
+                \DB::rollback();
             }
-            
-            // Save session data
-            session()->save();
-            
-            Log::info('Manual session authentication successful', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'session_id' => session()->getId(),
-                'session_key' => $sessionKey,
-                'session_stayed_same' => session()->getId() === $currentSessionId,
-                'session_data' => session()->all(),
+        } catch (\Throwable $e) {
+            \DB::rollback();
+            Log::error('Login process failed', [
+                'error' => $e->getMessage(),
+                'email' => $request->input('email'),
             ]);
-            
-            $this->clearLoginAttempts($request);
-            
-            // Check if auth works now
-            Log::info('Post-authentication check', [
-                'auth_check' => Auth::check(),
-                'auth_id' => Auth::id(),
-            ]);
-            
-            return redirect()->intended($this->redirectPath());
         }
 
         Log::warning('Login failed - invalid credentials', ['email' => $request->input('email')]);

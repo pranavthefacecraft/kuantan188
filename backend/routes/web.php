@@ -184,6 +184,28 @@ Route::get('/debug/recent-sessions', function () {
     ]);
 });
 
+// Debug: Show what session key Laravel expects
+Route::get('/debug/expected-session-key', function () {
+    $guardName = config('auth.defaults.guard');
+    
+    // Test different key formats Laravel might use
+    $possibleKeys = [
+        'login_' . $guardName . '_' . sha1(static::class),
+        'login_' . $guardName . '_' . sha1('App\Http\Controllers\Auth\LoginController'),
+        'login_' . $guardName . '_' . sha1(config('app.key')),
+        'login_' . $guardName . '_59ba36addc2b2f9401580f014c7f58ea4e30989d',
+        'login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d',
+    ];
+    
+    return response()->json([
+        'guard_name' => $guardName,
+        'app_key' => config('app.key'),
+        'possible_session_keys' => $possibleKeys,
+        'current_session_data' => session()->all(),
+        'auth_check' => Auth::check(),
+    ]);
+});
+
 // Force a simple login without redirect to test session
 Route::post('/debug/simple-login', function () {
     $credentials = request()->only('email', 'password');
