@@ -6,15 +6,21 @@ const Header: React.FC = () => {
   const location = useLocation();
 
   return (
-    <Navbar bg="white" expand="lg" className="shadow-sm sticky-top">
+    <Navbar expand="lg" className="position-absolute w-100" style={{ backgroundColor: 'transparent', zIndex: 1000, top: 0 }}>
       <Container>
-        <Navbar.Brand as={Link} to="/" className="fw-bold fs-3">
-          <span className="gradient-text">🎫 Kuantan188</span>
+        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
+          <img 
+            src="/Secondary_White.svg" 
+            alt="Kuantan188 Logo" 
+            width="80"
+            height="23"
+            className="me-2"
+          />
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto">
+          <Nav className="mx-auto erstoria-nav">
             <Nav.Link 
               as={Link} 
               to="/" 
@@ -24,40 +30,30 @@ const Header: React.FC = () => {
             </Nav.Link>
             <Nav.Link 
               as={Link} 
-              to="/events" 
-              className={location.pathname === '/events' ? 'active fw-semibold' : ''}
+              to="/sky-deck" 
+              className={location.pathname === '/sky-deck' ? 'active fw-semibold' : ''}
             >
-              Events
+              Sky Deck
             </Nav.Link>
             <Nav.Link 
               as={Link} 
-              to="/tickets" 
-              className={location.pathname === '/tickets' ? 'active fw-semibold' : ''}
+              to="/observation-deck" 
+              className={location.pathname === '/observation-deck' ? 'active fw-semibold' : ''}
             >
-              My Tickets
+              Observation Deck
             </Nav.Link>
             <Nav.Link 
               as={Link} 
-              to="/about" 
-              className={location.pathname === '/about' ? 'active fw-semibold' : ''}
+              to="/sky-walk" 
+              className={location.pathname === '/sky-walk' ? 'active fw-semibold' : ''}
             >
-              About
-            </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/contact" 
-              className={location.pathname === '/contact' ? 'active fw-semibold' : ''}
-            >
-              Contact
+              Sky Walk
             </Nav.Link>
           </Nav>
           
-          <div className="d-flex gap-2">
-            <Button variant="outline-primary" size="sm">
-              Login
-            </Button>
-            <Button variant="primary" size="sm">
-              Book Now
+          <div className="d-flex">
+            <Button className="shop-button">
+              Shop
             </Button>
           </div>
         </Navbar.Collapse>

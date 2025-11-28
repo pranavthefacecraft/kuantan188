@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Button, Row, Col } from 'react-bootstrap';
 import { Event } from '../../services/api';
+import { format } from 'date-fns';
+import Calendar from '../Calendar/Calendar';
 
 interface ReservationModalProps {
   show: boolean;
@@ -10,7 +12,7 @@ interface ReservationModalProps {
 
 const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event }) => {
   const [quantity, setQuantity] = useState(2);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   const handleQuantityChange = (change: number) => {
     const newQuantity = quantity + change;
@@ -27,14 +29,19 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
     return price * quantity;
   };
 
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+  };
+
   const handleAddToCart = () => {
     console.log('Adding to cart:', {
       event: event?.title,
       quantity,
+      selectedDate,
       total: calculateTotal()
     });
     
-    alert(`Added to cart!\n${event?.title}\nQuantity: ${quantity}\nTotal: ₹${calculateTotal()}`);
+    alert(`Added to cart!\n${event?.title}\nQuantity: ${quantity}\nDate: ${format(selectedDate, 'PPP')}\nTotal: ₹${calculateTotal()}`);
     onHide();
   };
 
@@ -158,22 +165,21 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                 <div className="alert alert-light border-0 p-3 mb-3" 
                      style={{ backgroundColor: '#f8f9fa', fontSize: '0.8rem' }}>
                   <span className="text-muted">
-                    Today and tomorrow are fully booked. Check future dates for availability!
+                    <i className="fas fa-calendar-check me-2" style={{ color: '#00c851' }}></i>
+                    Selected: {format(selectedDate, 'PPP')}
                   </span>
                 </div>
-                <Button 
-                  variant="outline-success" 
-                  className="border-2 rounded-3 px-4 py-2 fw-medium"
-                  style={{ 
-                    borderColor: '#00c851',
-                    color: '#00c851',
-                    fontSize: '0.9rem'
-                  }}
-                  onClick={() => setShowDatePicker(!showDatePicker)}
-                >
-                  <i className="fas fa-calendar-alt me-2" style={{ color: '#00c851' }}></i>
-                  Other Dates
-                </Button>
+                
+                {/* Calendar Component */}
+                <Calendar 
+                  selectedDate={selectedDate}
+                  onDateSelect={handleDateSelect}
+                  minDate={new Date()}
+                  disabledDates={[
+                    new Date(), // Today is fully booked
+                    new Date(Date.now() + 86400000) // Tomorrow is fully booked
+                  ]}
+                />
               </div>
 
 

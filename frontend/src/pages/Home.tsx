@@ -45,31 +45,119 @@ const Home: React.FC = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="hero-section py-5 mb-5">
-        <Container>
-          <Row className="align-items-center min-vh-50">
-            <Col lg={6}>
-              <h1 className="display-4 fw-bold mb-4">
-                Discover Amazing Events in <span className="gradient-text">Kuantan</span>
-              </h1>
-              <p className="lead mb-4 text-muted">
-                From concerts and festivals to workshops and exhibitions, find the perfect event 
-                that matches your interests. Book your tickets easily and securely.
-              </p>
-              <div className="d-flex gap-3 flex-wrap">
-                <Button variant="primary" size="lg">
-                  Browse Events
-                </Button>
-                <Button variant="outline-primary" size="lg">
-                  Learn More
-                </Button>
+      <section 
+        className="hero-section d-flex align-items-center" 
+        style={{
+          height: 'auto',
+          backgroundImage: 'url(/bg-ticket-1.webp)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          position: 'relative',
+          marginTop: 0,
+          paddingBottom: '150px'
+        }}
+      >
+        <div 
+          className="position-absolute w-100 h-100" 
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            top: 0,
+            left: 0
+          }}
+        ></div>
+        <Container className="position-relative" style={{ zIndex: 1 }}>
+          <Row className="justify-content-center text-center">
+            <Col lg={8}>
+              <h2 className="hero-title">
+                Tickets
+              </h2>
+            </Col>
+          </Row>
+          
+          {/* Three Columns inside Hero */}
+          <Row className="g-4">
+            <Col md={4}>
+              <div 
+                className="text-center h-100 d-flex flex-column justify-content-center" 
+                style={{
+                  backgroundImage: 'url(/skydeck.webp)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  height: '500px',
+                  position: 'relative'
+                }}
+              >
+                <div 
+                  className="position-absolute w-100 h-100" 
+                  style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    top: 0,
+                    left: 0
+                  }}
+                ></div>
+                <div className="position-relative h-100 d-flex flex-column justify-content-start align-items-start p-4" style={{ zIndex: 1 }}>
+                  <h3 className="column-title mb-2">Sky Deck</h3>
+                  <p className="pricing-label mb-1 title-pricing-spacing">Starting at</p>
+                  <p className="pricing-amount mb-3">RM 20.00</p>
+                  <Button className="get-tickets-button">Get Tickets</Button>
+                </div>
               </div>
             </Col>
-            <Col lg={6} className="text-center">
-              <div className="hero-image-placeholder bg-light rounded-4 p-5">
-                <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
-                     style={{ width: '200px', height: '200px' }}>
-                  <span className="text-white" style={{ fontSize: '4rem' }}>🎪</span>
+            <Col md={4}>
+              <div 
+                className="h-100 d-flex flex-column justify-content-start align-items-start" 
+                style={{
+                  backgroundImage: 'url(/skydeck.webp)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  height: '500px',
+                  position: 'relative'
+                }}
+              >
+                <div 
+                  className="position-absolute w-100 h-100" 
+                  style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    top: 0,
+                    left: 0
+                  }}
+                ></div>
+                <div className="position-relative p-4" style={{ zIndex: 1 }}>
+                  <h3 className="column-title mb-2">Observation Deck</h3>
+                  <p className="pricing-label mb-1 title-pricing-spacing">Starting at</p>
+                  <p className="pricing-amount mb-3">RM 20.00</p>
+                  <Button className="get-tickets-button">Get Tickets</Button>
+                </div>
+              </div>
+            </Col>
+            <Col md={4}>
+              <div 
+                className="h-100 d-flex flex-column justify-content-start align-items-start" 
+                style={{
+                  backgroundImage: 'url(/skydeck.webp)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  height: '500px',
+                  position: 'relative'
+                }}
+              >
+                <div 
+                  className="position-absolute w-100 h-100" 
+                  style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    top: 0,
+                    left: 0
+                  }}
+                ></div>
+                <div className="position-relative p-4" style={{ zIndex: 1 }}>
+                  <h3 className="column-title mb-2">Sky Walk</h3>
+                  <p className="pricing-label mb-1 title-pricing-spacing">Starting at</p>
+                  <p className="pricing-amount mb-3">RM 20.00</p>
+                  <Button className="get-tickets-button">Get Tickets</Button>
                 </div>
               </div>
             </Col>

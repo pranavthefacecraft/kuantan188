@@ -1,3 +1,13 @@
+@font-face {
+  font-family: 'Erstoria';
+  src: url('./assets/fonts/Erstoria-Regular.woff2') format('woff2'),
+       url('./assets/fonts/Erstoria-Regular.woff') format('woff'),
+       url('./assets/fonts/Erstoria-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,6 +15,182 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Erstoria font for navigation */
+.erstoria-nav {
+  font-family: 'Erstoria', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Custom container width */
+.container {
+  max-width: 1366px !important;
+}
+
+/* Transparent header navigation styling */
+.erstoria-nav .nav-link {
+  color: #ffffff !important;
+  transition: color 0.3s ease;
+}
+
+.erstoria-nav .nav-link:hover {
+  color: #cc3366 !important;
+}
+
+.erstoria-nav .nav-link.active,
+.navbar-nav .nav-link.active,
+.nav-link.active,
+.navbar-nav .nav-link:focus,
+.navbar-nav .nav-link:active {
+  color: #cc3366 !important;
+  font-weight: 600;
+}
+
+/* Override Bootstrap's active link color */
+.navbar-light .navbar-nav .nav-link.active,
+.navbar-light .navbar-nav .show > .nav-link {
+  color: #cc3366 !important;
+}
+
+/* Hero title styling */
+.hero-title {
+  font-family: "Erstoria", Sans-serif;
+  font-size: 120px;
+  font-weight: 400;
+  line-height: 144px;
+  color: #FF014A;
+  margin-top: 300px;
+  margin-bottom: 100px;
+}
+
+/* Shop button styling */
+.shop-button {
+    background-color: #61CE7000 !important;
+    font-family: "Erstoria", Sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    border-style: solid !important;
+    border-width: 1px !important;
+    border-color: #BAA73F !important;
+    border-radius: 0px !important;
+    padding: 4px 24px !important;
+    color: #ffffff !important;
+}
+
+/* Column title styling */
+.column-title {
+    font-family: "Erstoria", Sans-serif;
+    font-size: 40px;
+    font-weight: 400;
+    color: #FFE6ED;
+    text-align: left;
+}
+
+/* Pricing text styling */
+.pricing-label {
+    font-family: "Poppins", Sans-serif;
+    font-size: 16px;
+    font-weight: 200;
+    color: #FFFFFF;
+}
+
+.pricing-amount {
+    font-family: "Erstoria", Sans-serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: #FFFFFF;
+}
+
+/* Spacing between title and pricing */
+.title-pricing-spacing {
+    margin-top: 350px;
+}
+
+/* Get Tickets button styling */
+.get-tickets-button {
+    background-color: #61CE7000 !important;
+    font-family: "Erstoria", Sans-serif !important;
+    font-weight: 500 !important;
+    fill: #FFFFFF !important;
+    color: #FFFFFF !important;
+    border-style: solid !important;
+    border-color: #BAA73F !important;
+    border-radius: 0px !important;
+    padding: 8px 24px !important;
+    border-width: 1px !important;
+}
+
+.get-tickets-button:hover {
+    background-color: rgba(97, 206, 112, 0.1) !important;
+    border-color: #BAA73F !important;
+    color: #ffffff !important;
+}
+
+/* Footer title styling */
+.footer-title {
+    font-family: "Erstoria", Sans-serif;
+    font-size: 200px;
+    font-weight: 400;
+    line-height: 80px;
+    color: #FFE6ED;
+}
+
+/* Footer background styling */
+.footer-background {
+    background-image: url('./assets/images/bg-ticket-1.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+/* Footer overlay */
+.footer-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    top: 0;
+    left: 0;
+}
+
+/* Footer content */
+.footer-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Footer social icons */
+.footer-social-icon {
+    color: #ffffff;
+    font-size: 15px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ffffff;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.footer-social-icon:hover {
+    color: #cc3366;
+    border-color: #cc3366;
+}
+
+/* Footer menu styling */
+.footer-menu a {
+    font-family: "Poppins", Sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.footer-menu a:hover {
+    color: #cc3366 !important;
 }
 
 code {
