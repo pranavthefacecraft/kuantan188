@@ -49,13 +49,6 @@ class LoginController extends Controller
      */
     public function showLoginForm()
     {
-        Log::info('Login form requested', [
-            'ip' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'session_id' => session()->getId(),
-            'csrf_token' => csrf_token(),
-        ]);
-        
         return view('auth.login');
     }
 
@@ -69,24 +62,11 @@ class LoginController extends Controller
      */
     public function login(Request $request)
     {
-        $currentSessionId = session()->getId();
-        
-        Log::info('Login attempt started', [
-            'email' => $request->input('email'),
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'session_id' => $currentSessionId,
-            'csrf_token' => $request->input('_token'),
-            'all_input' => $request->except('password'),
-        ]);
-
         $this->validateLogin($request);
-        Log::info('Login validation passed');
 
         // Throttle check
         if (method_exists($this, 'hasTooManyLoginAttempts') &&
             $this->hasTooManyLoginAttempts($request)) {
-            Log::warning('Too many login attempts', ['email' => $request->input('email')]);
             $this->fireLockoutEvent($request);
             return $this->sendLockoutResponse($request);
         }
@@ -107,25 +87,11 @@ class LoginController extends Controller
                 // Commit before authentication
                 \DB::commit();
                 
-                Log::info('User verified, attempting proper Laravel login', [
-                    'user_id' => $user->id,
-                    'session_id_before' => session()->getId(),
-                ]);
-                
                 // Use Laravel's proper loginUsingId method
                 // This sets both session data AND guard's current user
                 Auth::loginUsingId($user->id, $request->boolean('remember'));
                 
-                // DO NOT regenerate session - this is what was causing the issue!
-                // $request->session()->regenerate(); // Comment this out
-                
-                Log::info('Laravel loginUsingId completed', [
-                    'user_id' => Auth::id(),
-                    'auth_check' => Auth::check(),
-                    'session_id_after' => session()->getId(),
-                    'session_stayed_same' => session()->getId() === $currentSessionId,
-                    'session_data' => session()->all(),
-                ]);
+                // DO NOT regenerate session to avoid cookie conflicts
                 
                 $this->clearLoginAttempts($request);
                 
@@ -135,49 +101,17 @@ class LoginController extends Controller
             }
         } catch (\Throwable $e) {
             \DB::rollback();
-            Log::error('Login process failed', [
+            Log::error('Login authentication failed', [
                 'error' => $e->getMessage(),
                 'email' => $request->input('email'),
             ]);
         }
 
-        Log::warning('Login failed - invalid credentials', ['email' => $request->input('email')]);
         $this->incrementLoginAttempts($request);
         return $this->sendFailedLoginResponse($request);
     }
 
-    /**
-     * Attempt to log the user into the application.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return bool
-     */
-    protected function attemptLogin(Request $request)
-    {
-        $credentials = $this->credentials($request);
-        
-        Log::info('Attempting login with credentials', [
-            'email' => $credentials['email'],
-            'remember' => $request->boolean('remember'),
-            'current_session_id' => session()->getId(),
-        ]);
 
-        // Store current session ID before attempt
-        $currentSessionId = session()->getId();
-        
-        $attempt = $this->guard()->attempt(
-            $credentials, $request->boolean('remember')
-        );
-
-        Log::info('Auth attempt result', [
-            'success' => $attempt,
-            'session_id_before' => $currentSessionId,
-            'session_id_after' => session()->getId(),
-            'session_changed' => $currentSessionId !== session()->getId(),
-        ]);
-
-        return $attempt;
-    }
 
     /**
      * Send the response after the user was authenticated.

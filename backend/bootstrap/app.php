@@ -18,11 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         
         $middleware->validateCsrfTokens(except: [
-            // Re-enable CSRF protection
-        ]);
-        
-        $middleware->alias([
-            'log.auth' => \App\Http\Middleware\LogAuthAttempts::class,
+            // CSRF protection enabled
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
