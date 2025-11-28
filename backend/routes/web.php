@@ -36,11 +36,43 @@ Route::get('/test-connection', function () {
     ]);
 });
 
+// Debug authentication state after login
+Route::get('/debug/auth-state', function () {
+    \Log::info('Auth state check', [
+        'authenticated' => Auth::check(),
+        'user_id' => Auth::id(),
+        'user' => Auth::user(),
+        'session_id' => session()->getId(),
+        'session_started' => session()->isStarted(),
+        'session_data' => session()->all(),
+        'guards' => array_keys(config('auth.guards')),
+        'default_guard' => config('auth.defaults.guard'),
+    ]);
+    
+    return response()->json([
+        'authenticated' => Auth::check(),
+        'user_id' => Auth::id(),
+        'user' => Auth::user(),
+        'session_id' => session()->getId(),
+        'session_data' => session()->all(),
+    ]);
+});
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // Admin Dashboard Routes (protected by auth middleware)
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', function () {
+        \Log::info('Admin dashboard accessed', [
+            'authenticated' => Auth::check(),
+            'user_id' => Auth::id(),
+            'session_id' => session()->getId(),
+            'ip' => request()->ip(),
+            'session_data' => session()->all(),
+        ]);
+        
+        return app(AdminDashboardController::class)->index();
+    })->name('dashboard');
     Route::get('/events', [AdminDashboardController::class, 'events'])->name('events');
     Route::post('/events', [AdminDashboardController::class, 'storeEvent'])->name('events.store');
     Route::get('/events/{event}/edit', [AdminDashboardController::class, 'editEvent'])->name('events.edit');
