@@ -31,3 +31,15 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('/tickets/bulk-delete', [AdminDashboardController::class, 'bulkDeleteTickets'])->name('tickets.bulk-delete');
     Route::get('/countries', [AdminDashboardController::class, 'countries'])->name('countries');
 });
+
+// Debug route to check CSRF token and session
+Route::get('/debug/csrf', function () {
+    return response()->json([
+        'csrf_token' => csrf_token(),
+        'session_id' => session()->getId(),
+        'app_env' => config('app.env'),
+        'session_domain' => config('session.domain'),
+        'session_secure' => config('session.secure'),
+        'session_same_site' => config('session.same_site'),
+    ]);
+});
