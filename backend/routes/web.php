@@ -17,7 +17,6 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 // Admin Dashboard Routes (protected by auth middleware)
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/events', [AdminDashboardController::class, 'events'])->name('events');
     Route::post('/events', [AdminDashboardController::class, 'storeEvent'])->name('events.store');
     Route::get('/events/{event}/edit', [AdminDashboardController::class, 'editEvent'])->name('events.edit');
