@@ -74,15 +74,15 @@ const Footer: React.FC = () => {
               </li>
               <li className="mb-2">
                 <div className="d-flex gap-3 mt-3">
-                  <a href="#" className="text-light-emphasis hover-primary">
+                  <button type="button" className="btn btn-link p-0 text-light-emphasis hover-primary" style={{ textDecoration: 'none' }}>
                     <i className="fab fa-facebook-f"></i> Facebook
-                  </a>
-                  <a href="#" className="text-light-emphasis hover-primary">
+                  </button>
+                  <button type="button" className="btn btn-link p-0 text-light-emphasis hover-primary" style={{ textDecoration: 'none' }}>
                     <i className="fab fa-instagram"></i> Instagram
-                  </a>
-                  <a href="#" className="text-light-emphasis hover-primary">
+                  </button>
+                  <button type="button" className="btn btn-link p-0 text-light-emphasis hover-primary" style={{ textDecoration: 'none' }}>
                     <i className="fab fa-twitter"></i> Twitter
-                  </a>
+                  </button>
                 </div>
               </li>
             </ul>
@@ -99,15 +99,15 @@ const Footer: React.FC = () => {
           </Col>
           <Col md={6} className="text-md-end">
             <div className="d-flex justify-content-md-end gap-3 mt-2 mt-md-0">
-              <a href="#" className="text-light-emphasis text-decoration-none hover-primary">
+              <button type="button" className="btn btn-link p-0 text-light-emphasis hover-primary" style={{ textDecoration: 'none' }}>
                 Privacy Policy
-              </a>
-              <a href="#" className="text-light-emphasis text-decoration-none hover-primary">
+              </button>
+              <button type="button" className="btn btn-link p-0 text-light-emphasis hover-primary" style={{ textDecoration: 'none' }}>
                 Terms of Service
-              </a>
-              <a href="#" className="text-light-emphasis text-decoration-none hover-primary">
+              </button>
+              <button type="button" className="btn btn-link p-0 text-light-emphasis hover-primary" style={{ textDecoration: 'none' }}>
                 Support
-              </a>
+              </button>
             </div>
           </Col>
         </Row>

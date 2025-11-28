@@ -24,7 +24,9 @@ export const API_ENDPOINTS = {
   BOOKINGS: '/bookings',
 };
 
-export default {
+const apiConfig = {
   API_BASE_URL,
   API_ENDPOINTS,
 };
+
+export default apiConfig;
