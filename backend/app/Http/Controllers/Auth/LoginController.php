@@ -91,29 +91,55 @@ class LoginController extends Controller
             return $this->sendLockoutResponse($request);
         }
 
-        // Manual authentication to avoid session regeneration
+        // Authentication with proper user persistence
         $credentials = $this->credentials($request);
-        $user = \App\Models\User::where('email', $credentials['email'])->first();
         
-        if ($user && \Hash::check($credentials['password'], $user->password)) {
-            // Login using existing session - NO session regeneration
-            Auth::login($user, $request->boolean('remember'));
+        \DB::beginTransaction();
+        try {
+            $user = \App\Models\User::where('email', $credentials['email'])->first();
             
-            // Force save to current session
-            session()->save();
-            
-            Log::info('Manual login successful', [
-                'user_id' => Auth::id(),
+            if ($user && \Hash::check($credentials['password'], $user->password)) {
+                // Ensure user is fresh from database and fully loaded
+                $user->refresh();
+                
+                // Update last login time to ensure user is persisted
+                $user->updated_at = now();
+                $user->save();
+                
+                // Commit the transaction BEFORE calling Auth::login()
+                \DB::commit();
+                
+                Log::info('User verified and persisted, attempting login', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'session_id_before_login' => session()->getId(),
+                ]);
+                
+                // Now safely call Auth::login() after user is persisted
+                Auth::login($user, $request->boolean('remember'));
+                
+                Log::info('Auth::login completed', [
+                    'user_id' => Auth::id(),
+                    'email' => $request->input('email'),
+                    'session_id_after_login' => session()->getId(),
+                    'session_id_stayed_same' => session()->getId() === $currentSessionId,
+                    'auth_check' => Auth::check(),
+                    'session_data' => session()->all(),
+                ]);
+                
+                $this->clearLoginAttempts($request);
+                
+                // Direct redirect 
+                return redirect()->intended($this->redirectPath());
+            } else {
+                \DB::rollback();
+            }
+        } catch (\Throwable $e) {
+            \DB::rollback();
+            Log::error('Login transaction failed', [
+                'error' => $e->getMessage(),
                 'email' => $request->input('email'),
-                'session_id_stayed_same' => session()->getId() === $currentSessionId,
-                'session_id' => session()->getId(),
-                'session_data' => session()->all(),
             ]);
-            
-            $this->clearLoginAttempts($request);
-            
-            // Direct redirect without session regeneration
-            return redirect()->intended($this->redirectPath());
         }
 
         Log::warning('Login failed - invalid credentials', ['email' => $request->input('email')]);
