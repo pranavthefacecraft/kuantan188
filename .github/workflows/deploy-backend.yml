@@ -72,7 +72,8 @@ jobs:
         username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
         password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
         local-dir: backend/
-        server-dir: public_html/ticketsadmin/
+        server-dir: ./
+        log-level: verbose
         exclude: |
           **/.git*
           **/.git*/**
