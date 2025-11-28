@@ -138,6 +138,52 @@ Route::get('/debug/check-user', function () {
     ]);
 });
 
+// Debug: Check sessions table for specific session ID
+Route::get('/debug/check-session/{sessionId}', function ($sessionId) {
+    $sessionRow = \DB::table('sessions')->where('id', $sessionId)->first();
+    
+    if (!$sessionRow) {
+        return response()->json(['error' => 'Session not found in database', 'session_id' => $sessionId]);
+    }
+    
+    // Decode the payload
+    $payload = unserialize(base64_decode($sessionRow->payload));
+    
+    // Look for login keys
+    $loginKeys = [];
+    foreach (array_keys($payload) as $key) {
+        if (strpos($key, 'login_') === 0) {
+            $loginKeys[$key] = $payload[$key];
+        }
+    }
+    
+    return response()->json([
+        'session_id' => $sessionId,
+        'session_found' => true,
+        'user_id' => $sessionRow->user_id ?? null,
+        'last_activity' => $sessionRow->last_activity,
+        'payload_length' => strlen($sessionRow->payload),
+        'payload_keys' => array_keys($payload),
+        'login_keys' => $loginKeys,
+        'full_payload' => $payload,
+    ]);
+});
+
+// Debug: Check recent sessions
+Route::get('/debug/recent-sessions', function () {
+    $recentSessions = \DB::table('sessions')
+        ->select('id', 'user_id', 'last_activity', \DB::raw('LENGTH(payload) as payload_len'))
+        ->orderBy('last_activity', 'desc')
+        ->limit(20)
+        ->get();
+    
+    return response()->json([
+        'recent_sessions' => $recentSessions,
+        'current_browser_session' => request()->cookie(config('session.cookie')),
+        'session_cookie_name' => config('session.cookie'),
+    ]);
+});
+
 // Force a simple login without redirect to test session
 Route::post('/debug/simple-login', function () {
     $credentials = request()->only('email', 'password');
