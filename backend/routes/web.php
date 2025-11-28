@@ -38,8 +38,14 @@ Route::get('/debug/csrf', function () {
         'csrf_token' => csrf_token(),
         'session_id' => session()->getId(),
         'app_env' => config('app.env'),
+        'session_driver' => config('session.driver'),
         'session_domain' => config('session.domain'),
         'session_secure' => config('session.secure'),
         'session_same_site' => config('session.same_site'),
+        'session_http_only' => config('session.http_only'),
+        'session_path' => config('session.path'),
+        'app_url' => config('app.url'),
+        'session_started' => session()->isStarted(),
+        'session_data' => session()->all(),
     ]);
 });
