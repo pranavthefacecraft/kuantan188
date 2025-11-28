@@ -167,6 +167,9 @@ class AdminDashboardController extends Controller
                 // Move uploaded file
                 $image->move($uploadPath, $imageName);
                 $imageUrl = 'uploads/events/' . $imageName;
+                
+                // Sync image to storage after upload
+                $this->syncImageToStorage($imageName);
             }
 
             $event = Event::create([
@@ -478,6 +481,9 @@ class AdminDashboardController extends Controller
                 // Move uploaded file
                 $image->move($uploadPath, $imageName);
                 $updateData['image_url'] = 'uploads/events/' . $imageName;
+                
+                // Sync image to storage after upload
+                $this->syncImageToStorage($imageName);
             }
 
             $event->update($updateData);
@@ -618,6 +624,31 @@ class AdminDashboardController extends Controller
                 'success' => false,
                 'message' => 'Error deleting tickets: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Sync uploaded image to storage directory
+     */
+    private function syncImageToStorage($filename)
+    {
+        try {
+            $sourceFile = public_path('uploads/events/' . $filename);
+            $storagePath = storage_path('app/public/uploads/events');
+            $destinationFile = $storagePath . '/' . $filename;
+            
+            // Ensure storage directory exists
+            if (!file_exists($storagePath)) {
+                mkdir($storagePath, 0755, true);
+            }
+            
+            // Copy file to storage
+            if (file_exists($sourceFile)) {
+                copy($sourceFile, $destinationFile);
+                \Log::info('Image synced to storage: ' . $filename);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to sync image to storage: ' . $e->getMessage());
         }
     }
 }
