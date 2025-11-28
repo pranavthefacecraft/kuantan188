@@ -72,7 +72,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
         password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
         local-dir: backend/
-        server-dir: ./
+        server-dir: domains/tfcmockup.com/public_html/ticketsadmin/
         log-level: verbose
         exclude: |
           **/.git*
