@@ -118,11 +118,14 @@ Route::post('/debug/simple-login', function () {
     $credentials = request()->only('email', 'password');
     
     if (Auth::attempt($credentials)) {
-        // Don't redirect, just return success
+        // Force session save
+        session()->save();
+        
         \Log::info('Simple login success', [
             'user_id' => Auth::id(),
             'session_id' => session()->getId(),
             'session_data' => session()->all(),
+            'auth_check' => Auth::check(),
         ]);
         
         return response()->json([
@@ -130,6 +133,29 @@ Route::post('/debug/simple-login', function () {
             'message' => 'Login successful - no redirect',
             'user_id' => Auth::id(),
             'session_id' => session()->getId(),
+            'authenticated' => Auth::check(),
+            'session_data' => session()->all(),
+        ]);
+    }
+    
+    return response()->json(['success' => false, 'message' => 'Invalid credentials']);
+});
+
+// GET version of simple login for testing
+Route::get('/debug/simple-login-test', function () {
+    $email = 'pranav@thefacecraft.com';
+    $password = 'Admin@123'; // Use your actual password
+    
+    if (Auth::attempt(['email' => $email, 'password' => $password])) {
+        session()->save();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'GET Login successful - no redirect',
+            'user_id' => Auth::id(),
+            'session_id' => session()->getId(),
+            'authenticated' => Auth::check(),
+            'session_data' => session()->all(),
         ]);
     }
     
