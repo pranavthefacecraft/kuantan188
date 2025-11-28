@@ -21,6 +21,7 @@
             <button onclick="loadLogs(50)">Last 50</button>
             <button onclick="loadLogs(100)">Last 100</button>
             <button onclick="loadLogs()">Refresh</button>
+            <button onclick="clearLogs()" style="background: #f44336;">Clear Logs</button>
         </div>
         <hr>
         <div id="logs">Loading logs...</div>
@@ -55,6 +56,20 @@
                 .catch(error => {
                     document.getElementById("logs").innerHTML = "<div class='error'>Error loading logs: " + error + "</div>";
                 });
+        }
+        
+        function clearLogs() {
+            if (confirm("Are you sure you want to clear all logs? This action cannot be undone.")) {
+                fetch("clear-logs.php", { method: "POST" })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message || "Logs cleared successfully!");
+                        loadLogs(); // Refresh to show empty logs
+                    })
+                    .catch(error => {
+                        alert("Error clearing logs: " + error);
+                    });
+            }
         }
         
         function escapeHtml(text) {
