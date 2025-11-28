@@ -4,13 +4,37 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminDashboardController;
 
 Route::get('/', function () {
+    \Log::info('Root route accessed', [
+        'authenticated' => Auth::check(),
+        'session_id' => session()->getId(),
+        'ip' => request()->ip(),
+    ]);
+    
     if (Auth::check()) {
         return redirect()->route('admin.dashboard');
     }
     return redirect()->route('login');
 });
 
-Auth::routes();
+// Log any request to login routes
+Route::middleware(['web'])->group(function () {
+    Auth::routes();
+});
+
+// Test route to verify requests are reaching Laravel
+Route::get('/test-connection', function () {
+    \Log::info('Test connection route accessed', [
+        'timestamp' => now()->toDateTimeString(),
+        'session_id' => session()->getId(),
+        'ip' => request()->ip(),
+    ]);
+    
+    return response()->json([
+        'status' => 'Laravel is working',
+        'timestamp' => now()->toDateTimeString(),
+        'session_id' => session()->getId(),
+    ]);
+});
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
