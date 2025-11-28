@@ -113,3 +113,46 @@ Route::get('/debug/create-admin', function () {
         ]
     ]);
 });
+
+// Deployment route to clear all caches (use carefully in production)
+Route::get('/deploy/clear-cache', function () {
+    $results = [];
+    
+    try {
+        // Clear application cache
+        \Artisan::call('cache:clear');
+        $results['cache_clear'] = 'Success';
+        
+        // Clear configuration cache
+        \Artisan::call('config:clear');
+        $results['config_clear'] = 'Success';
+        
+        // Clear route cache
+        \Artisan::call('route:clear');
+        $results['route_clear'] = 'Success';
+        
+        // Clear view cache
+        \Artisan::call('view:clear');
+        $results['view_clear'] = 'Success';
+        
+        // Clear compiled classes
+        \Artisan::call('clear-compiled');
+        $results['clear_compiled'] = 'Success';
+        
+        // Optimize for production
+        \Artisan::call('config:cache');
+        $results['config_cache'] = 'Success';
+        
+        \Artisan::call('route:cache');
+        $results['route_cache'] = 'Success';
+        
+    } catch (\Exception $e) {
+        $results['error'] = $e->getMessage();
+    }
+    
+    return response()->json([
+        'message' => 'Cache clearing completed',
+        'results' => $results,
+        'timestamp' => now()->toDateTimeString()
+    ]);
+});
