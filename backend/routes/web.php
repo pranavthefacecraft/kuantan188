@@ -1,22 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminDashboardController;
 
 Route::get('/', function () {
-    \Log::info('Root route accessed', [
-        'authenticated' => Auth::check(),
-        'session_id' => session()->getId(),
-        'ip' => request()->ip(),
-    ]);
-    
     if (Auth::check()) {
         return redirect()->route('admin.dashboard');
     }
     return redirect()->route('login');
 });
 
-// Log any request to login routes
+// Authentication routes
 Route::middleware(['web'])->group(function () {
     Auth::routes();
 });
