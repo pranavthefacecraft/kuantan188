@@ -462,6 +462,13 @@
                             Countries
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a href="{{ route('admin.reviews') }}" 
+                           class="nav-link {{ request()->routeIs('admin.reviews*') ? 'active' : '' }}">
+                            <span class="material-icons nav-icon">star_rate</span>
+                            Reviews
+                        </a>
+                    </div>
                 </div>
 
                 <div class="nav-section">

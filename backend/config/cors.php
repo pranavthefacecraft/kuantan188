@@ -24,8 +24,10 @@ return [
         'https://kuantan188.tfcmockup.com',   // Existing staging domain
         'http://localhost:3000',              // Development
         'http://localhost:3001',              // Development alternative port
+        'http://localhost:3002',              // Development React app current port
         'http://127.0.0.1:3000',             // Development alternative
         'http://127.0.0.1:3001',             // Development alternative
+        'http://127.0.0.1:3002',             // Development React app current port
     ],
 
     'allowed_origins_patterns' => [],

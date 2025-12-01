@@ -36,6 +36,11 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::delete('/tickets/{ticket}', [AdminDashboardController::class, 'destroyTicket'])->name('tickets.destroy');
     Route::post('/tickets/bulk-delete', [AdminDashboardController::class, 'bulkDeleteTickets'])->name('tickets.bulk-delete');
     Route::get('/countries', [AdminDashboardController::class, 'countries'])->name('countries');
+    
+    // Google Reviews Management
+    Route::get('/reviews', [AdminDashboardController::class, 'reviews'])->name('reviews');
+    Route::post('/reviews/sync', [AdminDashboardController::class, 'syncGoogleReviews'])->name('reviews.sync');
+    Route::put('/reviews/{review}/toggle-status', [AdminDashboardController::class, 'toggleReviewStatus'])->name('reviews.toggle-status');
 });
 
 // Simple test route

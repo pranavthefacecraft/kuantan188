@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
 import { eventsApi, Event } from '../services/api';
 import ReservationModal from '../components/modals/ReservationModal';
+import { ReviewsWidget } from '../components/GoogleReviews';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, FreeMode } from 'swiper/modules';
 import 'swiper/css';
@@ -437,6 +438,27 @@ const Home: React.FC = () => {
             </>
           )}
           </Row>
+        </Container>
+      </section>
+
+      {/* Customer Reviews Section */}
+      <section className="py-5 bg-light">
+        <Container>
+          <Row className="mb-5">
+            <Col>
+              <h2 className="text-center fw-bold mb-3">
+                What Our Visitors Say
+              </h2>
+              <p className="text-center text-muted lead">
+                Don't just take our word for it - see what others are saying about their experience at Menara Kuantan 188
+              </p>
+            </Col>
+          </Row>
+          <ReviewsWidget 
+            limit={3} 
+            showViewAll={true}
+            className="mb-4"
+          />
         </Container>
       </section>
 

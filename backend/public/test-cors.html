@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>Testing CORS for Reviews API</h1>
+    <button onclick="testAPI()">Test API Call</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/public/reviews', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Origin': 'http://localhost:3002'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <h3>✅ CORS is working!</h3>
+                        <p>Status: ${response.status}</p>
+                        <p>Reviews found: ${data.data ? data.data.length : 0}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>❌ API Error</h3>
+                        <p>Status: ${response.status}</p>
+                        <p>Response: ${await response.text()}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ CORS or Network Error</h3>
+                    <p>Error: ${error.message}</p>
+                    <p>This usually means CORS is not configured properly</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

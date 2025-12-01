@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend API Test - Google Reviews</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #cce7ff; border-color: #b3d9ff; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Frontend API Test - Google Reviews</h1>
+    <p>Testing connection between React frontend and Laravel backend</p>
+
+    <div id="results"></div>
+
+    <div class="test info">
+        <h3>🔧 Manual Tests</h3>
+        <button class="btn-primary" onclick="testReviewsAPI()">Test Reviews API</button>
+        <button class="btn-primary" onclick="testReviewsStats()">Test Reviews Stats</button>
+        <button class="btn-success" onclick="testAllEndpoints()">Test All Endpoints</button>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8000/api';
+        
+        function addResult(title, content, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test ${type}`;
+            div.innerHTML = `<h3>${title}</h3>${content}`;
+            results.appendChild(div);
+        }
+
+        function formatJSON(obj) {
+            return '<pre>' + JSON.stringify(obj, null, 2) + '</pre>';
+        }
+
+        async function testReviewsAPI() {
+            try {
+                addResult('🔄 Testing Reviews API...', 'Fetching reviews from Laravel backend...', 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/public/reviews`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult('✅ Reviews API Success!', 
+                        `Status: ${response.status}<br>
+                        Success: ${data.success}<br>
+                        Reviews Count: ${data.data ? data.data.length : 0}<br>
+                        ${data.stats ? `Average Rating: ${data.stats.average_rating}<br>Total Reviews: ${data.stats.total_reviews}` : ''}
+                        ${formatJSON(data)}`, 'success');
+                } else {
+                    addResult('❌ Reviews API Failed', 
+                        `Status: ${response.status}<br>
+                        ${formatJSON(data)}`, 'error');
+                }
+            } catch (error) {
+                addResult('❌ Reviews API Error', 
+                    `Network Error: ${error.message}<br>
+                    <strong>Possible Issues:</strong><br>
+                    • Laravel server not running on port 8000<br>
+                    • CORS issues<br>
+                    • Network connectivity<br>
+                    • API endpoint not found`, 'error');
+            }
+        }
+
+        async function testReviewsStats() {
+            try {
+                addResult('🔄 Testing Reviews Stats API...', 'Fetching review statistics...', 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/public/reviews/stats`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult('✅ Reviews Stats API Success!', 
+                        `Status: ${response.status}<br>
+                        ${formatJSON(data)}`, 'success');
+                } else {
+                    addResult('❌ Reviews Stats API Failed', 
+                        `Status: ${response.status}<br>
+                        ${formatJSON(data)}`, 'error');
+                }
+            } catch (error) {
+                addResult('❌ Reviews Stats API Error', 
+                    `Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAllEndpoints() {
+            // Clear previous results
+            document.getElementById('results').innerHTML = '';
+            
+            // Test basic connectivity
+            addResult('🌐 Environment Info', 
+                `Current URL: ${window.location.href}<br>
+                API Base URL: ${API_BASE_URL}<br>
+                User Agent: ${navigator.userAgent}<br>
+                Time: ${new Date().toISOString()}`, 'info');
+
+            // Test Laravel server
+            try {
+                const response = await fetch('http://127.0.0.1:8000', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    addResult('✅ Laravel Server Reachable', 
+                        `Status: ${response.status} - Server is running`, 'success');
+                } else {
+                    addResult('⚠️ Laravel Server Response', 
+                        `Status: ${response.status} - Server responding but might have issues`, 'error');
+                }
+            } catch (error) {
+                addResult('❌ Laravel Server Unreachable', 
+                    `Cannot connect to Laravel server on port 8000<br>
+                    Error: ${error.message}<br>
+                    <strong>Solution:</strong> Run 'php artisan serve' in backend directory`, 'error');
+            }
+
+            // Test APIs
+            await testReviewsAPI();
+            await testReviewsStats();
+            
+            // Test CORS
+            addResult('🔒 CORS Test', 
+                'If you can see API responses above, CORS is working correctly.<br>If not, you may need to configure CORS in Laravel.', 'info');
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', function() {
+            setTimeout(testAllEndpoints, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { GoogleReviews } from '../components/GoogleReviews';
 
 const About: React.FC = () => {
   const teamMembers = [
@@ -169,6 +170,17 @@ const About: React.FC = () => {
           </Row>
         </Col>
       </Row>
+
+      {/* Google Reviews Section */}
+      <div id="google-reviews" className="mb-5">
+        <GoogleReviews 
+          showTitle={true}
+          limit={6}
+          showPagination={true}
+          showStats={true}
+          className=""
+        />
+      </div>
 
       {/* CTA Section */}
       <Row className="text-center">

@@ -651,4 +651,54 @@ class AdminDashboardController extends Controller
             \Log::error('Failed to sync image to storage: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Show Google Reviews management page
+     */
+    public function reviews()
+    {
+        $reviews = \App\Models\GoogleReview::latest()->paginate(20);
+        $stats = [
+            'total_reviews' => \App\Models\GoogleReview::count(),
+            'active_reviews' => \App\Models\GoogleReview::where('is_active', true)->count(),
+            'average_rating' => \App\Models\GoogleReview::where('is_active', true)->avg('rating'),
+            'latest_sync' => \App\Models\GoogleReview::latest()->first()?->created_at,
+        ];
+        
+        return view('admin.reviews', compact('reviews', 'stats'));
+    }
+
+    /**
+     * Sync Google Reviews from API
+     */
+    public function syncGoogleReviews()
+    {
+        try {
+            // Call the artisan command to sync reviews
+            \Artisan::call('reviews:sync', ['--force' => true]);
+            $output = \Artisan::output();
+            
+            return redirect()->route('admin.reviews')
+                ->with('success', 'Google Reviews sync completed successfully!')
+                ->with('sync_output', $output);
+                
+        } catch (\Exception $e) {
+            return redirect()->route('admin.reviews')
+                ->with('error', 'Sync failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Toggle review status (active/inactive)
+     */
+    public function toggleReviewStatus(\App\Models\GoogleReview $review)
+    {
+        $review->is_active = !$review->is_active;
+        $review->save();
+
+        $status = $review->is_active ? 'activated' : 'deactivated';
+        
+        return redirect()->route('admin.reviews')
+            ->with('success', "Review by {$review->author_name} has been {$status}.");
+    }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\API\TicketController;
 use App\Http\Controllers\API\BookingController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PublicEventController;
+use App\Http\Controllers\API\ReviewController;
 
 // Authentication routes
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -25,6 +26,10 @@ Route::get('/public/events', [PublicEventController::class, 'index']);
 Route::get('/public/events/featured', [PublicEventController::class, 'featured']);
 Route::get('/public/events/{id}', [PublicEventController::class, 'show']);
 Route::get('/public/tickets', [PublicEventController::class, 'getTickets']);
+
+// Public Google Reviews routes
+Route::get('/public/reviews', [ReviewController::class, 'index']);
+Route::get('/public/reviews/stats', [ReviewController::class, 'stats']);
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
 Route::get('/events/{event}/countries/{country}/tickets', [TicketController::class, 'getByEventAndCountry']);
@@ -53,4 +58,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{booking}', [BookingController::class, 'show']);
     Route::put('/bookings/{booking}', [BookingController::class, 'update']);
     Route::delete('/bookings/{booking}', [BookingController::class, 'destroy']);
+    
+    // Admin routes for Google Reviews
+    Route::post('/reviews/fetch', [ReviewController::class, 'fetchFromGoogle']);
+    Route::put('/reviews/{review}/toggle-status', [ReviewController::class, 'toggleStatus']);
 });
