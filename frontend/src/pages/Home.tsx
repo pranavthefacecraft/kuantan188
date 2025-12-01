@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
 import { eventsApi, Event } from '../services/api';
 import ReservationModal from '../components/modals/ReservationModal';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, FreeMode } from 'swiper/modules';
+import { Navigation, FreeMode } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -18,20 +18,20 @@ const Home: React.FC = () => {
 
 
   // Top slider - Tickets (Sky Deck, Observation Deck, Sky Walk)
-  const ticketTypes = [
+  const ticketTypes = useMemo(() => [
     { name: 'Sky Deck', price: 'RM 20.00', image: '/skydeck.webp' },
     { name: 'Observation Deck', price: 'RM 20.00', image: '/skydeck.webp' },
     { name: 'Sky Walk', price: 'RM 20.00', image: '/skydeck.webp' },
     { name: 'Sky Walk1', price: 'RM 20.00', image: '/skydeck.webp' }
-  ];
+  ], []);
 
   // Bottom slider - Events (Sky Wedding, School Event, Sky Yoga)
-  const eventTypes = [
+  const eventTypes = useMemo(() => [
     { name: 'Sky Wedding', price: 'RM 40.00', image: '/skydeck.webp' },
     { name: 'School Event', price: 'RM 20.00', image: '/skydeck.webp' },
     { name: 'Sky Yoga', price: 'RM 20.00', image: '/skydeck.webp' },
     { name: 'Sky Yoga1', price: 'RM 20.00', image: '/skydeck.webp' }
-  ];
+  ], []);
 
 
   useEffect(() => {
