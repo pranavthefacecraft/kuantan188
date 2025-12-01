@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
 import { eventsApi, Event } from '../services/api';
 import ReservationModal from '../components/modals/ReservationModal';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, FreeMode } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/free-mode';
 
 const Home: React.FC = () => {
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
@@ -9,6 +15,23 @@ const Home: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
+
+  // Top slider - Tickets (Sky Deck, Observation Deck, Sky Walk)
+  const ticketTypes = [
+    { name: 'Sky Deck', price: 'RM 20.00', image: '/skydeck.webp' },
+    { name: 'Observation Deck', price: 'RM 20.00', image: '/skydeck.webp' },
+    { name: 'Sky Walk', price: 'RM 20.00', image: '/skydeck.webp' },
+    { name: 'Sky Walk1', price: 'RM 20.00', image: '/skydeck.webp' }
+  ];
+
+  // Bottom slider - Events (Sky Wedding, School Event, Sky Yoga)
+  const eventTypes = [
+    { name: 'Sky Wedding', price: 'RM 40.00', image: '/skydeck.webp' },
+    { name: 'School Event', price: 'RM 20.00', image: '/skydeck.webp' },
+    { name: 'Sky Yoga', price: 'RM 20.00', image: '/skydeck.webp' },
+    { name: 'Sky Yoga1', price: 'RM 20.00', image: '/skydeck.webp' }
+  ];
 
 
   useEffect(() => {
@@ -32,6 +55,10 @@ const Home: React.FC = () => {
     fetchFeaturedEvents();
   }, []);
 
+
+
+
+
   const handleReserveNow = (event: Event) => {
     setSelectedEvent(event);
     setShowModal(true);
@@ -42,127 +69,286 @@ const Home: React.FC = () => {
     setSelectedEvent(null);
   };
 
+  // Debug Swiper initialization
+  useEffect(() => {
+    console.log('🔍 Swiper Debug - Component mounted');
+    console.log('📊 Ticket types count:', ticketTypes.length, ticketTypes);
+    console.log('📊 Event types count:', eventTypes.length, eventTypes);
+    
+    // Check if Swiper elements exist
+    setTimeout(() => {
+      console.log('🕒 Checking DOM elements after 2 seconds...');
+      
+      const ticketsContainer = document.querySelector('.tickets-swiper');
+      const eventsContainer = document.querySelector('.events-swiper');
+      const ticketsSlides = document.querySelectorAll('.tickets-swiper .swiper-slide');
+      const eventsSlides = document.querySelectorAll('.events-swiper .swiper-slide');
+      const ticketsPrevButton = document.querySelector('.swiper-button-prev-tickets');
+      const ticketsNextButton = document.querySelector('.swiper-button-next-tickets');
+      const eventsPrevButton = document.querySelector('.swiper-button-prev-events');
+      const eventsNextButton = document.querySelector('.swiper-button-next-events');
+
+      console.log('🎯 Tickets container found:', !!ticketsContainer);
+      console.log('🎯 Events container found:', !!eventsContainer);
+      console.log('📋 Tickets slides count:', ticketsSlides.length);
+      console.log('📋 Events slides count:', eventsSlides.length);
+      console.log('⬅️ Tickets prev button found:', !!ticketsPrevButton);
+      console.log('➡️ Tickets next button found:', !!ticketsNextButton);
+      console.log('⬅️ Events prev button found:', !!eventsPrevButton);
+      console.log('➡️ Events next button found:', !!eventsNextButton);
+      
+      // Also check if sections are rendering
+      const heroSections = document.querySelectorAll('.hero-section');
+      console.log('🏛️ Hero sections found:', heroSections.length);
+    }, 2000);
+  }, [ticketTypes, eventTypes]);
+
+
+
+
+
+
+
   return (
     <div>
-      {/* Hero Section */}
-      <section 
-        className="hero-section d-flex align-items-center" 
-        style={{
-          height: 'auto',
-          backgroundImage: 'url(/bg-ticket-1.webp)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          position: 'relative',
-          marginTop: 0,
-          paddingBottom: '150px'
-        }}
-      >
-        <div 
-          className="position-absolute w-100 h-100" 
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            top: 0,
-            left: 0
-          }}
-        ></div>
-        <Container className="position-relative" style={{ zIndex: 1 }}>
-          <Row className="justify-content-center text-center">
-            <Col lg={8}>
-              <h2 className="hero-title">
-                Tickets
-              </h2>
-            </Col>
-          </Row>
+      {/* Top Section - Get Your Tickets */}
+      <section className="bg-custom-dark position-relative overflow-hidden hero-section d-flex align-items-center">
+        <div className="hero-container position-relative d-flex align-items-center w-100 mx-auto mt-300" style={{ zIndex: 1 }}>
+          {/* Left Side - Get Your Tickets Section */}
+          <div className="hero-book-section flex-shrink-0">
+            <div>
+            <div className="text-start">
+              <h1 className="hero-title-main">
+                <span className="hero-title-white">Get Your</span><br />
+                <span className="hero-title-red">Tickets</span>
+              </h1>
+              <p className="hero-subtitle">
+                Choose your experience,<br />
+                book your entry today!
+              </p>
+            </div>
+              </div>
+          </div>
           
-          {/* Three Columns inside Hero */}
-          <Row className="g-4">
-            <Col md={4}>
-              <div 
-                className="text-center h-100 d-flex flex-column justify-content-center" 
-                style={{
-                  backgroundImage: 'url(/skydeck.webp)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  height: '500px',
-                  position: 'relative'
-                }}
-              >
-                <div 
-                  className="position-absolute w-100 h-100" 
-                  style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                    top: 0,
-                    left: 0
-                  }}
-                ></div>
-                <div className="position-relative h-100 d-flex flex-column justify-content-start align-items-start p-4" style={{ zIndex: 1 }}>
-                  <h3 className="column-title mb-2">Sky Deck</h3>
-                  <p className="pricing-label mb-1 title-pricing-spacing">Starting at</p>
-                  <p className="pricing-amount mb-3">RM 20.00</p>
-                  <Button className="get-tickets-button">Get Tickets</Button>
-                </div>
+          {/* Right Side - Tickets Slider */}
+          <div className="hero-slider-section flex-grow-1">
+          <div className="position-relative">
+            {/* Swiper Event Cards Container */}
+            <Swiper
+              modules={[Navigation, FreeMode]}
+              spaceBetween={16}
+              slidesPerView="auto"
+              freeMode={true}
+              loop={false}
+              centeredSlides={false}
+              navigation={{
+                prevEl: '.swiper-button-prev-tickets',
+                nextEl: '.swiper-button-next-tickets',
+              }}
+              grabCursor={true}
+              allowTouchMove={true}
+              simulateTouch={true}
+              className="tickets-swiper"
+              onInit={(swiper: any) => {
+                console.log('🚀 TICKETS Swiper initialized successfully');
+                console.log('📊 TICKETS Swiper params:', swiper.params);
+                console.log('🎯 TICKETS slides count:', swiper.slides.length);
+                console.log('🔄 TICKETS FreeMode enabled:', swiper.params.freeMode);
+                console.log('🎯 TICKETS Navigation enabled:', !!swiper.navigation);
+                console.log('📐 TICKETS Container width:', swiper.width);
+                console.log('📏 TICKETS Slide width:', swiper.slidesSizesGrid);
+                // Force slide width to 350px
+                swiper.slides.forEach((slide: any) => {
+                  slide.style.width = '350px';
+                  slide.style.minWidth = '350px';
+                  slide.style.maxWidth = '350px';
+                });
+                swiper.update();
+              }}
+              onSlideChange={(swiper: any) => {
+                console.log('🔄 TICKETS Slide changed to:', swiper.activeIndex);
+              }}
+              onTouchMove={(swiper: any) => {
+                console.log('👆 TICKETS Touch move - translate:', swiper.translate);
+              }}
+              onTouchStart={() => {
+                console.log('🤚 TICKETS Touch start detected');
+              }}
+              onTouchEnd={() => {
+                console.log('✋ TICKETS Touch end detected');
+              }}
+              breakpoints={{
+                320: {
+                  slidesPerView: 1,
+                },
+                768: {
+                  slidesPerView: 2,
+                },
+                1024: {
+                  slidesPerView: 3,
+                },
+              }}
+            >
+              {ticketTypes.map((ticket, ticketIndex) => (
+                <SwiperSlide key={ticketIndex} className="event-card-item">
+                  <div 
+                    className="event-card-background h-100 d-flex flex-column"
+                    style={{
+                      backgroundImage: `url(${ticket.image})`
+                    }}
+                  >
+                    <div className="event-card-overlay"></div>
+                    <div className="event-card-content p-4 d-flex flex-column h-100">
+                      <h3 className="column-title mb-2">{ticket.name}</h3>
+                      <div className="mt-auto">
+                        <p className="pricing-label mb-1">Starting at</p>
+                        <p className="pricing-amount mb-3">{ticket.price}</p>
+                        <Button className="reserve-button get-tickets-button">
+                          Get Tickets
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+
+            {/* Custom Navigation Arrows for Tickets */}
+            <button 
+              className="swiper-button-prev-tickets slider-nav-btn slider-nav-left btn btn-outline-light position-absolute top-50 start-0 translate-middle-y"
+              onClick={() => console.log('🔥 TICKETS LEFT ARROW CLICKED')}
+            >
+              <i className="fas fa-chevron-left"></i>
+            </button>
+            <button 
+              className="swiper-button-next-tickets slider-nav-btn slider-nav-right btn btn-outline-light position-absolute top-50 end-0 translate-middle-y"
+              onClick={() => console.log('🔥 TICKETS RIGHT ARROW CLICKED')}
+            >
+              <i className="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom Section - Book Now Events */}
+      <section className="bg-custom-dark position-relative overflow-hidden hero-section d-flex align-items-center">
+        <div className="hero-container position-relative d-flex align-items-center w-100 mx-auto" style={{ zIndex: 1 }}>
+          {/* Left Side - Book Now Section */}
+          <div className="hero-book-section flex-shrink-0">
+            <div>
+            <div className="text-start">
+              <h1 className="hero-title-main">
+                <span className="hero-title-white">Book</span><br />
+                <span className="hero-title-red">Now</span>
+              </h1>
+              <p className="hero-subtitle">
+                Select the perfect event package<br />
+                to unlock your ultimate experience
+              </p>
+            </div>
               </div>
-            </Col>
-            <Col md={4}>
-              <div 
-                className="h-100 d-flex flex-column justify-content-start align-items-start" 
-                style={{
-                  backgroundImage: 'url(/skydeck.webp)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  height: '500px',
-                  position: 'relative'
-                }}
-              >
-                <div 
-                  className="position-absolute w-100 h-100" 
-                  style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                    top: 0,
-                    left: 0
-                  }}
-                ></div>
-                <div className="position-relative p-4" style={{ zIndex: 1 }}>
-                  <h3 className="column-title mb-2">Observation Deck</h3>
-                  <p className="pricing-label mb-1 title-pricing-spacing">Starting at</p>
-                  <p className="pricing-amount mb-3">RM 20.00</p>
-                  <Button className="get-tickets-button">Get Tickets</Button>
-                </div>
-              </div>
-            </Col>
-            <Col md={4}>
-              <div 
-                className="h-100 d-flex flex-column justify-content-start align-items-start" 
-                style={{
-                  backgroundImage: 'url(/skydeck.webp)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  height: '500px',
-                  position: 'relative'
-                }}
-              >
-                <div 
-                  className="position-absolute w-100 h-100" 
-                  style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                    top: 0,
-                    left: 0
-                  }}
-                ></div>
-                <div className="position-relative p-4" style={{ zIndex: 1 }}>
-                  <h3 className="column-title mb-2">Sky Walk</h3>
-                  <p className="pricing-label mb-1 title-pricing-spacing">Starting at</p>
-                  <p className="pricing-amount mb-3">RM 20.00</p>
-                  <Button className="get-tickets-button">Get Tickets</Button>
-                </div>
-              </div>
-            </Col>
-          </Row>
-        </Container>
+          </div>
+          
+          {/* Right Side - Events Slider */}
+          <div className="hero-slider-section flex-grow-1">
+          <div className="position-relative">
+            {/* Swiper Events Container */}
+            <Swiper
+              modules={[Navigation, FreeMode]}
+              spaceBetween={16}
+              slidesPerView="auto"
+              freeMode={true}
+              loop={false}
+              centeredSlides={false}
+              navigation={{
+                prevEl: '.swiper-button-prev-events',
+                nextEl: '.swiper-button-next-events',
+              }}
+              grabCursor={true}
+              allowTouchMove={true}
+              simulateTouch={true}
+              className="events-swiper"
+              onInit={(swiper: any) => {
+                console.log('🚀 EVENTS Swiper initialized successfully');
+                console.log('📊 EVENTS Swiper params:', swiper.params);
+                console.log('🎯 EVENTS slides count:', swiper.slides.length);
+                console.log('🔄 EVENTS FreeMode enabled:', swiper.params.freeMode);
+                console.log('🎯 EVENTS Navigation enabled:', !!swiper.navigation);
+                console.log('📐 EVENTS Container width:', swiper.width);
+                console.log('📏 EVENTS Slide width:', swiper.slidesSizesGrid);
+                // Force slide width to 350px
+                swiper.slides.forEach((slide: any) => {
+                  slide.style.width = '350px';
+                  slide.style.minWidth = '350px';
+                  slide.style.maxWidth = '350px';
+                });
+                swiper.update();
+              }}
+              onSlideChange={(swiper: any) => {
+                console.log('🔄 EVENTS Slide changed to:', swiper.activeIndex);
+              }}
+              onTouchMove={(swiper: any) => {
+                console.log('👆 EVENTS Touch move - translate:', swiper.translate);
+              }}
+              onTouchStart={() => {
+                console.log('🤚 EVENTS Touch start detected');
+              }}
+              onTouchEnd={() => {
+                console.log('✋ EVENTS Touch end detected');
+              }}
+              breakpoints={{
+                320: {
+                  slidesPerView: 1,
+                },
+                768: {
+                  slidesPerView: 2,
+                },
+                1024: {
+                  slidesPerView: 3,
+                },
+              }}
+            >
+              {eventTypes.map((event, eventIndex) => (
+                <SwiperSlide key={eventIndex} className="event-card-item">
+                  <div 
+                    className="event-card-background h-100 d-flex flex-column"
+                    style={{
+                      backgroundImage: `url(${event.image})`
+                    }}
+                  >
+                    <div className="event-card-overlay"></div>
+                    <div className="event-card-content p-4 d-flex flex-column h-100">
+                      <h3 className="column-title mb-2">{event.name}</h3>
+                      <div className="mt-auto">
+                        <p className="pricing-label mb-1">Starting at</p>
+                        <p className="pricing-amount mb-3">{event.price}</p>
+                        <Button className="reserve-button get-tickets-button">
+                          Reserve
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+
+            {/* Custom Navigation Arrows for Events */}
+            <button 
+              className="swiper-button-prev-events slider-nav-btn slider-nav-left btn btn-outline-light position-absolute top-50 start-0 translate-middle-y"
+              onClick={() => console.log('🔥 EVENTS LEFT ARROW CLICKED')}
+            >
+              <i className="fas fa-chevron-left"></i>
+            </button>
+            <button 
+              className="swiper-button-next-events slider-nav-btn slider-nav-right btn btn-outline-light position-absolute top-50 end-0 translate-middle-y"
+              onClick={() => console.log('🔥 EVENTS RIGHT ARROW CLICKED')}
+            >
+              <i className="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          </div>
+        </div>
       </section>
 
       {/* Featured Events Section */}

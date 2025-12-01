@@ -135,7 +135,7 @@ const Events: React.FC = () => {
                       variant="top" 
                       src={event.image_url} 
                       alt={event.title}
-                      style={{ height: '200px', objectFit: 'cover' }}
+                      className="event-card-img"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = `https://picsum.photos/400/250?random=${event.id}`;
@@ -191,7 +191,7 @@ const Events: React.FC = () => {
           <p className="text-muted mb-4">
             Subscribe to our newsletter to get notified about new events and exclusive deals.
           </p>
-          <InputGroup className="mb-3" style={{ maxWidth: '400px', margin: '0 auto' }}>
+          <InputGroup className="event-search-container mb-3">
             <Form.Control
               type="email"
               placeholder="Enter your email"

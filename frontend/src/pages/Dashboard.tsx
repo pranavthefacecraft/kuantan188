@@ -65,7 +65,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
       <Card.Body>
         <div className="d-flex justify-content-between align-items-start mb-3">
           <div>
-            <p className="text-muted text-uppercase small fw-semibold mb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
+            <p className="dashboard-stat-label text-muted text-uppercase small fw-semibold mb-1">
               {title}
             </p>
             <h3 className="mb-0 fw-bold" style={{ color: `var(--${color}-color)` }}>
@@ -254,7 +254,7 @@ const Dashboard: React.FC = () => {
       <Row className="g-4 mb-4">
         {/* Booking Trends */}
         <Col xs={12} lg={8}>
-          <Card style={{ height: '400px' }}>
+          <Card className="dashboard-chart-container">
             <Card.Header>
               <h6 className="mb-0 fw-semibold">Booking Trends</h6>
               <small className="text-muted">Monthly booking and revenue overview</small>
@@ -294,7 +294,7 @@ const Dashboard: React.FC = () => {
 
         {/* Event Distribution */}
         <Col xs={12} lg={4}>
-          <Card style={{ height: '400px' }}>
+          <Card className="dashboard-chart-container">
             <Card.Header>
               <h6 className="mb-0 fw-semibold">Event Types</h6>
               <small className="text-muted">Distribution by category</small>
@@ -340,7 +340,7 @@ const Dashboard: React.FC = () => {
               <h6 className="mb-0 fw-semibold">Active Events</h6>
               <small className="text-muted">Currently available for booking</small>
             </Card.Header>
-            <Card.Body style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <Card.Body className="dashboard-scrollable">
               {events.length > 0 ? (
                 events.map((event) => (
                   <div

@@ -41,8 +41,7 @@ const About: React.FC = () => {
         <Col lg={6} className="mb-4">
           <div className="bg-light rounded-4 p-4 h-100 d-flex align-items-center justify-content-center">
             <div className="text-center">
-              <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                   style={{ width: '100px', height: '100px' }}>
+              <div className="about-icon-large bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
                 <span className="text-white fs-1">🎪</span>
               </div>
               <h4>Our Story</h4>
@@ -75,9 +74,7 @@ const About: React.FC = () => {
           <h2 className="text-center fw-bold mb-5">Our Mission & Values</h2>
           <Row>
             <Col lg={4} className="mb-4 text-center">
-              <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                   style={{ width: '80px', height: '80px' }}>
-                <span className="text-white fs-2">🎯</span>
+              <div className="about-icon-medium bg-info rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
               </div>
               <h5 className="fw-bold mb-3">Our Mission</h5>
               <p className="text-muted">
@@ -86,8 +83,7 @@ const About: React.FC = () => {
               </p>
             </Col>
             <Col lg={4} className="mb-4 text-center">
-              <div className="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                   style={{ width: '80px', height: '80px' }}>
+              <div className="about-icon-medium bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
                 <span className="text-white fs-2">❤️</span>
               </div>
               <h5 className="fw-bold mb-3">Community First</h5>

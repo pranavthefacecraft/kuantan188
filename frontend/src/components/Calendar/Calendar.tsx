@@ -48,8 +48,7 @@ const Calendar: React.FC<CalendarProps> = ({
           variant="outline-secondary"
           size="sm"
           onClick={prevMonth}
-          className="rounded-circle"
-          style={{ width: '32px', height: '32px', padding: 0 }}
+          className="calendar-nav-btn rounded-circle"
         >
           ‹
         </Button>
@@ -60,8 +59,7 @@ const Calendar: React.FC<CalendarProps> = ({
           variant="outline-secondary"
           size="sm"
           onClick={nextMonth}
-          className="rounded-circle"
-          style={{ width: '32px', height: '32px', padding: 0 }}
+          className="calendar-nav-btn rounded-circle"
         >
           ›
         </Button>
@@ -111,23 +109,17 @@ const Calendar: React.FC<CalendarProps> = ({
         days.push(
           <div key={cloneDay.getTime()} className="col p-1">
             <button
-              className={`btn w-100 rounded-circle d-flex align-items-center justify-content-center ${
+              className={`calendar-date-btn btn w-100 rounded-circle d-flex align-items-center justify-content-center ${
                 !isCurrentMonth 
-                  ? 'text-muted' 
+                  ? 'text-muted not-current-month' 
                   : isSelected 
                     ? 'btn-success text-white' 
                     : isTodayDate
                       ? 'btn-outline-success'
                       : isDisabled
-                        ? 'btn-light text-muted'
+                        ? 'btn-light text-muted disabled'
                         : 'btn-outline-secondary'
               }`}
-              style={{ 
-                height: '36px', 
-                fontSize: '0.85rem',
-                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                opacity: !isCurrentMonth ? 0.3 : isDisabled ? 0.5 : 1
-              }}
               onClick={(e) => {
                 e.preventDefault();
                 if (!isDisabled && isCurrentMonth) {
@@ -155,7 +147,7 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   return (
-    <div className="calendar-component p-3 border rounded-3" style={{ backgroundColor: '#f8f9fa' }}>
+    <div className="calendar-component p-3 border rounded-3">
       {renderHeader()}
       {renderDaysOfWeek()}
       {renderCells()}

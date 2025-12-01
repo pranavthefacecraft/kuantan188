@@ -3,40 +3,24 @@ import { Container, Row, Col } from 'react-bootstrap';
 
 const Footer: React.FC = () => {
   return (
-    <footer 
-      className="text-light py-5 mt-auto"
-      style={{
-        backgroundImage: 'url(/bg-ticket-1.webp)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        position: 'relative'
-      }}
-    >
-      <div 
-        className="position-absolute w-100 h-100" 
-        style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          top: 0,
-          left: 0
-        }}
-      ></div>
+    <footer className="footer-background text-light py-5 mt-auto">
+      <div className="footer-overlay"></div>
       
-      <Container className="position-relative" style={{ zIndex: 1 }}>
+      <Container className="footer-content">
         <Row className="justify-content-center text-center">
           <Col lg={8}>
             {/* Social Media Icons */}
             <div className="mb-4">
-              <a href="#" className="text-white me-4" style={{ fontSize: '24px' }}>
+              <a href="#" className="footer-social-link text-white me-4">
                 <i className="fab fa-facebook-f"></i>
               </a>
-              <a href="#" className="text-white me-4" style={{ fontSize: '24px' }}>
+              <a href="#" className="footer-social-link text-white me-4">
                 <i className="fab fa-twitter"></i>
               </a>
-              <a href="#" className="text-white me-4" style={{ fontSize: '24px' }}>
+              <a href="#" className="footer-social-link text-white me-4">
                 <i className="fab fa-instagram"></i>
               </a>
-              <a href="#" className="text-white" style={{ fontSize: '24px' }}>
+              <a href="#" className="footer-social-link text-white">
                 <i className="fab fa-linkedin-in"></i>
               </a>
             </div>
