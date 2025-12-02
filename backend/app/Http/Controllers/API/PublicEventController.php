@@ -11,6 +11,7 @@ class PublicEventController extends Controller
 {
     /**
      * Get all active events for public display
+     * Updated: 2025-12-03 - Deployment test version 2.0
      */
     public function index(Request $request): JsonResponse
     {
