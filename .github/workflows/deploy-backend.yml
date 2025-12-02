@@ -21,14 +21,6 @@ jobs:
         php-version: '8.2'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, dom, filter, gd, iconv, json, mbstring, pdo
         tools: composer:v2
-        
-    - name: Install dependencies
-      working-directory: ./backend
-      run: composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
-      env:
-        COMPOSER_PROCESS_TIMEOUT: 600
-        COMPOSER_NO_INTERACTION: 1
-        COMPOSER_NO_AUDIT: 1
 
     - name: Create Laravel directories
       run: |
@@ -37,6 +29,14 @@ jobs:
         mkdir -p backend/storage/framework/{cache,sessions,views}
         mkdir -p backend/storage/logs
         chmod 755 backend/bootstrap/cache backend/storage -R
+        
+    - name: Install dependencies
+      working-directory: ./backend
+      run: composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
+      env:
+        COMPOSER_PROCESS_TIMEOUT: 600
+        COMPOSER_NO_INTERACTION: 1
+        COMPOSER_NO_AUDIT: 1
         
     - name: Prepare deployment files
       run: |
