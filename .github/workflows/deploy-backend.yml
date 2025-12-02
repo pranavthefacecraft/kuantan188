@@ -159,7 +159,14 @@ jobs:
         exit;
         EOF
         
-    - name: Deploy Laravel application to server via FTP
+    - name: Show files to be deployed
+      run: |
+        echo "📦 Files prepared for deployment:"
+        find deployment_temp -type f -name "*.php" | head -10
+        echo "..."
+        echo "Total files: $(find deployment_temp -type f | wc -l)"
+        
+    - name: Deploy Laravel application to server via FTP (incremental)
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
@@ -167,6 +174,7 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
         local-dir: deployment_temp/
         server-dir: /
+        state-name: kuantan188-backend-sync
         log-level: verbose
         timeout: 180000
         security: loose
