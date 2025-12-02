@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Test - Kuantan188</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        .test-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; }
+        .test-item { margin: 10px 0; padding: 10px; background: white; border-left: 4px solid #007bff; }
+        img { max-width: 200px; height: auto; margin: 10px; border: 1px solid #ddd; }
+        code { background: #e9ecef; padding: 2px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Storage & Image Accessibility Test</h1>
+        <p>Testing image accessibility and storage configuration</p>
+        
+        <div class="test-section">
+            <h2>📸 Direct Image Tests</h2>
+            <p>Testing the actual image URLs from your API:</p>
+            
+            <div class="test-item">
+                <h3>Image 1: kuantan4.png</h3>
+                <p><strong>URL:</strong> <code id="url1">https://admin.tfcmockup.com/storage/uploads/events/1764698152_kuantan4.png</code></p>
+                <img id="img1" src="https://admin.tfcmockup.com/storage/uploads/events/1764698152_kuantan4.png" 
+                     onerror="handleImageError(this, 'img1')" 
+                     onload="handleImageSuccess(this, 'img1')" 
+                     alt="Kuantan 4">
+                <div id="status1">⏳ Loading...</div>
+            </div>
+
+            <div class="test-item">
+                <h3>Image 2: unnamed (2).jpg</h3>
+                <p><strong>URL:</strong> <code id="url2">https://admin.tfcmockup.com/storage/uploads/events/1764697922_unnamed (2).jpg</code></p>
+                <img id="img2" src="https://admin.tfcmockup.com/storage/uploads/events/1764697922_unnamed (2).jpg" 
+                     onerror="handleImageError(this, 'img2')" 
+                     onload="handleImageSuccess(this, 'img2')" 
+                     alt="Unnamed 2">
+                <div id="status2">⏳ Loading...</div>
+            </div>
+
+            <div class="test-item">
+                <h3>Image 3: unnamed.jpg</h3>
+                <p><strong>URL:</strong> <code id="url3">https://admin.tfcmockup.com/storage/uploads/events/1764697932_unnamed.jpg</code></p>
+                <img id="img3" src="https://admin.tfcmockup.com/storage/uploads/events/1764697932_unnamed.jpg" 
+                     onerror="handleImageError(this, 'img3')" 
+                     onload="handleImageSuccess(this, 'img3')" 
+                     alt="Unnamed">
+                <div id="status3">⏳ Loading...</div>
+            </div>
+
+            <div class="test-item">
+                <h3>Image 4: kuantan1.png</h3>
+                <p><strong>URL:</strong> <code id="url4">https://admin.tfcmockup.com/storage/uploads/events/1764698137_kuantan1.png</code></p>
+                <img id="img4" src="https://admin.tfcmockup.com/storage/uploads/events/1764698137_kuantan1.png" 
+                     onerror="handleImageError(this, 'img4')" 
+                     onload="handleImageSuccess(this, 'img4')" 
+                     alt="Kuantan 1">
+                <div id="status4">⏳ Loading...</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Alternative Domain Tests</h2>
+            <p>Testing if images are available on alternative domains:</p>
+            
+            <div class="test-item">
+                <h3>Test: ticketsadmin domain</h3>
+                <img src="https://ticketsadmin.tfcmockup.com/storage/uploads/events/1764698152_kuantan4.png" 
+                     onerror="handleImageError(this, 'alt1')" 
+                     onload="handleImageSuccess(this, 'alt1')" 
+                     alt="Alternative domain test">
+                <div id="statusalt1">⏳ Testing ticketsadmin.tfcmockup.com...</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Storage Diagnosis</h2>
+            <div id="diagnosis">
+                <h4>Possible Issues & Solutions:</h4>
+                <ul>
+                    <li><strong>404 Not Found:</strong> Storage symlink not created or files not uploaded to admin domain</li>
+                    <li><strong>403 Forbidden:</strong> Permission issues or .htaccess blocking access</li>
+                    <li><strong>CORS Error:</strong> Cross-origin request blocked (check browser console)</li>
+                </ul>
+                
+                <h4>Required Server Setup:</h4>
+                <ol>
+                    <li>Run: <code>php artisan storage:link</code></li>
+                    <li>Create directory: <code>storage/app/public/uploads/events/</code></li>
+                    <li>Set permissions: <code>chmod 755 storage/ public/storage/ -R</code></li>
+                    <li>Upload image files to: <code>storage/app/public/uploads/events/</code></li>
+                </ol>
+
+                <h4>Upload PHP Test File:</h4>
+                <p>Upload <code>test-storage.php</code> to your Laravel root and visit it to check server-side storage status.</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Test Summary</h2>
+            <div id="summary">
+                <div id="successCount">✅ Loaded: 0 images</div>
+                <div id="errorCount">❌ Failed: 0 images</div>
+                <div id="recommendations"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let successCount = 0;
+        let errorCount = 0;
+
+        function handleImageSuccess(img, statusId) {
+            successCount++;
+            document.getElementById('status' + statusId.replace('img', '').replace('alt', '')).innerHTML = 
+                '<span class="success">✅ LOADED - ' + img.naturalWidth + 'x' + img.naturalHeight + ' pixels</span>';
+            updateSummary();
+        }
+
+        function handleImageError(img, statusId) {
+            errorCount++;
+            document.getElementById('status' + statusId.replace('img', '').replace('alt', '')).innerHTML = 
+                '<span class="error">❌ FAILED - 404 Not Found or Access Denied</span>';
+            img.src = 'https://via.placeholder.com/200x120/f0f0f0/666?text=Image+Not+Found';
+            updateSummary();
+        }
+
+        function updateSummary() {
+            document.getElementById('successCount').innerHTML = '✅ Loaded: ' + successCount + ' images';
+            document.getElementById('errorCount').innerHTML = '❌ Failed: ' + errorCount + ' images';
+            
+            const recommendations = document.getElementById('recommendations');
+            if (successCount === 0 && errorCount > 0) {
+                recommendations.innerHTML = '<div class="error"><strong>All images failed!</strong> Check storage symlink and file uploads.</div>';
+            } else if (successCount > 0 && errorCount > 0) {
+                recommendations.innerHTML = '<div class="warning"><strong>Partial success.</strong> Some images missing or inaccessible.</div>';
+            } else if (successCount > 0) {
+                recommendations.innerHTML = '<div class="success"><strong>All images loaded!</strong> Storage configuration is working correctly.</div>';
+            }
+        }
+
+        // Test API connectivity
+        fetch('https://admin.tfcmockup.com/api/public/events/book-now')
+            .then(response => response.json())
+            .then(data => {
+                console.log('✅ API Connection successful:', data);
+            })
+            .catch(error => {
+                console.error('❌ API Connection failed:', error);
+            });
+    </script>
+</body>
+</html>

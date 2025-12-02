@@ -44,7 +44,7 @@ class PublicEventController extends Controller
                 'image_url' => $event->image_url 
                     ? (str_starts_with($event->image_url, 'http') 
                         ? $event->image_url 
-                        : url('storage/' . $event->image_url))
+                        : 'https://admin.tfcmockup.com/storage/' . $event->image_url)
                     : 'https://via.placeholder.com/400x250/6c63ff/ffffff?text=' . urlencode($event->title),
                 'price' => $event->price ?? 'From RM50',
                 'price_display' => $event->price ? "From RM{$event->price}" : 'From RM50',
@@ -84,7 +84,7 @@ class PublicEventController extends Controller
                               'image_url' => $event->image_url 
                                   ? (str_starts_with($event->image_url, 'http') 
                                       ? $event->image_url 
-                                      : url('storage/' . $event->image_url))
+                                      : 'https://ticketsadmin.tfcmockup.com/storage/' . $event->image_url)
                                   : 'https://picsum.photos/400/250?random=' . $event->id,
                               'price' => $event->price ?? 'From RM50',
                               'price_display' => $event->price ? "From RM{$event->price}" : 'From RM50',
@@ -194,7 +194,7 @@ class PublicEventController extends Controller
                 'image_url' => $event->image_url 
                     ? (str_starts_with($event->image_url, 'http') 
                         ? $event->image_url 
-                        : url('storage/' . $event->image_url))
+                        : 'https://admin.tfcmockup.com/storage/' . $event->image_url)
                     : 'https://via.placeholder.com/400x250/6c63ff/ffffff?text=' . urlencode($event->title),
                 'price' => $event->price ?? $ticketPrices['base_price'] ?? 'From RM50',
                 'price_display' => $this->formatPriceDisplay($event, $ticketPrices),
@@ -307,15 +307,15 @@ class PublicEventController extends Controller
             return 'Sky Yoga';
         }
         
-        // Fallback - determine from general categories
-        if (str_contains($title, 'music') || str_contains($title, 'concert') || str_contains($title, 'festival')) {
-            return 'Music';
-        }
+        // Fallback - determine from general categories (prioritize specific content over format)
         if (str_contains($title, 'food') || str_contains($title, 'culinary')) {
             return 'Food';
         }
         if (str_contains($title, 'cultural') || str_contains($title, 'heritage') || str_contains($title, 'traditional')) {
             return 'Culture';
+        }
+        if (str_contains($title, 'music') || str_contains($title, 'concert') || str_contains($title, 'festival')) {
+            return 'Music';
         }
         
         return 'Events';
