@@ -163,11 +163,22 @@ jobs:
       id: changed-files
       run: |
         echo "📦 Files changed in this commit:"
-        CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep "^backend/" | sed 's|^backend/||' | tr '\n' ' ')
-        echo "Changed files: $CHANGED_FILES"
-        echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+        # Get all files that changed and filter for backend files (including moved files)
+        ALL_CHANGED=$(git diff --name-only HEAD~1 HEAD)
+        echo "All changed files: $ALL_CHANGED"
         
-        if [ -z "$CHANGED_FILES" ]; then
+        # Get backend files (including public folder files)
+        CHANGED_FILES=$(echo "$ALL_CHANGED" | grep "^backend/" | sed 's|^backend/||' | tr '\n' ' ')
+        
+        # Also check for moved files (files that were moved TO backend/public from root)
+        MOVED_TO_BACKEND=$(git diff --name-status HEAD~1 HEAD | grep "^R.*backend/public/" | awk '{print $3}' | sed 's|^backend/||' | tr '\n' ' ')
+        
+        # Combine both lists
+        ALL_BACKEND_FILES="$CHANGED_FILES $MOVED_TO_BACKEND"
+        echo "Backend files to deploy: $ALL_BACKEND_FILES"
+        echo "changed_files=$ALL_BACKEND_FILES" >> $GITHUB_OUTPUT
+        
+        if [ -z "$ALL_BACKEND_FILES" ]; then
           echo "No backend files changed in this commit. Skipping deployment."
           echo "skip_deployment=true" >> $GITHUB_OUTPUT
         else
@@ -178,14 +189,23 @@ jobs:
       if: steps.changed-files.outputs.skip_deployment != 'true'
       run: |
         mkdir -p deployment_incremental
+        
+        # Ensure deployment_temp is created first
+        if [ ! -d "deployment_temp" ]; then
+          mkdir -p deployment_temp
+          cp -r backend/* deployment_temp/
+        fi
+        
         for file in ${{ steps.changed-files.outputs.changed_files }}; do
           if [ -f "deployment_temp/$file" ]; then
             mkdir -p "deployment_incremental/$(dirname "$file")" 2>/dev/null || true
             cp "deployment_temp/$file" "deployment_incremental/$file"
             echo "✅ Added: $file"
+          else
+            echo "⚠️ File not found in deployment_temp: $file"
           fi
         done
-        echo "📊 Incremental deployment contains $(find deployment_incremental -type f | wc -l) files"
+        echo "📊 Incremental deployment contains $(find deployment_incremental -type f 2>/dev/null | wc -l) files"
         
     - name: Deploy only changed files via FTP
       if: steps.changed-files.outputs.skip_deployment != 'true'
