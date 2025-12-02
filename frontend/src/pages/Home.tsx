@@ -442,16 +442,13 @@ const Home: React.FC = () => {
       </section>
 
       {/* Customer Reviews Section */}
-      <section className="py-5 bg-light">
+      <section className="py-5" style={{ backgroundColor: '#1A0007' }}>
         <Container>
           <Row className="mb-5">
             <Col>
-              <h2 className="text-center fw-bold mb-3">
-                What Our Visitors Say
+              <h2 className="text-center fw-bold mb-3 text-white" style={{ fontFamily: 'Erstoria', fontSize: '72px' }}>
+                Our guests feedback
               </h2>
-              <p className="text-center text-muted lead">
-                Don't just take our word for it - see what others are saying about their experience at Menara Kuantan 188
-              </p>
             </Col>
           </Row>
           <ReviewsWidget 
