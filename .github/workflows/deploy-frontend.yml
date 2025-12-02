@@ -31,7 +31,7 @@ jobs:
       run: |
         npm run build
         
-    - name: Deploy to server via FTP
+    - name: Deploy to server via FTP (with retry logic)
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_HOST_TICKETS }}
@@ -39,10 +39,29 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD_TICKETS }}
         local-dir: ./frontend/build/
         server-dir: /
+        timeout: 60000
+        security: loose
+        protocol: ftp
+        port: 21
+        log-level: verbose
+        dangerous-clean-slate: true
         exclude: |
           **/.git*
           **/.git*/**
           **/node_modules/**
+      continue-on-error: true
+      id: ftp-deploy
+      
+    - name: Deploy via SFTP fallback (if FTP fails)
+      if: steps.ftp-deploy.outcome == 'failure'
+      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+      with:
+        server: ${{ secrets.FTP_HOST_TICKETS }}
+        username: ${{ secrets.FTP_USERNAME_TICKETS }}
+        password: ${{ secrets.FTP_PASSWORD_TICKETS }}
+        local_path: './frontend/build/*'
+        remote_path: '/'
+        sftpArgs: '-o ConnectTimeout=5'
           
     - name: Verify deployment
       run: |

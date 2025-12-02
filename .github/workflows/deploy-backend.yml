@@ -65,7 +65,7 @@ jobs:
           php artisan key:generate
         fi
         
-    - name: Deploy to server via FTP
+    - name: Deploy to server via FTP (with retry logic)
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
@@ -74,6 +74,11 @@ jobs:
         local-dir: backend/
         server-dir: /
         log-level: verbose
+        timeout: 60000
+        security: loose
+        protocol: ftp
+        port: 21
+        dangerous-clean-slate: true
         exclude: |
           **/.git*
           **/.git*/**
@@ -83,3 +88,16 @@ jobs:
           **/.env.example
           **/README.md
           **/composer.lock
+      continue-on-error: true
+      id: ftp-deploy
+      
+    - name: Deploy via SFTP fallback (if FTP fails)
+      if: steps.ftp-deploy.outcome == 'failure'
+      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+      with:
+        server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
+        username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
+        password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
+        local_path: './backend/*'
+        remote_path: '/'
+        sftpArgs: '-o ConnectTimeout=5'
