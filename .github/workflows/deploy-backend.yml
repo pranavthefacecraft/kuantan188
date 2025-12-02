@@ -159,38 +159,59 @@ jobs:
         exit;
         EOF
         
-    - name: Show files to be deployed
+    - name: Get changed files from this commit
+      id: changed-files
       run: |
-        echo "📦 Files prepared for deployment:"
-        find deployment_temp -type f -name "*.php" | head -10
-        echo "..."
-        echo "Total files: $(find deployment_temp -type f | wc -l)"
+        echo "📦 Files changed in this commit:"
+        CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep "^backend/" | sed 's|^backend/||' | tr '\n' ' ')
+        echo "Changed files: $CHANGED_FILES"
+        echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
         
-    - name: Deploy Laravel application to server via FTP (incremental)
+        if [ -z "$CHANGED_FILES" ]; then
+          echo "No backend files changed in this commit. Skipping deployment."
+          echo "skip_deployment=true" >> $GITHUB_OUTPUT
+        else
+          echo "skip_deployment=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Create incremental deployment folder
+      if: steps.changed-files.outputs.skip_deployment != 'true'
+      run: |
+        mkdir -p deployment_incremental
+        for file in ${{ steps.changed-files.outputs.changed_files }}; do
+          if [ -f "deployment_temp/$file" ]; then
+            mkdir -p "deployment_incremental/$(dirname "$file")" 2>/dev/null || true
+            cp "deployment_temp/$file" "deployment_incremental/$file"
+            echo "✅ Added: $file"
+          fi
+        done
+        echo "📊 Incremental deployment contains $(find deployment_incremental -type f | wc -l) files"
+        
+    - name: Deploy only changed files via FTP
+      if: steps.changed-files.outputs.skip_deployment != 'true'
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
         username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
         password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
-        local-dir: deployment_temp/
+        local-dir: deployment_incremental/
         server-dir: /
-        state-name: kuantan188-backend-sync
         log-level: verbose
-        timeout: 180000
+        timeout: 60000
         security: loose
         protocol: ftp
         port: 21
         dry-run: false
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/node_modules/**
-          **/tests/**
-          **/.env.example
-          **/README.md
-          .htaccess
+        
+    - name: Skip deployment notification
+      if: steps.changed-files.outputs.skip_deployment == 'true'
+      run: |
+        echo "⏭️ No backend files changed in this commit"
+        echo "📝 Only frontend or non-backend files were modified"
+        echo "🚀 Skipping backend deployment"
         
     - name: Verify deployment completion
+      if: steps.changed-files.outputs.skip_deployment != 'true'
       run: |
         echo "✅ Laravel backend deployment completed successfully"
         echo "📂 Files deployed to server root directory"
