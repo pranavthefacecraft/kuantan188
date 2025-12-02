@@ -139,6 +139,189 @@ class PublicEventController extends Controller
     }
 
     /**
+     * Get events for Book Now section with specific category filtering
+     */
+    public function bookNow(Request $request): JsonResponse
+    {
+        $query = Event::where('is_active', true)
+                     ->where('event_date', '>', now()) // Only future events
+                     ->orderBy('event_date', 'asc');
+
+        // Filter by specific Book Now categories if requested
+        if ($request->has('category') && $request->get('category') !== 'all') {
+            $category = $request->get('category');
+            $query->where(function($q) use ($category) {
+                switch(strtolower($category)) {
+                    case 'sky wedding':
+                    case 'sky_wedding':
+                        $q->where('title', 'like', '%wedding%')
+                          ->orWhere('title', 'like', '%sky wedding%')
+                          ->orWhere('description', 'like', '%wedding%')
+                          ->orWhere('description', 'like', '%ceremony%');
+                        break;
+                    case 'school event':
+                    case 'school_event':
+                        $q->where('title', 'like', '%school%')
+                          ->orWhere('title', 'like', '%education%')
+                          ->orWhere('title', 'like', '%student%')
+                          ->orWhere('description', 'like', '%school%')
+                          ->orWhere('description', 'like', '%educational%');
+                        break;
+                    case 'sky yoga':
+                    case 'sky_yoga':
+                        $q->where('title', 'like', '%yoga%')
+                          ->orWhere('title', 'like', '%sky yoga%')
+                          ->orWhere('title', 'like', '%meditation%')
+                          ->orWhere('description', 'like', '%yoga%')
+                          ->orWhere('description', 'like', '%wellness%');
+                        break;
+                }
+            });
+        }
+
+        $events = $query->get()->map(function ($event) {
+            // Get ticket pricing information
+            $ticketPrices = $this->getTicketPricing($event);
+            
+            return [
+                'id' => $event->id,
+                'title' => $event->title,
+                'description' => $event->description,
+                'location' => $event->location,
+                'event_date' => $event->event_date->format('Y-m-d H:i:s'),
+                'event_date_formatted' => $event->event_date->format('F j, Y'),
+                'event_time_formatted' => $event->event_date->format('g:i A'),
+                'image_url' => $event->image_url 
+                    ? (str_starts_with($event->image_url, 'http') 
+                        ? $event->image_url 
+                        : asset('storage/' . $event->image_url))
+                    : 'https://via.placeholder.com/400x250/6c63ff/ffffff?text=' . urlencode($event->title),
+                'price' => $event->price ?? $ticketPrices['base_price'] ?? 'From RM50',
+                'price_display' => $this->formatPriceDisplay($event, $ticketPrices),
+                'category' => $this->determineBookNowCategory($event->title),
+                'is_booking_open' => $event->isBookingOpen(),
+                'slug' => str_replace(' ', '-', strtolower($event->title)),
+                'ticket_pricing' => $ticketPrices
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $events,
+            'total' => $events->count(),
+            'available_categories' => ['Sky Wedding', 'School Event', 'Sky Yoga']
+        ]);
+    }
+
+    /**
+     * Get ticket pricing information for an event
+     */
+    private function getTicketPricing($event): array
+    {
+        $tickets = $event->tickets()->with('countries')->get();
+        
+        if ($tickets->isEmpty()) {
+            return [
+                'base_price' => $event->price ?? 50.00,
+                'adult_price_range' => null,
+                'child_price_range' => null,
+                'countries_available' => []
+            ];
+        }
+
+        $adultPrices = [];
+        $childPrices = [];
+        $countries = [];
+
+        foreach ($tickets as $ticket) {
+            foreach ($ticket->countries as $country) {
+                $adultPrice = $country->pivot->adult_price ?? 0;
+                $childPrice = $country->pivot->child_price ?? 0;
+                
+                if ($adultPrice > 0) $adultPrices[] = $adultPrice;
+                if ($childPrice > 0) $childPrices[] = $childPrice;
+                
+                $countries[$country->id] = [
+                    'name' => $country->name,
+                    'code' => $country->code,
+                    'currency_symbol' => $country->currency_symbol,
+                    'adult_price' => $adultPrice,
+                    'child_price' => $childPrice
+                ];
+            }
+        }
+
+        return [
+            'base_price' => $event->price ?? (!empty($adultPrices) ? min($adultPrices) : 50.00),
+            'adult_price_range' => !empty($adultPrices) ? [
+                'min' => min($adultPrices),
+                'max' => max($adultPrices)
+            ] : null,
+            'child_price_range' => !empty($childPrices) ? [
+                'min' => min($childPrices),
+                'max' => max($childPrices)
+            ] : null,
+            'countries_available' => array_values($countries)
+        ];
+    }
+
+    /**
+     * Format price display for Book Now events
+     */
+    private function formatPriceDisplay($event, $ticketPrices): string
+    {
+        if ($event->price) {
+            return "From RM{$event->price}";
+        }
+        
+        if (isset($ticketPrices['adult_price_range'])) {
+            $minPrice = $ticketPrices['adult_price_range']['min'];
+            return "From RM{$minPrice}";
+        }
+        
+        return 'From RM' . ($ticketPrices['base_price'] ?? 50);
+    }
+
+    /**
+     * Determine category specifically for Book Now section
+     */
+    private function determineBookNowCategory(string $title): string
+    {
+        $title = strtolower($title);
+        
+        // Sky Wedding category
+        if (str_contains($title, 'wedding') || str_contains($title, 'sky wedding') || 
+            str_contains($title, 'ceremony') || str_contains($title, 'marriage')) {
+            return 'Sky Wedding';
+        }
+        
+        // School Event category
+        if (str_contains($title, 'school') || str_contains($title, 'education') || 
+            str_contains($title, 'student') || str_contains($title, 'academic')) {
+            return 'School Event';
+        }
+        
+        // Sky Yoga category
+        if (str_contains($title, 'yoga') || str_contains($title, 'sky yoga') || 
+            str_contains($title, 'meditation') || str_contains($title, 'wellness')) {
+            return 'Sky Yoga';
+        }
+        
+        // Fallback - determine from general categories
+        if (str_contains($title, 'music') || str_contains($title, 'concert') || str_contains($title, 'festival')) {
+            return 'Music';
+        }
+        if (str_contains($title, 'food') || str_contains($title, 'culinary')) {
+            return 'Food';
+        }
+        if (str_contains($title, 'cultural') || str_contains($title, 'heritage') || str_contains($title, 'traditional')) {
+            return 'Culture';
+        }
+        
+        return 'Events';
+    }
+
+    /**
      * Simple category determination based on title keywords
      */
     private function determineCategory(string $title): string

@@ -16,6 +16,18 @@ export interface Event {
   category: string;
   is_booking_open: boolean;
   slug: string;
+  ticket_pricing?: {
+    base_price: number;
+    adult_price_range?: { min: number; max: number } | null;
+    child_price_range?: { min: number; max: number } | null;
+    countries_available: Array<{
+      name: string;
+      code: string;
+      currency_symbol: string;
+      adult_price: number;
+      child_price: number;
+    }>;
+  };
 }
 
 export interface ApiResponse<T> {
@@ -86,6 +98,13 @@ export const eventsApi = {
   // Get user tickets/bookings
   async getTickets(): Promise<ApiResponse<any[]>> {
     const response = await apiClient.get('/public/tickets');
+    return response.data;
+  },
+
+  // Get Book Now events with category filtering
+  async getBookNowEvents(category?: string): Promise<ApiResponse<Event[]>> {
+    const params = category && category !== 'all' ? { category } : {};
+    const response = await apiClient.get('/public/events/book-now', { params });
     return response.data;
   }
 };

@@ -24,6 +24,7 @@ Route::get('/events/{event}', [EventController::class, 'show']);
 // Public events for frontend website
 Route::get('/public/events', [PublicEventController::class, 'index']);
 Route::get('/public/events/featured', [PublicEventController::class, 'featured']);
+Route::get('/public/events/book-now', [PublicEventController::class, 'bookNow']);
 Route::get('/public/events/{id}', [PublicEventController::class, 'show']);
 Route::get('/public/tickets', [PublicEventController::class, 'getTickets']);
 

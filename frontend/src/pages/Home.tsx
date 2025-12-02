@@ -26,34 +26,45 @@ const Home: React.FC = () => {
     { name: 'Sky Walk1', price: 'RM 20.00', image: '/skydeck.webp' }
   ], []);
 
-  // Bottom slider - Events (Sky Wedding, School Event, Sky Yoga)
-  const eventTypes = useMemo(() => [
-    { name: 'Sky Wedding', price: 'RM 40.00', image: '/skydeck.webp' },
-    { name: 'School Event', price: 'RM 20.00', image: '/skydeck.webp' },
-    { name: 'Sky Yoga', price: 'RM 20.00', image: '/skydeck.webp' },
-    { name: 'Sky Yoga1', price: 'RM 20.00', image: '/skydeck.webp' }
-  ], []);
+  // Book Now events from API
+  const [bookNowEvents, setBookNowEvents] = useState<Event[]>([]);
+  const [bookNowLoading, setBookNowLoading] = useState(true);
 
 
   useEffect(() => {
-    const fetchFeaturedEvents = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await eventsApi.getFeaturedEvents();
-        if (response.success) {
-          setFeaturedEvents(response.data);
+        setBookNowLoading(true);
+        
+        // Fetch both featured events and book now events in parallel
+        const [featuredResponse, bookNowResponse] = await Promise.all([
+          eventsApi.getFeaturedEvents(),
+          eventsApi.getBookNowEvents()
+        ]);
+        
+        if (featuredResponse.success) {
+          setFeaturedEvents(featuredResponse.data);
         } else {
-          setError('Failed to load events');
+          setError('Failed to load featured events');
         }
+        
+        if (bookNowResponse.success) {
+          setBookNowEvents(bookNowResponse.data);
+        } else {
+          console.error('Failed to load Book Now events');
+        }
+        
       } catch (err) {
-        console.error('Error fetching events:', err);
+        console.error('Error fetching data:', err);
         setError('Failed to load events. Please try again later.');
       } finally {
         setLoading(false);
+        setBookNowLoading(false);
       }
     };
 
-    fetchFeaturedEvents();
+    fetchData();
   }, []);
 
 
@@ -74,7 +85,7 @@ const Home: React.FC = () => {
   useEffect(() => {
     console.log('🔍 Swiper Debug - Component mounted');
     console.log('📊 Ticket types count:', ticketTypes.length, ticketTypes);
-    console.log('📊 Event types count:', eventTypes.length, eventTypes);
+    console.log('📊 Book Now events count:', bookNowEvents.length, bookNowEvents);
     
     // Check if Swiper elements exist
     setTimeout(() => {
@@ -102,7 +113,7 @@ const Home: React.FC = () => {
       const heroSections = document.querySelectorAll('.hero-section');
       console.log('🏛️ Hero sections found:', heroSections.length);
     }, 2000);
-  }, [ticketTypes, eventTypes]);
+  }, [ticketTypes, bookNowEvents]);
 
 
 
@@ -195,7 +206,10 @@ const Home: React.FC = () => {
                   <div 
                     className="event-card-background h-100 d-flex flex-column"
                     style={{
-                      backgroundImage: `url(${ticket.image})`
+                      backgroundImage: ticket.image 
+                        ? `url(${ticket.image})` 
+                        : `linear-gradient(135deg, #1A0007 0%, #4A0E15 100%)`,
+                      backgroundColor: '#1A0007' // Fallback color
                     }}
                   >
                     <div className="event-card-overlay"></div>
@@ -310,28 +324,59 @@ const Home: React.FC = () => {
                 },
               }}
             >
-              {eventTypes.map((event, eventIndex) => (
-                <SwiperSlide key={eventIndex} className="event-card-item">
-                  <div 
-                    className="event-card-background h-100 d-flex flex-column"
-                    style={{
-                      backgroundImage: `url(${event.image})`
-                    }}
-                  >
-                    <div className="event-card-overlay"></div>
-                    <div className="event-card-content p-4 d-flex flex-column h-100">
-                      <h3 className="column-title mb-2">{event.name}</h3>
-                      <div className="mt-auto">
-                        <p className="pricing-label mb-1">Starting at</p>
-                        <p className="pricing-amount mb-3">{event.price}</p>
-                        <Button className="reserve-button get-tickets-button">
-                          Reserve
-                        </Button>
-                      </div>
+              {bookNowLoading ? (
+                <SwiperSlide className="event-card-item">
+                  <div className="event-card-background h-100 d-flex flex-column align-items-center justify-content-center" style={{ backgroundColor: '#1A0007' }}>
+                    <div className="text-center">
+                      <Spinner animation="border" variant="light" />
+                      <p className="text-white mt-3">Loading events...</p>
                     </div>
                   </div>
                 </SwiperSlide>
-              ))}
+              ) : bookNowEvents.length > 0 ? (
+                bookNowEvents.map((event, eventIndex) => (
+                  <SwiperSlide key={event.id} className="event-card-item">
+                    <div 
+                      className="event-card-background h-100 d-flex flex-column"
+                      style={{
+                        backgroundImage: event.image_url 
+                          ? `url(${event.image_url})` 
+                          : `linear-gradient(135deg, #1A0007 0%, #4A0E15 100%)`,
+                        backgroundColor: '#1A0007' // Fallback color
+                      }}
+                      onError={(e) => {
+                        // Fallback if image fails to load
+                        const target = e.target as HTMLElement;
+                        target.style.backgroundImage = 'linear-gradient(135deg, #1A0007 0%, #4A0E15 100%)';
+                      }}
+                    >
+                      <div className="event-card-overlay"></div>
+                      <div className="event-card-content p-4 d-flex flex-column h-100">
+                        <h3 className="column-title mb-2">{event.title}</h3>
+                        <div className="mt-auto">
+                          <p className="pricing-label mb-1">Starting at</p>
+                          <p className="pricing-amount mb-3">{event.price_display}</p>
+                          <Button 
+                            className="reserve-button get-tickets-button"
+                            onClick={() => handleReserveNow(event)}
+                          >
+                            Reserve
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </SwiperSlide>
+                ))
+              ) : (
+                <SwiperSlide className="event-card-item">
+                  <div className="event-card-background h-100 d-flex flex-column align-items-center justify-content-center" style={{ backgroundColor: '#1A0007' }}>
+                    <div className="text-center">
+                      <h5 className="text-white">No Book Now events available</h5>
+                      <p className="text-white">Check back soon for exciting events!</p>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              )}
             </Swiper>
 
             {/* Custom Navigation Arrows for Events */}

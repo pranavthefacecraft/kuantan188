@@ -112,21 +112,6 @@ const ReviewsWidget: React.FC<ReviewsWidgetProps> = ({
 
   return (
     <div className={className}>
-      {/* Stats Header */}
-      <div className="text-center mb-4">
-        <div className="d-flex align-items-center justify-content-center mb-2">
-          <div className="display-6 fw-bold text-primary me-3">
-            {stats.average_rating}
-          </div>
-          <div>
-            {renderStars(Math.round(stats.average_rating))}
-            <div className="text-muted small">
-              {stats.total_reviews} reviews
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Reviews Slider */}
       <div style={{ position: 'relative', padding: '0 60px' }}>
         <Swiper
