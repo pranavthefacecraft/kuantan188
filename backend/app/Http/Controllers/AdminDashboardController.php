@@ -675,16 +675,25 @@ class AdminDashboardController extends Controller
     {
         try {
             // Call the artisan command to sync reviews
-            \Artisan::call('reviews:sync', ['--force' => true]);
+            $exitCode = \Artisan::call('reviews:sync', ['--force' => true]);
             $output = \Artisan::output();
             
-            return redirect()->route('admin.reviews')
-                ->with('success', 'Google Reviews sync completed successfully!')
-                ->with('sync_output', $output);
+            if ($exitCode === 0) {
+                return redirect()->route('admin.reviews')
+                    ->with('success', 'Google Reviews sync completed successfully!')
+                    ->with('sync_output', $output);
+            } else {
+                return redirect()->route('admin.reviews')
+                    ->with('error', 'Google Reviews sync failed. Check the output below for details.')
+                    ->with('sync_output', $output);
+            }
                 
         } catch (\Exception $e) {
+            \Log::error('Admin sync error: ' . $e->getMessage());
+            
             return redirect()->route('admin.reviews')
-                ->with('error', 'Sync failed: ' . $e->getMessage());
+                ->with('error', 'Sync failed with exception: ' . $e->getMessage())
+                ->with('sync_output', 'Exception occurred: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString());
         }
     }
 

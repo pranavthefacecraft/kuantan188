@@ -60,15 +60,37 @@ class SyncGoogleReviews extends Command
             
             if (!$response->successful()) {
                 $this->error('Failed to fetch from Google Places API: ' . $response->status());
-                Log::error('Google Places API error: ' . $response->body());
+                $this->error('Response body: ' . $response->body());
+                Log::error('Google Places API HTTP error', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'headers' => $response->headers()
+                ]);
                 return 1;
             }
             
             $data = $response->json();
             
+            if (!isset($data['status'])) {
+                $this->error('Invalid API response format');
+                Log::error('Invalid Google Places API response', ['response' => $data]);
+                return 1;
+            }
+            
             if ($data['status'] !== 'OK') {
+                $errorMessage = $this->getGoogleApiErrorMessage($data['status'], $data);
                 $this->error('Google Places API error: ' . $data['status']);
-                Log::error('Google Places API status error: ' . json_encode($data));
+                $this->error($errorMessage);
+                
+                if (isset($data['error_message'])) {
+                    $this->error('Google error message: ' . $data['error_message']);
+                }
+                
+                Log::error('Google Places API status error', [
+                    'status' => $data['status'],
+                    'error_message' => $data['error_message'] ?? null,
+                    'full_response' => $data
+                ]);
                 return 1;
             }
             
@@ -135,6 +157,41 @@ class SyncGoogleReviews extends Command
             $this->error('Error syncing Google reviews: ' . $e->getMessage());
             Log::error('Error syncing Google reviews: ' . $e->getMessage());
             return 1;
+        }
+    }
+    
+    /**
+     * Get human-readable error message for Google API status codes
+     */
+    private function getGoogleApiErrorMessage($status, $data)
+    {
+        switch ($status) {
+            case 'REQUEST_DENIED':
+                return "API request denied. Check:\n" .
+                       "1. API key restrictions in Google Cloud Console\n" .
+                       "2. Places API is enabled\n" .
+                       "3. Billing is enabled\n" .
+                       "4. API key has proper permissions";
+                       
+            case 'INVALID_REQUEST':
+                return "Invalid request. Check:\n" .
+                       "1. Place ID format is correct\n" .
+                       "2. Required parameters are provided";
+                       
+            case 'NOT_FOUND':
+                return "Place not found. Check Place ID is correct";
+                
+            case 'ZERO_RESULTS':
+                return "No reviews found for this place";
+                
+            case 'OVER_QUERY_LIMIT':
+                return "API quota exceeded. Check daily/per-second limits";
+                
+            case 'UNKNOWN_ERROR':
+                return "Unknown server error. Try again later";
+                
+            default:
+                return "Unexpected error status: {$status}";
         }
     }
 }
