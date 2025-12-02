@@ -163,22 +163,32 @@ jobs:
       id: changed-files
       run: |
         echo "📦 Files changed in this commit:"
-        # Get all files that changed and filter for backend files (including moved files)
-        ALL_CHANGED=$(git diff --name-only HEAD~1 HEAD)
-        echo "All changed files: $ALL_CHANGED"
         
-        # Get backend files (including public folder files)
-        CHANGED_FILES=$(echo "$ALL_CHANGED" | grep "^backend/" | sed 's|^backend/||' | tr '\n' ' ')
+        # Check if we have a previous commit to compare against
+        if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+          # Get all files that changed and filter for backend files (including moved files)
+          ALL_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          echo "All changed files: $ALL_CHANGED"
+          
+          # Get backend files (including public folder files)
+          CHANGED_FILES=$(echo "$ALL_CHANGED" | grep "^backend/" | sed 's|^backend/||' | tr '\n' ' ' || echo "")
+          
+          # Also check for moved files (files that were moved TO backend/public from root)
+          MOVED_TO_BACKEND=$(git diff --name-status HEAD~1 HEAD 2>/dev/null | grep "^R.*backend/public/" | awk '{print $3}' | sed 's|^backend/||' | tr '\n' ' ' || echo "")
+          
+          # Combine both lists
+          ALL_BACKEND_FILES="$CHANGED_FILES $MOVED_TO_BACKEND"
+        else
+          echo "⚠️ No previous commit found. This might be the first commit or initial deployment."
+          echo "📁 Deploying all backend files..."
+          # For first deployment, deploy all backend files
+          ALL_BACKEND_FILES=$(find backend -type f -name "*.php" -o -name "*.html" -o -name "*.js" -o -name "*.css" | sed 's|^backend/||' | tr '\n' ' ' || echo "")
+        fi
         
-        # Also check for moved files (files that were moved TO backend/public from root)
-        MOVED_TO_BACKEND=$(git diff --name-status HEAD~1 HEAD | grep "^R.*backend/public/" | awk '{print $3}' | sed 's|^backend/||' | tr '\n' ' ')
-        
-        # Combine both lists
-        ALL_BACKEND_FILES="$CHANGED_FILES $MOVED_TO_BACKEND"
         echo "Backend files to deploy: $ALL_BACKEND_FILES"
         echo "changed_files=$ALL_BACKEND_FILES" >> $GITHUB_OUTPUT
         
-        if [ -z "$ALL_BACKEND_FILES" ]; then
+        if [ -z "$(echo $ALL_BACKEND_FILES | tr -d ' ')" ]; then
           echo "No backend files changed in this commit. Skipping deployment."
           echo "skip_deployment=true" >> $GITHUB_OUTPUT
         else
