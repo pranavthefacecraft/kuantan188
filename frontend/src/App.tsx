@@ -6,6 +6,7 @@ import Events from './pages/Events';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Tickets from './pages/Tickets';
+import ApiTestPage from './components/ApiTestPage';
 import Layout from './components/layout/Layout';
 import './App.css';
 
@@ -20,6 +21,7 @@ function App() {
             <Route path="tickets" element={<Tickets />} />
             <Route path="about" element={<About />} />
             <Route path="contact" element={<Contact />} />
+            <Route path="api-test" element={<ApiTestPage />} />
           </Route>
         </Routes>
       </div>
