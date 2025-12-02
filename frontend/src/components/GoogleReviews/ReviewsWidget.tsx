@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Spinner } from 'react-bootstrap';
-import { Star, StarFill, ArrowRight } from 'react-bootstrap-icons';
+import { Card, Spinner } from 'react-bootstrap';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -92,15 +91,7 @@ const ReviewsWidget: React.FC<ReviewsWidgetProps> = ({
     return text.substring(0, maxLength) + '...';
   };
 
-  // Format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+
 
   if (loading) {
     return (
