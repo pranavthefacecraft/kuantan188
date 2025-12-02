@@ -66,41 +66,44 @@ jobs:
           php artisan key:generate
         fi
         
+    - name: Prepare Laravel directories before Composer
+      working-directory: ./backend
+      run: |
+        # Create required directories before Composer installation
+        mkdir -p bootstrap/cache
+        mkdir -p storage/app
+        mkdir -p storage/framework/cache
+        mkdir -p storage/framework/sessions
+        mkdir -p storage/framework/views
+        mkdir -p storage/logs
+        
+        # Set permissions
+        chmod -R 755 bootstrap/cache
+        chmod -R 755 storage
+        
     - name: Install Composer dependencies
       working-directory: ./backend
       run: |
         composer install --optimize-autoloader --no-dev --no-interaction
         
-    - name: Optimize Laravel for production
+    - name: Clear Laravel cache and optimize
       working-directory: ./backend
       run: |
+        # Clear any existing cache first
+        php artisan config:clear || true
+        php artisan route:clear || true
+        php artisan view:clear || true
+        
+        # Only cache config for production (avoid route caching issues)
         php artisan config:cache
-        php artisan route:cache
-        php artisan view:cache
         
     - name: Create deployment structure and directories
       run: |
         # Create a simple deployment that puts everything in the web root
         mkdir -p deployment_temp
         
-        # Copy all Laravel files to deployment temp
+        # Copy all Laravel files to deployment temp (directories already created)
         cp -r backend/* deployment_temp/
-        
-        # Ensure required directories exist with proper structure
-        mkdir -p deployment_temp/bootstrap/cache
-        mkdir -p deployment_temp/storage/app
-        mkdir -p deployment_temp/storage/framework/cache
-        mkdir -p deployment_temp/storage/framework/sessions
-        mkdir -p deployment_temp/storage/framework/views
-        mkdir -p deployment_temp/storage/logs
-        
-        # Create empty files to ensure directories are uploaded
-        touch deployment_temp/bootstrap/cache/.gitkeep
-        touch deployment_temp/storage/app/.gitkeep
-        touch deployment_temp/storage/framework/cache/.gitkeep
-        touch deployment_temp/storage/framework/sessions/.gitkeep
-        touch deployment_temp/storage/framework/views/.gitkeep
-        touch deployment_temp/storage/logs/.gitkeep
         
         # Create or update .htaccess in public directory for Laravel routing
         cat > deployment_temp/public/.htaccess << 'EOF'
@@ -163,7 +166,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
         password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
         local-dir: deployment_temp/
-        server-dir: /
+        server-dir: /domains/tfcmockup.com/public_html/ticketsadmin/
         log-level: verbose
         timeout: 60000
         security: loose
@@ -188,7 +191,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
         password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
         local_path: './deployment_temp/*'
-        remote_path: '/'
+        remote_path: '/domains/tfcmockup.com/public_html/ticketsadmin/'
         sftpArgs: '-o ConnectTimeout=5'
         
     - name: Verify deployment structure
