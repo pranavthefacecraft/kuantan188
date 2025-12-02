@@ -11,7 +11,7 @@ class PublicEventController extends Controller
 {
     /**
      * Get all active events for public display
-     * Updated: 2025-12-03 - Deployment test version 2.0
+     * Updated: 2025-12-03 - Deployment test version 3.0 - Testing auto-deployment
      */
     public function index(Request $request): JsonResponse
     {
@@ -210,7 +210,12 @@ class PublicEventController extends Controller
             'success' => true,
             'data' => $events,
             'total' => $events->count(),
-            'available_categories' => ['Sky Wedding', 'School Event', 'Sky Yoga']
+            'available_categories' => ['Sky Wedding', 'School Event', 'Sky Yoga'],
+            'deployment_test' => [
+                'version' => '3.0',
+                'timestamp' => now()->format('Y-m-d H:i:s T'),
+                'message' => 'Auto-deployment test successful!'
+            ]
         ]);
     }
 
