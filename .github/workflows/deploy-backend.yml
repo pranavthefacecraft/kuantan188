@@ -166,7 +166,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
         password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
         local-dir: deployment_temp/
-        server-dir: /domains/tfcmockup.com/public_html/ticketsadmin/
+        server-dir: /
         log-level: verbose
         timeout: 60000
         security: loose
@@ -191,7 +191,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
         password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
         local_path: './deployment_temp/*'
-        remote_path: '/domains/tfcmockup.com/public_html/ticketsadmin/'
+        remote_path: '/'
         sftpArgs: '-o ConnectTimeout=5'
         
     - name: Verify deployment structure
