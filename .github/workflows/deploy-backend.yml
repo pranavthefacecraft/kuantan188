@@ -28,9 +28,10 @@ jobs:
         APP_NAME="Kuantan188 Admin"
         APP_ENV=production
         APP_KEY=${{ secrets.LARAVEL_APP_KEY || 'base64:TEMP_KEY_WILL_BE_GENERATED' }}
-        APP_DEBUG=false
+        APP_DEBUG=true
         APP_URL=https://admin.tfcmockup.com
         APP_TIMEZONE=UTC
+        LOG_CHANNEL=single
         
         DB_CONNECTION=mysql
         DB_HOST=srv1317.hstgr.io
@@ -65,13 +66,41 @@ jobs:
           php artisan key:generate
         fi
         
-    - name: Create simple deployment structure
+    - name: Install Composer dependencies
+      working-directory: ./backend
+      run: |
+        composer install --optimize-autoloader --no-dev --no-interaction
+        
+    - name: Optimize Laravel for production
+      working-directory: ./backend
+      run: |
+        php artisan config:cache
+        php artisan route:cache
+        php artisan view:cache
+        
+    - name: Create deployment structure and directories
       run: |
         # Create a simple deployment that puts everything in the web root
         mkdir -p deployment_temp
         
         # Copy all Laravel files to deployment temp
         cp -r backend/* deployment_temp/
+        
+        # Ensure required directories exist with proper structure
+        mkdir -p deployment_temp/bootstrap/cache
+        mkdir -p deployment_temp/storage/app
+        mkdir -p deployment_temp/storage/framework/cache
+        mkdir -p deployment_temp/storage/framework/sessions
+        mkdir -p deployment_temp/storage/framework/views
+        mkdir -p deployment_temp/storage/logs
+        
+        # Create empty files to ensure directories are uploaded
+        touch deployment_temp/bootstrap/cache/.gitkeep
+        touch deployment_temp/storage/app/.gitkeep
+        touch deployment_temp/storage/framework/cache/.gitkeep
+        touch deployment_temp/storage/framework/sessions/.gitkeep
+        touch deployment_temp/storage/framework/views/.gitkeep
+        touch deployment_temp/storage/logs/.gitkeep
         
         # Create or update .htaccess in public directory for Laravel routing
         cat > deployment_temp/public/.htaccess << 'EOF'
@@ -109,8 +138,21 @@ jobs:
         # Create a simple index.php file for the root to handle requests
         cat > deployment_temp/index.php << 'EOF'
         <?php
-        // Redirect all requests to public folder
-        header('Location: /public/');
+        // Simple debug info and redirect to public folder
+        if (isset($_GET['debug'])) {
+            echo "PHP Version: " . phpversion() . "<br>";
+            echo "Laravel Path: " . __DIR__ . "<br>";
+            echo "Public Path: " . __DIR__ . '/public' . "<br>";
+            echo "Public Index exists: " . (file_exists(__DIR__ . '/public/index.php') ? 'Yes' : 'No') . "<br>";
+            exit;
+        }
+        
+        // Check if public/index.php exists
+        if (file_exists(__DIR__ . '/public/index.php')) {
+            header('Location: /public/');
+        } else {
+            echo "Laravel application not properly deployed. Public directory missing.";
+        }
         exit;
         EOF
         
@@ -131,11 +173,9 @@ jobs:
           **/.git*
           **/.git*/**
           **/node_modules/**
-          **/vendor/**
           **/tests/**
           **/.env.example
           **/README.md
-          **/composer.lock
           .htaccess
       continue-on-error: true
       id: ftp-deploy
