@@ -1,7 +1,7 @@
 // API Configuration for different environments
 export const API_BASE_URL = process.env.REACT_APP_API_URL || 
   (process.env.NODE_ENV === 'production' 
-    ? 'https://ticketsadmin.tfcmockup.com/api'   // Production: Laravel admin subdomain
+    ? 'https://admin.tfcmockup.com/api'   // Production: Laravel admin subdomain
     : 'http://127.0.0.1:8000/api');        // Development: Local Laravel
 
 export const API_ENDPOINTS = {
