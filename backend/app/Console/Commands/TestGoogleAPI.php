@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class TestGoogleAPI extends Command
 {
-    protected $signature = 'google:test {--verbose}';
+    protected $signature = 'google:test {--details : Show detailed API response}';
     protected $description = 'Test Google Places API configuration and connectivity';
 
     public function handle()
@@ -47,7 +47,7 @@ class TestGoogleAPI extends Command
             
             $data = $response->json();
             
-            if ($this->option('verbose')) {
+            if ($this->option('details')) {
                 $this->line('Raw API Response:');
                 $this->line(json_encode($data, JSON_PRETTY_PRINT));
             }
@@ -115,7 +115,7 @@ class TestGoogleAPI extends Command
                 $this->line("Total reviews on Google: {$totalReviews}");
                 $this->line("Reviews returned by API: " . count($reviews));
                 
-                if ($this->option('verbose') && !empty($reviews)) {
+                if ($this->option('details') && !empty($reviews)) {
                     $this->line("\nSample Review:");
                     $review = $reviews[0];
                     $this->line("Author: " . $review['author_name']);
