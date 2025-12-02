@@ -159,7 +159,7 @@ jobs:
         exit;
         EOF
         
-    - name: Deploy Laravel application to server (preserving existing files)
+    - name: Deploy Laravel application to server via FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
@@ -168,10 +168,11 @@ jobs:
         local-dir: deployment_temp/
         server-dir: /
         log-level: verbose
-        timeout: 60000
+        timeout: 180000
         security: loose
         protocol: ftp
         port: 21
+        dry-run: false
         exclude: |
           **/.git*
           **/.git*/**
@@ -180,24 +181,12 @@ jobs:
           **/.env.example
           **/README.md
           .htaccess
-      continue-on-error: true
-      id: ftp-deploy
-      
-    - name: Deploy via SFTP fallback (if FTP fails)
-      if: steps.ftp-deploy.outcome == 'failure'
-      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-      with:
-        server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
-        username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
-        password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
-        local_path: './deployment_temp/*'
-        remote_path: '/'
-        sftpArgs: '-o ConnectTimeout=5'
         
-    - name: Verify deployment structure
+    - name: Verify deployment completion
       run: |
-        echo "Deployment structure created:"
-        ls -la deployment_temp/
+        echo "✅ Laravel backend deployment completed successfully"
+        echo "📂 Files deployed to server root directory"
+        echo "🔧 Laravel optimization and caching should now be functional"
         echo "Root .htaccess content:"
         cat deployment_temp/.htaccess
         echo "Public .htaccess content:"
