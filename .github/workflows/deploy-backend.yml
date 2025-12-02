@@ -1,11 +1,11 @@
-name: Deploy Backend to admin.tfcmockup.com
+name: Deploy Backend to Server
 
 on:
   push:
     branches: [ main ]
-    paths: 
+    paths:
       - 'backend/**'
-      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -14,245 +14,79 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+        
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, iconv, json, mbstring, pdo
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, dom, filter, gd, iconv, json, mbstring, pdo
+        tools: composer:v2
         
-    - name: Create production .env
+    - name: Install dependencies
       working-directory: ./backend
+      run: composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
+      env:
+        COMPOSER_PROCESS_TIMEOUT: 600
+        COMPOSER_NO_INTERACTION: 1
+        COMPOSER_NO_AUDIT: 1
+
+    - name: Create Laravel directories
       run: |
-        cat > .env << 'EOF'
-        APP_NAME="Kuantan188 Admin"
-        APP_ENV=production
-        APP_KEY=${{ secrets.LARAVEL_APP_KEY || 'base64:TEMP_KEY_WILL_BE_GENERATED' }}
-        APP_DEBUG=true
-        APP_URL=https://admin.tfcmockup.com
-        APP_TIMEZONE=UTC
-        LOG_CHANNEL=single
+        mkdir -p backend/bootstrap/cache
+        mkdir -p backend/storage/app/public
+        mkdir -p backend/storage/framework/{cache,sessions,views}
+        mkdir -p backend/storage/logs
+        chmod 755 backend/bootstrap/cache backend/storage -R
         
-        DB_CONNECTION=mysql
-        DB_HOST=srv1317.hstgr.io
-        DB_PORT=3306
-        DB_DATABASE=u706445394_kuantanticket
-        DB_USERNAME=${{ secrets.DB_USERNAME }}
-        DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-        
-        CACHE_DRIVER=file
-        FILESYSTEM_DISK=local
-        QUEUE_CONNECTION=sync
-        SESSION_DRIVER=file
-        SESSION_LIFETIME=120
-        
-        MAIL_MAILER=smtp
-        MAIL_HOST=mailpit
-        MAIL_PORT=1025
-        MAIL_USERNAME=null
-        MAIL_PASSWORD=null
-        MAIL_ENCRYPTION=null
-        MAIL_FROM_ADDRESS="hello@admin.tfcmockup.com"
-        MAIL_FROM_NAME="${APP_NAME}"
-        
-        SANCTUM_STATEFUL_DOMAINS=tickets.tfcmockup.com,admin.tfcmockup.com
-        SESSION_DOMAIN=.tfcmockup.com
-        
-        FILESYSTEM_DISK=public
-        EOF
-        
-        # Generate APP_KEY if not provided as secret
-        if [[ "${{ secrets.LARAVEL_APP_KEY }}" == "" ]]; then
-          php artisan key:generate
-        fi
-        
-    - name: Prepare Laravel directories before Composer
-      working-directory: ./backend
+    - name: Prepare deployment files
       run: |
-        # Create required directories before Composer installation
-        mkdir -p bootstrap/cache
-        mkdir -p storage/app
-        mkdir -p storage/framework/cache
-        mkdir -p storage/framework/sessions
-        mkdir -p storage/framework/views
-        mkdir -p storage/logs
+        echo "📦 Preparing deployment files..."
+        mkdir -p deploy
+        cp -r backend/* deploy/
         
-        # Set permissions
-        chmod -R 755 bootstrap/cache
-        chmod -R 755 storage
-        
-    - name: Install Composer dependencies
-      working-directory: ./backend
-      run: |
-        composer install --optimize-autoloader --no-dev --no-interaction
-        
-    - name: Clear Laravel cache and optimize
-      working-directory: ./backend
-      run: |
-        # Clear any existing cache first
-        php artisan config:clear || true
-        php artisan route:clear || true
-        php artisan view:clear || true
-        
-        # Only cache config for production (avoid route caching issues)
-        php artisan config:cache
-        
-    - name: Create deployment structure and directories
-      run: |
-        # Create a simple deployment that puts everything in the web root
-        mkdir -p deployment_temp
-        
-        # Copy all Laravel files to deployment temp (directories already created)
-        cp -r backend/* deployment_temp/
-        
-        # Create or update .htaccess in public directory for Laravel routing
-        cat > deployment_temp/public/.htaccess << 'EOF'
+        # Create .htaccess for Laravel
+        cat > deploy/public/.htaccess << 'EOF'
         <IfModule mod_rewrite.c>
             <IfModule mod_negotiation.c>
                 Options -MultiViews -Indexes
             </IfModule>
-
             RewriteEngine On
-
-            # Handle Authorization Header
             RewriteCond %{HTTP:Authorization} .
             RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-            # Redirect Trailing Slashes If Not A Folder...
             RewriteCond %{REQUEST_FILENAME} !-d
             RewriteCond %{REQUEST_URI} (.+)/$
             RewriteRule ^ %1 [L,R=301]
-
-            # Send Requests To Front Controller...
             RewriteCond %{REQUEST_FILENAME} !-d
             RewriteCond %{REQUEST_FILENAME} !-f
             RewriteRule ^ index.php [L]
         </IfModule>
         EOF
         
-        # Create root .htaccess as backup (rename it so it doesn't overwrite existing)
-        cat > deployment_temp/.htaccess.laravel << 'EOF'
-        <IfModule mod_rewrite.c>
-            RewriteEngine On
-            RewriteRule ^(.*)$ public/$1 [L]
-        </IfModule>
-        EOF
+        echo "✅ Deployment files prepared"
         
-        # Create a simple index.php file for the root to handle requests
-        cat > deployment_temp/index.php << 'EOF'
-        <?php
-        // Simple debug info and redirect to public folder
-        if (isset($_GET['debug'])) {
-            echo "PHP Version: " . phpversion() . "<br>";
-            echo "Laravel Path: " . __DIR__ . "<br>";
-            echo "Public Path: " . __DIR__ . '/public' . "<br>";
-            echo "Public Index exists: " . (file_exists(__DIR__ . '/public/index.php') ? 'Yes' : 'No') . "<br>";
-            exit;
-        }
-        
-        // Check if public/index.php exists
-        if (file_exists(__DIR__ . '/public/index.php')) {
-            header('Location: /public/');
-        } else {
-            echo "Laravel application not properly deployed. Public directory missing.";
-        }
-        exit;
-        EOF
-        
-    - name: Get changed files from this commit
-      id: changed-files
-      run: |
-        echo "📦 Files changed in this commit:"
-        
-        # Check if we have a previous commit to compare against
-        if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
-          # Get all files that changed and filter for backend files (including moved files)
-          ALL_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
-          echo "All changed files: $ALL_CHANGED"
-          
-          # Get backend files (including public folder files)
-          CHANGED_FILES=$(echo "$ALL_CHANGED" | grep "^backend/" | sed 's|^backend/||' | tr '\n' ' ' || echo "")
-          
-          # Also check for moved files (files that were moved TO backend/public from root)
-          MOVED_TO_BACKEND=$(git diff --name-status HEAD~1 HEAD 2>/dev/null | grep "^R.*backend/public/" | awk '{print $3}' | sed 's|^backend/||' | tr '\n' ' ' || echo "")
-          
-          # Combine both lists
-          ALL_BACKEND_FILES="$CHANGED_FILES $MOVED_TO_BACKEND"
-        else
-          echo "⚠️ No previous commit found. This might be the first commit or initial deployment."
-          echo "📁 Deploying all backend files..."
-          # For first deployment, deploy all backend files
-          ALL_BACKEND_FILES=$(find backend -type f -name "*.php" -o -name "*.html" -o -name "*.js" -o -name "*.css" | sed 's|^backend/||' | tr '\n' ' ' || echo "")
-        fi
-        
-        echo "Backend files to deploy: $ALL_BACKEND_FILES"
-        echo "changed_files=$ALL_BACKEND_FILES" >> $GITHUB_OUTPUT
-        
-        if [ -z "$(echo $ALL_BACKEND_FILES | tr -d ' ')" ]; then
-          echo "No backend files changed in this commit. Skipping deployment."
-          echo "skip_deployment=true" >> $GITHUB_OUTPUT
-        else
-          echo "skip_deployment=false" >> $GITHUB_OUTPUT
-        fi
-        
-    - name: Create incremental deployment folder
-      if: steps.changed-files.outputs.skip_deployment != 'true'
-      run: |
-        mkdir -p deployment_incremental
-        
-        # Ensure deployment_temp is created first
-        if [ ! -d "deployment_temp" ]; then
-          mkdir -p deployment_temp
-          cp -r backend/* deployment_temp/
-        fi
-        
-        for file in ${{ steps.changed-files.outputs.changed_files }}; do
-          if [ -f "deployment_temp/$file" ]; then
-            mkdir -p "deployment_incremental/$(dirname "$file")" 2>/dev/null || true
-            cp "deployment_temp/$file" "deployment_incremental/$file"
-            echo "✅ Added: $file"
-          else
-            echo "⚠️ File not found in deployment_temp: $file"
-          fi
-        done
-        echo "📊 Incremental deployment contains $(find deployment_incremental -type f 2>/dev/null | wc -l) files"
-        
-    - name: Deploy only changed files via FTP
-      if: steps.changed-files.outputs.skip_deployment != 'true'
+    - name: Deploy to server via FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
         username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
         password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
-        local-dir: deployment_incremental/
+        local-dir: deploy/
         server-dir: /
         log-level: verbose
-        timeout: 60000
+        timeout: 300000
         security: loose
         protocol: ftp
         port: 21
-        dry-run: false
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/tests/**
+          **/.env.example
+          **/README.md
         
-    - name: Skip deployment notification
-      if: steps.changed-files.outputs.skip_deployment == 'true'
+    - name: Deployment completed
       run: |
-        echo "⏭️ No backend files changed in this commit"
-        echo "📝 Only frontend or non-backend files were modified"
-        echo "🚀 Skipping backend deployment"
-        
-    - name: Verify deployment completion
-      if: steps.changed-files.outputs.skip_deployment != 'true'
-      run: |
-        echo "✅ Laravel backend deployment completed successfully"
-        echo "📂 Files deployed to server root directory"
-        echo "🔧 Laravel optimization and caching should now be functional"
-        echo "Root .htaccess content:"
-        cat deployment_temp/.htaccess
-        echo "Public .htaccess content:"
-        cat deployment_temp/public/.htaccess
-        
-    - name: Test deployment
-      run: |
-        echo "Testing deployed application..."
-        sleep 10  # Wait for deployment to complete
-        curl -I https://admin.tfcmockup.com/ || echo "Site not yet accessible"
+        echo "✅ Backend deployment completed successfully"
+        echo "🌐 Your Laravel application should now be accessible"
+        echo "🔧 Visit your admin panel to verify functionality"
