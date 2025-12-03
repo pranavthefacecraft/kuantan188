@@ -442,3 +442,32 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
+
+/* Calendar component styling */
+.calendar-component {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-date-btn {
+  height: 40px !important;
+  min-height: 40px;
+  width: 40px !important;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.calendar-date-btn:not(.not-current-month):hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.calendar-nav-btn {
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+}

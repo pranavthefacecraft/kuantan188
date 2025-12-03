@@ -87,15 +87,16 @@ const Calendar: React.FC<CalendarProps> = ({
     const endDate = endOfWeek(monthEnd);
 
     const rows = [];
-    let days = [];
     let day = startDate;
-    let formattedDate = '';
-    let rowIndex = 0;
 
+    // Create calendar grid week by week
     while (day <= endDate) {
+      const week = [];
+      
+      // Create 7 days for each week
       for (let i = 0; i < 7; i++) {
-        formattedDate = format(day, 'd');
-        const cloneDay = day;
+        const formattedDate = format(day, 'd');
+        const cloneDay = new Date(day);
         const isCurrentMonth = isSameMonth(day, monthStart);
         const isSelected = selectedDate && isSameDay(day, selectedDate);
         const isPast = isBefore(day, startOfDay(minDate));
@@ -105,13 +106,12 @@ const Calendar: React.FC<CalendarProps> = ({
                           isPast || 
                           (maxDate && day > maxDate);
 
-        // eslint-disable-next-line no-loop-func
-        days.push(
-          <div key={cloneDay.getTime()} className="col p-1">
+        week.push(
+          <div key={day.getTime()} className="col p-1">
             <button
               className={`calendar-date-btn btn w-100 rounded-circle d-flex align-items-center justify-content-center ${
                 !isCurrentMonth 
-                  ? 'text-muted not-current-month' 
+                  ? 'text-muted not-current-month opacity-50' 
                   : isSelected 
                     ? 'btn-success text-white' 
                     : isTodayDate
@@ -120,6 +120,11 @@ const Calendar: React.FC<CalendarProps> = ({
                         ? 'btn-light text-muted disabled'
                         : 'btn-outline-secondary'
               }`}
+              style={{ 
+                height: '40px', 
+                fontSize: '0.875rem',
+                border: isCurrentMonth ? undefined : 'none'
+              }}
               onClick={(e) => {
                 e.preventDefault();
                 if (!isDisabled && isCurrentMonth) {
@@ -134,13 +139,13 @@ const Calendar: React.FC<CalendarProps> = ({
         );
         day = addDays(day, 1);
       }
+      
+      // Add the complete week as a row
       rows.push(
-        <div className="row" key={`row-${rowIndex}`}>
-          {days}
+        <div className="row g-1" key={`week-${rows.length}`}>
+          {week}
         </div>
       );
-      days = [];
-      rowIndex++;
     }
 
     return <div>{rows}</div>;
