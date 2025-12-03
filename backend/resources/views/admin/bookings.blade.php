@@ -67,16 +67,16 @@
                                 </td>
                                 <td>
                                     <div>
-                                        <div style="font-weight: 500;">{{ $booking->ticket->event->name }}</div>
+                                        <div style="font-weight: 500;">{{ $booking->event->title ?? 'N/A' }}</div>
                                         <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
-                                            {{ $booking->ticket->event->date->format('M j, Y') }}
+                                            {{ $booking->event->event_date ? $booking->event->event_date->format('M j, Y') : 'N/A' }}
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <span class="material-icons" style="font-size: 16px; color: var(--accent);">public</span>
-                                        {{ $booking->ticket->country->name }}
+                                        {{ $booking->country->name ?? 'N/A' }}
                                     </div>
                                 </td>
                                 <td>
