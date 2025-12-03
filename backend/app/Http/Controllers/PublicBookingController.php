@@ -28,6 +28,8 @@ class PublicBookingController extends Controller
     {
         try {
             \Log::info('Booking request received:', $request->all());
+            \Log::info('Database columns available:', \Schema::getColumnListing('bookings'));
+            
             $validator = Validator::make($request->all(), [
                 'event_id' => 'required|integer',
                 'event_title' => 'required|string|max:255',
@@ -40,36 +42,52 @@ class PublicBookingController extends Controller
                 'event_date' => 'required|date',
                 'total_amount' => 'required|numeric|min:0',
                 'payment_method' => 'required|string|max:50',
-                'receive_updates' => 'boolean',
+                'receive_updates' => 'nullable|boolean',
                 'booking_status' => 'required|string|max:50'
             ]);
 
             if ($validator->fails()) {
+                \Log::error('Validation failed:', $validator->errors()->toArray());
                 return response()->json([
                     'error' => 'Validation failed',
                     'messages' => $validator->errors()
                 ], 422);
             }
 
+            \Log::info('Validation passed, creating booking...');
+
             // Generate booking reference
             $bookingReference = 'KB' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            \Log::info('Generated booking reference:', ['reference' => $bookingReference]);
 
-            $booking = Booking::create([
+            $bookingData = [
                 'booking_reference' => $bookingReference,
                 'event_id' => $request->event_id,
                 'event_title' => $request->event_title,
                 'customer_name' => $request->customer_name,
-                'email' => $request->email,
-                'mobile_phone' => $request->mobile_phone,
+                'customer_email' => $request->email, // Use existing column name
+                'email' => $request->email, // Also populate this for compatibility
+                'customer_phone' => $request->mobile_phone, // Use existing column name
+                'mobile_phone' => $request->mobile_phone, // Also populate this for compatibility
                 'country' => $request->country,
                 'postal_code' => $request->postal_code,
+                'adult_tickets' => $request->adult_tickets ?? 0,
+                'child_tickets' => $request->child_tickets ?? 0,
                 'quantity' => $request->quantity,
                 'event_date' => $request->event_date,
+                'adult_price' => $request->adult_price ?? 0,
+                'child_price' => $request->child_price ?? 0,
                 'total_amount' => $request->total_amount,
                 'payment_method' => $request->payment_method,
-                'receive_updates' => $request->receive_updates ?? false,
-                'booking_status' => $request->booking_status,
-            ]);
+                'payment_status' => 'pending',
+                'status' => $request->booking_status ?? 'confirmed',
+            ];
+
+            \Log::info('Attempting to create booking with data:', $bookingData);
+
+            $booking = Booking::create($bookingData);
+
+            \Log::info('Booking created successfully:', ['id' => $booking->id, 'reference' => $booking->booking_reference]);
 
             return response()->json([
                 'success' => true,
