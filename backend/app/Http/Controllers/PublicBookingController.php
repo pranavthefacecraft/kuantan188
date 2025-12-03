@@ -47,18 +47,15 @@ class PublicBookingController extends Controller
 
             $bookingReference = 'KB' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
 
+            // Basic required fields that should exist
             $bookingData = [
                 'booking_reference' => $bookingReference,
                 'event_id' => $sampleData['event_id'],
-                'event_title' => $sampleData['event_title'],
                 'country_id' => 1,
-                'country' => $sampleData['country'],
                 'postal_code' => $sampleData['postal_code'],
                 'customer_name' => $sampleData['customer_name'],
                 'customer_email' => $sampleData['email'],
-                'email' => $sampleData['email'],
                 'customer_phone' => $sampleData['mobile_phone'],
-                'mobile_phone' => $sampleData['mobile_phone'],
                 'adult_tickets' => 0,
                 'child_tickets' => 0,
                 'quantity' => $sampleData['quantity'],
@@ -73,6 +70,20 @@ class PublicBookingController extends Controller
                 'status' => $sampleData['booking_status'],
                 'ticket_id' => 1,
             ];
+
+            // Add optional fields only if columns exist
+            if (Schema::hasColumn('bookings', 'event_title')) {
+                $bookingData['event_title'] = $sampleData['event_title'];
+            }
+            if (Schema::hasColumn('bookings', 'email')) {
+                $bookingData['email'] = $sampleData['email'];
+            }
+            if (Schema::hasColumn('bookings', 'mobile_phone')) {
+                $bookingData['mobile_phone'] = $sampleData['mobile_phone'];
+            }
+            if (Schema::hasColumn('bookings', 'country')) {
+                $bookingData['country'] = $sampleData['country'];
+            }
 
             \Log::info('Attempting test booking creation with:', $bookingData);
 
@@ -113,17 +124,16 @@ class PublicBookingController extends Controller
             
             $validator = Validator::make($request->all(), [
                 'event_id' => 'required|integer',
-                'event_title' => 'required|string|max:255',
+                'event_title' => 'nullable|string|max:255',
                 'customer_name' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
                 'mobile_phone' => 'nullable|string|max:20',
-                'country' => 'required|string|max:100',
+                'country' => 'nullable|string|max:100',
                 'postal_code' => 'required|string|max:20',
                 'quantity' => 'required|integer|min:1',
                 'event_date' => 'required|date',
                 'total_amount' => 'required|numeric|min:0',
                 'payment_method' => 'required|string|max:50',
-                'receive_updates' => 'nullable|boolean',
                 'booking_status' => 'required|string|max:50'
             ]);
 
@@ -141,18 +151,15 @@ class PublicBookingController extends Controller
             $bookingReference = 'KB' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
             \Log::info('Generated booking reference:', ['reference' => $bookingReference]);
 
+            // Only include fields that exist in the database schema
             $bookingData = [
                 'booking_reference' => $bookingReference,
                 'event_id' => $request->event_id,
-                'event_title' => $request->event_title,
-                'country_id' => 1, // Default country ID - we'll need to map this properly later
-                'country' => $request->country,
+                'country_id' => 1, // Default country ID
                 'postal_code' => $request->postal_code,
                 'customer_name' => $request->customer_name,
                 'customer_email' => $request->email,
-                'email' => $request->email,
                 'customer_phone' => $request->mobile_phone,
-                'mobile_phone' => $request->mobile_phone,
                 'adult_tickets' => $request->adult_tickets ?? 0,
                 'child_tickets' => $request->child_tickets ?? 0,
                 'quantity' => $request->quantity,
@@ -165,8 +172,22 @@ class PublicBookingController extends Controller
                 'payment_reference' => null,
                 'payment_date' => null,
                 'status' => $request->booking_status ?? 'confirmed',
-                'ticket_id' => 1, // Default ticket ID - we'll need to map this properly later
+                'ticket_id' => 1, // Default ticket ID
             ];
+
+            // Add optional fields only if they exist in database
+            if (Schema::hasColumn('bookings', 'event_title')) {
+                $bookingData['event_title'] = $request->event_title;
+            }
+            if (Schema::hasColumn('bookings', 'email')) {
+                $bookingData['email'] = $request->email;
+            }
+            if (Schema::hasColumn('bookings', 'mobile_phone')) {
+                $bookingData['mobile_phone'] = $request->mobile_phone;
+            }
+            if (Schema::hasColumn('bookings', 'country')) {
+                $bookingData['country'] = $request->country;
+            }
 
             \Log::info('Attempting to create booking with data:', $bookingData);
 

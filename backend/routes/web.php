@@ -11,6 +11,28 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('/health', function () {
+    try {
+        // Test database connection
+        $dbStatus = \DB::connection()->getPdo() ? 'connected' : 'disconnected';
+        
+        return response()->json([
+            'status' => 'healthy',
+            'database' => $dbStatus,
+            'timestamp' => now(),
+            'laravel_version' => app()->version(),
+            'environment' => app()->environment()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'timestamp' => now(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
 // Authentication routes
 Route::middleware(['web'])->group(function () {
     Auth::routes();
