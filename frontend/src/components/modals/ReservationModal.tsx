@@ -187,12 +187,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
           </Row>
 
           {/* Right Aligned Add to Cart Button */}
-          <div className="px-4 pb-4 d-flex justify-content-end" style={{ backgroundColor: '#00c851' }}>
+          <div className="px-4 pb-4 d-flex justify-content-end" style={{ backgroundColor: '#000c' }}>
             <Button 
               className="fw-bold py-2 px-4 rounded-3 border-0"
               onClick={handleAddToCart}
               style={{
-                backgroundColor: '#00c851',
+                backgroundColor: '#000c !important',
+                color: '#fff !important',
                 fontSize: '0.9rem'
               }}
             >
