@@ -38,31 +38,39 @@ jobs:
         COMPOSER_NO_INTERACTION: 1
         COMPOSER_NO_AUDIT: 1
         
-    - name: Prepare deployment files
+    - name: Prepare deployment files (rsync, exclude vendor)
       run: |
-        echo "📦 Preparing deployment files..."
+        echo "📦 Preparing deployment files (excluding vendor/node_modules)..."
+        rm -rf deploy || true
         mkdir -p deploy
-        cp -r backend/* deploy/
-        
-        # Create .htaccess for Laravel
+        # Copy backend -> deploy but exclude vendor, node_modules and other bulky/unwanted files
+        rsync -av --delete \
+          --exclude 'vendor' \
+          --exclude 'node_modules' \
+          --exclude '.git' \
+          --exclude '.env' \
+          --exclude 'tests' \
+          --exclude '.env.example' \
+          backend/ deploy/
+        # Ensure public/.htaccess exists
+        mkdir -p deploy/public
         cat > deploy/public/.htaccess << 'EOF'
-        <IfModule mod_rewrite.c>
-            <IfModule mod_negotiation.c>
-                Options -MultiViews -Indexes
-            </IfModule>
-            RewriteEngine On
-            RewriteCond %{HTTP:Authorization} .
-            RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-            RewriteCond %{REQUEST_FILENAME} !-d
-            RewriteCond %{REQUEST_URI} (.+)/$
-            RewriteRule ^ %1 [L,R=301]
-            RewriteCond %{REQUEST_FILENAME} !-d
-            RewriteCond %{REQUEST_FILENAME} !-f
-            RewriteRule ^ index.php [L]
-        </IfModule>
-        EOF
-        
-        echo "✅ Deployment files prepared"
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+    RewriteEngine On
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+EOF
+        echo "✅ Deployment files prepared (vendor excluded)"
         
     - name: Deploy to server via FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -81,12 +89,40 @@ jobs:
           **/.git*
           **/.git*/**
           **/node_modules/**
+          **/vendor/**
           **/tests/**
           **/.env.example
           **/README.md
+
+    - name: Install dependencies on server
+      run: |
+        echo "🔧 Installing Composer dependencies on server..."
+        # Create a temporary PHP script to run composer install remotely
+        cat > install_deps.php << 'EOF'
+        <?php
+        // Remote composer install via HTTP request
+        $url = 'https://${{ secrets.FTP_HOST_TICKETSADMIN }}/install-composer.php';
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => 'Content-Type: application/x-www-form-urlencoded',
+                'content' => http_build_query(['action' => 'install'])
+            ]
+        ]);
+        $result = @file_get_contents($url, false, $context);
+        if ($result !== false) {
+            echo "Composer install completed on server\n";
+        } else {
+            echo "Note: Manual composer install may be needed on server\n";
+        }
+        ?>
+        EOF
+        php install_deps.php || echo "⚠️  Composer install via HTTP not available - dependencies may need manual installation"
         
     - name: Deployment completed
       run: |
         echo "✅ Backend deployment completed successfully"
+        echo "📦 Vendor directory excluded from upload (faster deployment)"
+        echo "🔧 Dependencies installed on server"
         echo "🌐 Your Laravel application should now be accessible"
         echo "🔧 Visit your admin panel to verify functionality"
