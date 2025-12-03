@@ -112,7 +112,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
       }
     } catch (error) {
       console.error('Error creating booking:', error);
-      alert(`Sorry, there was an error processing your booking: ${error.message || 'Please try again.'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Please try again.';
+      alert(`Sorry, there was an error processing your booking: ${errorMessage}`);
     }
   };
 
