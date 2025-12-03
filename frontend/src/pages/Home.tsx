@@ -11,7 +11,6 @@ import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
 const Home: React.FC = () => {
-  const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -37,22 +36,14 @@ const Home: React.FC = () => {
         setLoading(true);
         setBookNowLoading(true);
         
-        // Fetch both featured events and book now events in parallel
-        const [featuredResponse, bookNowResponse] = await Promise.all([
-          eventsApi.getFeaturedEvents(),
-          eventsApi.getBookNowEvents()
-        ]);
-        
-        if (featuredResponse.success) {
-          setFeaturedEvents(featuredResponse.data);
-        } else {
-          setError('Failed to load featured events');
-        }
+        // Fetch book now events
+        const bookNowResponse = await eventsApi.getBookNowEvents();
         
         if (bookNowResponse.success) {
           setBookNowEvents(bookNowResponse.data);
         } else {
           console.error('Failed to load Book Now events');
+          setError('Failed to load events');
         }
         
       } catch (err) {
@@ -398,95 +389,6 @@ const Home: React.FC = () => {
           </div>
           </div>
         </div>
-      </section>
-
-      {/* Featured Events Section */}
-      <section className="py-5">
-        <Container>
-          <Row className="mb-4">
-            <Col>
-              <h2 className="text-center fw-bold mb-4">Featured Events</h2>
-              <p className="text-center text-muted">
-                Don't miss these amazing upcoming events in Kuantan
-              </p>
-            </Col>
-          </Row>
-                <Row>
-            {loading ? (
-              <Col className="text-center">
-                <Spinner animation="border" role="status" variant="primary">
-                  <span className="visually-hidden">Loading events...</span>
-                </Spinner>
-                <p className="mt-2 text-muted">Loading amazing events...</p>
-              </Col>
-            ) : error ? (
-            <Col>
-              <Alert variant="warning" className="text-center">
-                <Alert.Heading>Oops! Something went wrong</Alert.Heading>
-                <p>{error}</p>
-                <Button 
-                  variant="outline-warning" 
-                  onClick={() => window.location.reload()}
-                >
-                  Try Again
-                </Button>
-              </Alert>
-            </Col>
-          ) : (
-            <>
-              {featuredEvents.map((event) => (
-                <Col lg={4} md={6} key={event.id} className="mb-4">
-                  <Card className="h-100 border-0 shadow-sm hover-lift">
-                    <div className="position-relative">
-                      <Card.Img 
-                        variant="top" 
-                        src={event.image_url} 
-                        alt={event.title}
-                        style={{ height: '200px', objectFit: 'cover' }}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = `https://picsum.photos/400/250?random=${event.id}`;
-                        }}
-                      />
-                      <Badge 
-                        bg="primary" 
-                        className="position-absolute top-0 end-0 m-3"
-                      >
-                        {event.category}
-                      </Badge>
-                    </div>
-                    <Card.Body className="d-flex flex-column">
-                      <Card.Title className="fw-bold mb-2">{event.title}</Card.Title>
-                      <Card.Text className="text-muted mb-3 flex-grow-1">
-                        📅 {event.event_date_formatted} at {event.event_time_formatted}<br />
-                        📍 {event.location}
-                      </Card.Text>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="fw-bold text-primary">{event.price_display}</span>
-                        <Button 
-                          variant="outline-primary" 
-                          size="sm"
-                          onClick={() => handleReserveNow(event)}
-                        >
-                          Reserve Now
-                        </Button>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-              {featuredEvents.length === 0 && !loading && (
-                <Col className="text-center">
-                  <div className="py-5">
-                    <h5 className="text-muted">No events available at the moment</h5>
-                    <p className="text-muted">Check back soon for exciting upcoming events!</p>
-                  </div>
-                </Col>
-              )}
-            </>
-          )}
-          </Row>
-        </Container>
       </section>
 
       {/* Customer Reviews Section */}
