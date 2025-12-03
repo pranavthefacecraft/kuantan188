@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Button } from 'react-bootstrap';
 import { eventsApi, Event } from '../services/api';
 import ReservationModal from '../components/modals/ReservationModal';
 import { ReviewsWidget } from '../components/GoogleReviews';
@@ -11,8 +11,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
 const Home: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
@@ -27,15 +26,11 @@ const Home: React.FC = () => {
 
   // Book Now events from API
   const [bookNowEvents, setBookNowEvents] = useState<Event[]>([]);
-  const [bookNowLoading, setBookNowLoading] = useState(true);
 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
-        setBookNowLoading(true);
-        
         // Fetch book now events
         const bookNowResponse = await eventsApi.getBookNowEvents();
         
@@ -43,15 +38,10 @@ const Home: React.FC = () => {
           setBookNowEvents(bookNowResponse.data);
         } else {
           console.error('Failed to load Book Now events');
-          setError('Failed to load events');
         }
         
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError('Failed to load events. Please try again later.');
-      } finally {
-        setLoading(false);
-        setBookNowLoading(false);
       }
     };
 
@@ -315,16 +305,7 @@ const Home: React.FC = () => {
                 },
               }}
             >
-              {bookNowLoading ? (
-                <SwiperSlide className="event-card-item">
-                  <div className="event-card-background h-100 d-flex flex-column align-items-center justify-content-center" style={{ backgroundColor: '#1A0007' }}>
-                    <div className="text-center">
-                      <Spinner animation="border" variant="light" />
-                      <p className="text-white mt-3">Loading events...</p>
-                    </div>
-                  </div>
-                </SwiperSlide>
-              ) : bookNowEvents.length > 0 ? (
+              {bookNowEvents.length > 0 ? (
                 bookNowEvents.map((event, eventIndex) => (
                   <SwiperSlide key={event.id} className="event-card-item">
                     <div 
