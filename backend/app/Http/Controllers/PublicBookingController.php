@@ -51,13 +51,14 @@ class PublicBookingController extends Controller
                 'booking_reference' => $bookingReference,
                 'event_id' => $sampleData['event_id'],
                 'event_title' => $sampleData['event_title'],
+                'country_id' => 1,
+                'country' => $sampleData['country'],
+                'postal_code' => $sampleData['postal_code'],
                 'customer_name' => $sampleData['customer_name'],
                 'customer_email' => $sampleData['email'],
                 'email' => $sampleData['email'],
                 'customer_phone' => $sampleData['mobile_phone'],
                 'mobile_phone' => $sampleData['mobile_phone'],
-                'country' => $sampleData['country'],
-                'postal_code' => $sampleData['postal_code'],
                 'adult_tickets' => 0,
                 'child_tickets' => 0,
                 'quantity' => $sampleData['quantity'],
@@ -65,9 +66,12 @@ class PublicBookingController extends Controller
                 'adult_price' => 0,
                 'child_price' => 0,
                 'total_amount' => $sampleData['total_amount'],
-                'payment_method' => $sampleData['payment_method'],
                 'payment_status' => 'pending',
+                'payment_method' => $sampleData['payment_method'],
+                'payment_reference' => null,
+                'payment_date' => null,
                 'status' => $sampleData['booking_status'],
+                'ticket_id' => 1,
             ];
 
             \Log::info('Attempting test booking creation with:', $bookingData);
@@ -141,13 +145,14 @@ class PublicBookingController extends Controller
                 'booking_reference' => $bookingReference,
                 'event_id' => $request->event_id,
                 'event_title' => $request->event_title,
-                'customer_name' => $request->customer_name,
-                'customer_email' => $request->email, // Use existing column name
-                'email' => $request->email, // Also populate this for compatibility
-                'customer_phone' => $request->mobile_phone, // Use existing column name
-                'mobile_phone' => $request->mobile_phone, // Also populate this for compatibility
+                'country_id' => 1, // Default country ID - we'll need to map this properly later
                 'country' => $request->country,
                 'postal_code' => $request->postal_code,
+                'customer_name' => $request->customer_name,
+                'customer_email' => $request->email,
+                'email' => $request->email,
+                'customer_phone' => $request->mobile_phone,
+                'mobile_phone' => $request->mobile_phone,
                 'adult_tickets' => $request->adult_tickets ?? 0,
                 'child_tickets' => $request->child_tickets ?? 0,
                 'quantity' => $request->quantity,
@@ -155,9 +160,12 @@ class PublicBookingController extends Controller
                 'adult_price' => $request->adult_price ?? 0,
                 'child_price' => $request->child_price ?? 0,
                 'total_amount' => $request->total_amount,
-                'payment_method' => $request->payment_method,
                 'payment_status' => 'pending',
+                'payment_method' => $request->payment_method,
+                'payment_reference' => null,
+                'payment_date' => null,
                 'status' => $request->booking_status ?? 'confirmed',
+                'ticket_id' => 1, // Default ticket ID - we'll need to map this properly later
             ];
 
             \Log::info('Attempting to create booking with data:', $bookingData);
