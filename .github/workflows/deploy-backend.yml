@@ -51,7 +51,7 @@ jobs:
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
 
-      - name: Prepare deployment files
+      - name: Prepare deployment files (fixed for Laravel)
         run: |
           rm -rf deploy || true
           mkdir -p deploy
@@ -59,6 +59,7 @@ jobs:
           rsync -av --delete \
             --exclude 'vendor' \
             --exclude 'node_modules' \
+            --exclude 'tests' \
             --exclude '.git' \
             --exclude '.env' \
             --exclude 'storage/framework/views/*' \
@@ -96,6 +97,7 @@ jobs:
 
           rm -f deploy/bootstrap/cache/*.php || true
           rm -f deploy/storage/framework/views/* || true
+          chmod -R 775 deploy/storage deploy/bootstrap/cache || true
 
       - name: Deploy to server via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -123,3 +125,6 @@ jobs:
       - name: Deployment completed
         run: |
           echo "Deployment completed"
+          echo "If you need to set permissions on server, run:"
+          echo "  chmod -R 775 storage bootstrap/cache"
+          echo "  php artisan optimize:clear"
