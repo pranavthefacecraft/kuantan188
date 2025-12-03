@@ -118,9 +118,18 @@ Route::get('/simple-admin', function () {
 
 // Admin Dashboard Routes (protected by auth middleware)
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
-    // Temporarily replace dashboard with simple response to test
     Route::get('/', function () {
-        return '<h1>Admin Dashboard</h1><p>This is a simple response to test if the route works without view rendering.</p><p>Controller and views will be restored once this works.</p>';
+        try {
+            $controller = new AdminDashboardController();
+            return $controller->index();
+        } catch (\Exception $e) {
+            // If view fails, show detailed error
+            return '<h1>View Rendering Error</h1>' .
+                   '<p><strong>Error:</strong> ' . $e->getMessage() . '</p>' .
+                   '<p><strong>File:</strong> ' . $e->getFile() . '</p>' .
+                   '<p><strong>Line:</strong> ' . $e->getLine() . '</p>' .
+                   '<pre>' . $e->getTraceAsString() . '</pre>';
+        }
     })->name('dashboard');
     
     // Route to test controller data without complex view

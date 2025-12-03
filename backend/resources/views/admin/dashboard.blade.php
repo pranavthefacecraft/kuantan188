@@ -157,7 +157,7 @@
                                 <td>
                                     <strong>{{ $booking->booking_reference }}</strong>
                                 </td>
-                                <td>{{ $booking->ticket->event->name }}</td>
+                                <td>{{ $booking->event->title ?? 'N/A' }}</td>
                                 <td>
                                     <div>
                                         <div>{{ $booking->customer_name }}</div>
@@ -166,7 +166,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>{{ $booking->ticket->country->name }}</td>
+                                <td>{{ $booking->country->name ?? 'N/A' }}</td>
                                 <td>RM {{ number_format($booking->total_amount, 2) }}</td>
                                 <td>
                                     @if($booking->status === 'confirmed')
