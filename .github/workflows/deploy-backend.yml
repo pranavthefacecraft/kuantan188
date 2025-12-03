@@ -20,18 +20,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions:
-            - mbstring
-            - xml
-            - ctype
-            - iconv
-            - intl
-            - pdo_mysql
-            - dom
-            - filter
-            - gd
-            - json
-            - pdo
+          # Provide extensions as a single comma-separated string to avoid YAML sequence issues
+          extensions: mbstring,xml,ctype,iconv,intl,pdo_mysql,dom,filter,gd,json,pdo
           tools: composer:v2
 
       - name: Create Laravel directories (local)
