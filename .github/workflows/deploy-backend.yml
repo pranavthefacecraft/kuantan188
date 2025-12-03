@@ -51,16 +51,14 @@ jobs:
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
 
-      - name: Prepare deployment files (fixed for Laravel)
+      - name: Prepare deployment files
         run: |
           rm -rf deploy || true
           mkdir -p deploy
 
-          # Copy backend but exclude vendor, node_modules, compiled caches, logs
           rsync -av --delete \
             --exclude 'vendor' \
             --exclude 'node_modules' \
-            --exclude 'tests' \
             --exclude '.git' \
             --exclude '.env' \
             --exclude 'storage/framework/views/*' \
@@ -68,13 +66,11 @@ jobs:
             --exclude 'bootstrap/cache/*.php' \
             backend/ deploy/
 
-          # Ensure required storage directories exist (important for FTP)
           mkdir -p deploy/storage/app/public
           mkdir -p deploy/storage/framework/{views,cache,sessions}
           mkdir -p deploy/storage/logs
           mkdir -p deploy/bootstrap/cache
 
-          # Add .gitkeep to force FTP to create directories
           touch deploy/storage/app/public/.gitkeep
           touch deploy/storage/framework/views/.gitkeep
           touch deploy/storage/framework/cache/.gitkeep
@@ -82,7 +78,6 @@ jobs:
           touch deploy/storage/logs/.gitkeep
           touch deploy/bootstrap/cache/.gitkeep
 
-          # Create public .htaccess using echo (HEREDOCs break YAML)
           mkdir -p deploy/public
           echo "<IfModule mod_rewrite.c>" > deploy/public/.htaccess
           echo "    <IfModule mod_negotiation.c>" >> deploy/public/.htaccess
@@ -99,11 +94,8 @@ jobs:
           echo "    RewriteRule ^ index.php [L]" >> deploy/public/.htaccess
           echo "</IfModule>" >> deploy/public/.htaccess
 
-          # Ensure no compiled caches are shipped
           rm -f deploy/bootstrap/cache/*.php || true
           rm -f deploy/storage/framework/views/* || true
-
-          chmod -R 775 deploy/storage deploy/bootstrap/cache || true
 
       - name: Deploy to server via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -131,6 +123,3 @@ jobs:
       - name: Deployment completed
         run: |
           echo "Deployment completed"
-          echo "If you need to set permissions on server, run:"
-          echo "  chmod -R 775 storage bootstrap/cache"
-          echo "  php artisan optimize:clear"
