@@ -384,4 +384,52 @@ class PublicEventController extends Controller
             'total' => $bookings->count()
         ]);
     }
+
+    /**
+     * Debug endpoint to check raw event data
+     */
+    public function debug(Request $request): JsonResponse
+    {
+        try {
+            // Get all events without filtering
+            $allEvents = Event::all();
+            
+            // Get active events
+            $activeEvents = Event::where('is_active', true)->get();
+            
+            // Get events with images
+            $eventsWithImages = Event::whereNotNull('image_url')->get();
+            
+            return response()->json([
+                'success' => true,
+                'debug_info' => [
+                    'total_events_in_db' => $allEvents->count(),
+                    'active_events' => $activeEvents->count(),
+                    'events_with_images' => $eventsWithImages->count(),
+                    'all_events' => $allEvents->map(function($event) {
+                        return [
+                            'id' => $event->id,
+                            'title' => $event->title,
+                            'is_active' => $event->is_active,
+                            'image_url' => $event->image_url,
+                            'created_at' => $event->created_at,
+                        ];
+                    })
+                ],
+                'deployment_test' => [
+                    'version' => '5.3',
+                    'timestamp' => now()->toISOString(),
+                    'message' => 'Debug endpoint for event image troubleshooting'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'debug_info' => [
+                    'database_connection' => 'Failed to connect or query database'
+                ]
+            ], 500);
+        }
+    }
 }

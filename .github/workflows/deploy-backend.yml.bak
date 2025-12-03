@@ -1,0 +1,137 @@
+name: Deploy Backend to Server
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions:
+            - mbstring
+            - xml
+            - ctype
+            - iconv
+            - intl
+            - pdo_mysql
+            - dom
+            - filter
+            - gd
+            - json
+            - pdo
+          tools: composer:v2
+
+      - name: Create Laravel directories (local)
+        run: |
+          mkdir -p backend/bootstrap/cache
+          mkdir -p backend/storage/app/public
+          mkdir -p backend/storage/framework/{cache,sessions,views}
+          mkdir -p backend/storage/logs
+          chmod 755 backend/bootstrap/cache backend/storage -R
+
+      - name: Install dependencies (CI)
+        working-directory: ./backend
+        run: |
+          composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
+        env:
+          COMPOSER_PROCESS_TIMEOUT: 600
+          COMPOSER_NO_INTERACTION: 1
+          COMPOSER_NO_AUDIT: 1
+
+      - name: Prepare deployment files (fixed for Laravel)
+        run: |
+          rm -rf deploy || true
+          mkdir -p deploy
+
+          # Copy backend but exclude vendor, node_modules, compiled caches, logs
+          rsync -av --delete \
+            --exclude 'vendor' \
+            --exclude 'node_modules' \
+            --exclude 'tests' \
+            --exclude '.git' \
+            --exclude '.env' \
+            --exclude 'storage/framework/views/*' \
+            --exclude 'storage/framework/cache/*' \
+            --exclude 'bootstrap/cache/*.php' \
+            backend/ deploy/
+
+          # Ensure required storage directories exist (important for FTP)
+          mkdir -p deploy/storage/app/public
+          mkdir -p deploy/storage/framework/{views,cache,sessions}
+          mkdir -p deploy/storage/logs
+          mkdir -p deploy/bootstrap/cache
+
+          # Add .gitkeep to force FTP to create directories
+          touch deploy/storage/app/public/.gitkeep
+          touch deploy/storage/framework/views/.gitkeep
+          touch deploy/storage/framework/cache/.gitkeep
+          touch deploy/storage/framework/sessions/.gitkeep
+          touch deploy/storage/logs/.gitkeep
+          touch deploy/bootstrap/cache/.gitkeep
+
+          # Add .htaccess to public folder
+          mkdir -p deploy/public
+          cat > deploy/public/.htaccess << 'HTEOF'
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+    RewriteEngine On
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+HTEOF
+
+          # Ensure no compiled caches are shipped
+          rm -f deploy/bootstrap/cache/*.php || true
+          rm -f deploy/storage/framework/views/* || true
+
+          chmod -R 775 deploy/storage deploy/bootstrap/cache || true
+
+      - name: Deploy to server via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
+          username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
+          password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
+          local-dir: deploy/
+          server-dir: /
+          log-level: verbose
+          timeout: 300000
+          security: loose
+          protocol: ftp
+          port: 21
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/vendor/**
+            **/tests/**
+            **/storage/framework/views/**
+            **/.env.example
+            **/README.md
+
+      - name: Deployment completed
+        run: |
+          echo "Deployment completed"
+          echo "If you need to set permissions on server, run:"
+          echo "  chmod -R 775 storage bootstrap/cache"
+          echo "  php artisan optimize:clear"

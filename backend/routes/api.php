@@ -27,6 +27,7 @@ Route::get('/public/events/featured', [PublicEventController::class, 'featured']
 Route::get('/public/events/book-now', [PublicEventController::class, 'bookNow']);
 Route::get('/public/events/{id}', [PublicEventController::class, 'show']);
 Route::get('/public/tickets', [PublicEventController::class, 'getTickets']);
+Route::get('/public/events/debug', [PublicEventController::class, 'debug']);
 
 // Public Google Reviews routes
 Route::get('/public/reviews', [ReviewController::class, 'index']);
