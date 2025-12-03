@@ -76,6 +76,32 @@ Route::get('/test-dashboard', function () {
     }
 });
 
+Route::get('/test-admin-controller', function () {
+    try {
+        // Test AdminDashboardController index method directly
+        $controller = new \App\Http\Controllers\AdminDashboardController();
+        
+        // Mock authentication for testing
+        \Auth::loginUsingId(3); // Use the user ID from earlier test
+        
+        // Try to call the index method
+        $result = $controller->index();
+        
+        return response()->json([
+            'message' => 'Controller index method works',
+            'result_type' => get_class($result),
+            'timestamp' => now()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
+
 // Authentication routes
 Route::middleware(['web'])->group(function () {
     Auth::routes();
