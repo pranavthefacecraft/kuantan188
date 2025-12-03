@@ -149,11 +149,34 @@ const Events: React.FC = () => {
                     </Badge>
                   </div>
                   <Card.Body className="d-flex flex-column">
-                    <Card.Title className="fw-bold mb-2">{event.title}</Card.Title>
-                    <Card.Text className="text-muted small mb-2">
-                      📅 {event.event_date_formatted} at {event.event_time_formatted}<br />
-                      📍 {event.location}
-                    </Card.Text>
+                    <Card.Title className="fw-bold mb-3">{event.title}</Card.Title>
+                    
+                    {/* Event Details Section */}
+                    <div className="event-details mb-3">
+                      <div className="d-flex align-items-center mb-2">
+                        <i className="fas fa-calendar-alt text-primary me-2"></i>
+                        <span className="small">
+                          <strong>{event.event_date_formatted}</strong> at {event.event_time_formatted}
+                        </span>
+                      </div>
+                      <div className="d-flex align-items-center mb-2">
+                        <i className="fas fa-map-marker-alt text-primary me-2"></i>
+                        <span className="small">{event.location}</span>
+                      </div>
+                      <div className="d-flex align-items-center mb-2">
+                        <i className="fas fa-tag text-primary me-2"></i>
+                        <span className="small">{event.category}</span>
+                      </div>
+                      {event.is_booking_open && (
+                        <div className="d-flex align-items-center mb-2">
+                          <i className="fas fa-ticket-alt text-success me-2"></i>
+                          <span className="small text-success">
+                            <strong>Booking Open</strong>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
                     <Card.Text className="text-muted mb-3 flex-grow-1">
                       {event.description}
                     </Card.Text>

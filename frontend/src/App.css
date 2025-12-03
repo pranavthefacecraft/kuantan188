@@ -392,3 +392,41 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+
+/* Event Details Styles */
+.event-details {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.event-details .fas {
+  width: 16px;
+  text-align: center;
+}
+
+.event-details .small {
+  font-size: 0.875rem;
+  color: #495057;
+}
+
+.event-details .small strong {
+  color: #212529;
+}
+
+/* Event card improvements */
+.event-card-img {
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.hover-lift:hover .event-card-img {
+  transform: scale(1.05);
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  transition: transform 0.3s ease;
+}
