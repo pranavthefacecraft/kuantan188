@@ -29,6 +29,10 @@ Route::get('/public/events/{id}', [PublicEventController::class, 'show']);
 Route::get('/public/tickets', [PublicEventController::class, 'getTickets']);
 Route::get('/public/events/debug', [PublicEventController::class, 'debug']);
 
+// Public bookings API
+Route::post('/public/bookings', [App\Http\Controllers\PublicBookingController::class, 'store']);
+Route::get('/public/bookings', [App\Http\Controllers\PublicBookingController::class, 'getBookingsByEmail']);
+
 // Public Google Reviews routes
 Route::get('/public/reviews', [ReviewController::class, 'index']);
 Route::get('/public/reviews/stats', [ReviewController::class, 'stats']);
