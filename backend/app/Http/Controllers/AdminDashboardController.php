@@ -32,8 +32,8 @@ class AdminDashboardController extends Controller
         // Get dashboard statistics
         $stats = $this->getDashboardStats();
         
-        // Get recent bookings
-        $recentBookings = Booking::with(['ticket.event', 'ticket.country'])
+        // Get recent bookings with safer relationships
+        $recentBookings = Booking::with(['event', 'country'])
             ->latest()
             ->take(10)
             ->get();
@@ -129,7 +129,7 @@ class AdminDashboardController extends Controller
      */
     public function events()
     {
-        $events = Event::with(['tickets.country', 'tickets.bookings'])->paginate(15);
+        $events = Event::with(['tickets.countries', 'tickets.bookings'])->paginate(15);
         return view('admin.events', compact('events'));
     }
 
@@ -211,9 +211,9 @@ class AdminDashboardController extends Controller
      */
     public function bookings()
     {
-        $bookings = Booking::with(['ticket.event', 'ticket.country'])
+        $bookings = Booking::with(['event', 'country', 'ticket'])
             ->latest()
-            ->paginate(15);
+            ->paginate(20);
         return view('admin.bookings', compact('bookings'));
     }
 
@@ -411,7 +411,7 @@ class AdminDashboardController extends Controller
      */
     public function countries()
     {
-        $countries = Country::with(['tickets.bookings'])->paginate(15);
+        $countries = Country::with('tickets')->paginate(15);
         return view('admin.countries', compact('countries'));
     }
 
