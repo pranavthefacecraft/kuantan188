@@ -353,6 +353,9 @@ const Home: React.FC = () => {
                       <div className="event-card-overlay"></div>
                       <div className="event-card-content p-4 d-flex flex-column h-100">
                         <h3 className="column-title mb-2">{event.title}</h3>
+                        <p className="event-description mb-3 flex-grow-1">
+                          {event.description}
+                        </p>
                         <div className="mt-auto">
                           <p className="pricing-label mb-1">Starting at</p>
                           <p className="pricing-amount mb-3">{event.price_display}</p>

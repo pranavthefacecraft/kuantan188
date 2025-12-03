@@ -430,3 +430,15 @@
   transform: translateY(-5px);
   transition: transform 0.3s ease;
 }
+
+/* Event description styling for Book Now cards */
+.event-description {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
