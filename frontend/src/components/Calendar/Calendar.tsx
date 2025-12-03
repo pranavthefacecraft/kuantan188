@@ -121,8 +121,9 @@ const Calendar: React.FC<CalendarProps> = ({
                         : 'btn-outline-secondary'
               }`}
               style={{ 
-                height: '40px', 
-                fontSize: '0.875rem',
+                height: '30px', 
+                width: '30px',
+                fontSize: '13px',
                 border: isCurrentMonth ? undefined : 'none'
               }}
               onClick={(e) => {

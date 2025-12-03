@@ -450,12 +450,12 @@
 }
 
 .calendar-date-btn {
-  height: 40px !important;
-  min-height: 40px;
-  width: 40px !important;
-  padding: 0;
-  font-size: 0.875rem;
+  font-size: 13px !important;
   font-weight: 500;
+  height: 30px !important;
+  min-height: 30px;
+  padding: 0;
+  width: 30px !important;
 }
 
 .calendar-date-btn:not(.not-current-month):hover {
