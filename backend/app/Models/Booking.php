@@ -32,9 +32,7 @@ class Booking extends Model
         'child_tickets',
         'adult_price',
         'child_price',
-        'total_amount',
         'payment_status',
-        'payment_method',
         'payment_reference',
         'payment_date',
         'status'
@@ -44,7 +42,9 @@ class Booking extends Model
         'adult_price' => 'decimal:2',
         'child_price' => 'decimal:2',
         'total_amount' => 'decimal:2',
-        'payment_date' => 'datetime'
+        'payment_date' => 'datetime',
+        'event_date' => 'date',
+        'receive_updates' => 'boolean'
     ];
 
     public function event(): BelongsTo

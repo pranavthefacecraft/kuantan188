@@ -30,6 +30,7 @@ Route::get('/public/tickets', [PublicEventController::class, 'getTickets']);
 Route::get('/public/events/debug', [PublicEventController::class, 'debug']);
 
 // Public bookings API
+Route::get('/public/bookings/test', [App\Http\Controllers\PublicBookingController::class, 'test']);
 Route::post('/public/bookings', [App\Http\Controllers\PublicBookingController::class, 'store']);
 Route::get('/public/bookings', [App\Http\Controllers\PublicBookingController::class, 'getBookingsByEmail']);
 

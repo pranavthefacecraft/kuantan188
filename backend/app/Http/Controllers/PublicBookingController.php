@@ -10,11 +10,24 @@ use Illuminate\Support\Facades\Validator;
 class PublicBookingController extends Controller
 {
     /**
+     * Test endpoint for debugging
+     */
+    public function test(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'API is working',
+            'timestamp' => now(),
+            'columns' => \Schema::getColumnListing('bookings')
+        ]);
+    }
+
+    /**
      * Store a new booking
      */
     public function store(Request $request): JsonResponse
     {
         try {
+            \Log::info('Booking request received:', $request->all());
             $validator = Validator::make($request->all(), [
                 'event_id' => 'required|integer',
                 'event_title' => 'required|string|max:255',
@@ -78,10 +91,12 @@ class PublicBookingController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Booking creation failed: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             
             return response()->json([
                 'error' => 'Failed to create booking',
-                'message' => 'An error occurred while processing your booking. Please try again.'
+                'message' => 'An error occurred while processing your booking. Please try again.',
+                'debug' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
