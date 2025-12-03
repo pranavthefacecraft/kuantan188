@@ -52,6 +52,21 @@ jobs:
           --exclude 'tests' \
           --exclude '.env.example' \
           backend/ deploy/
+        
+        # Recreate Laravel storage directories with proper structure
+        mkdir -p deploy/storage/framework/{cache,sessions,views}
+        mkdir -p deploy/storage/app/public
+        mkdir -p deploy/storage/logs
+        mkdir -p deploy/bootstrap/cache
+        
+        # Create empty files to ensure directories are uploaded
+        touch deploy/storage/framework/cache/.gitkeep
+        touch deploy/storage/framework/sessions/.gitkeep  
+        touch deploy/storage/framework/views/.gitkeep
+        touch deploy/storage/app/public/.gitkeep
+        touch deploy/storage/logs/.gitkeep
+        touch deploy/bootstrap/cache/.gitkeep
+        
         # Ensure public/.htaccess exists
         mkdir -p deploy/public
         cat > deploy/public/.htaccess << 'EOF'
@@ -70,7 +85,7 @@ jobs:
             RewriteRule ^ index.php [L]
         </IfModule>
         EOF
-        echo "✅ Deployment files prepared (vendor excluded)"
+        echo "✅ Deployment files prepared (vendor excluded, storage directories created)"
         
     - name: Deploy to server via FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
