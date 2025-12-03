@@ -31,6 +31,7 @@ Route::get('/public/events/debug', [PublicEventController::class, 'debug']);
 
 // Public bookings API
 Route::get('/public/bookings/test', [App\Http\Controllers\PublicBookingController::class, 'test']);
+Route::get('/public/bookings/test-create', [App\Http\Controllers\PublicBookingController::class, 'testCreate']);
 Route::post('/public/bookings', [App\Http\Controllers\PublicBookingController::class, 'store']);
 Route::get('/public/bookings', [App\Http\Controllers\PublicBookingController::class, 'getBookingsByEmail']);
 

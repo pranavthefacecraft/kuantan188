@@ -22,6 +22,83 @@ class PublicBookingController extends Controller
     }
 
     /**
+     * Test booking creation with sample data
+     */
+    public function testCreate(): JsonResponse
+    {
+        try {
+            $sampleData = [
+                'event_id' => 1,
+                'event_title' => 'Test Event',
+                'customer_name' => 'Test User',
+                'email' => 'test@example.com',
+                'mobile_phone' => '1234567890',
+                'country' => 'Malaysia',
+                'postal_code' => '12345',
+                'quantity' => 1,
+                'event_date' => '2025-12-10',
+                'total_amount' => 100.00,
+                'payment_method' => 'cash_on_delivery',
+                'receive_updates' => false,
+                'booking_status' => 'confirmed'
+            ];
+
+            \Log::info('Test booking creation started with data:', $sampleData);
+
+            $bookingReference = 'KB' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+
+            $bookingData = [
+                'booking_reference' => $bookingReference,
+                'event_id' => $sampleData['event_id'],
+                'event_title' => $sampleData['event_title'],
+                'customer_name' => $sampleData['customer_name'],
+                'customer_email' => $sampleData['email'],
+                'email' => $sampleData['email'],
+                'customer_phone' => $sampleData['mobile_phone'],
+                'mobile_phone' => $sampleData['mobile_phone'],
+                'country' => $sampleData['country'],
+                'postal_code' => $sampleData['postal_code'],
+                'adult_tickets' => 0,
+                'child_tickets' => 0,
+                'quantity' => $sampleData['quantity'],
+                'event_date' => $sampleData['event_date'],
+                'adult_price' => 0,
+                'child_price' => 0,
+                'total_amount' => $sampleData['total_amount'],
+                'payment_method' => $sampleData['payment_method'],
+                'payment_status' => 'pending',
+                'status' => $sampleData['booking_status'],
+            ];
+
+            \Log::info('Attempting test booking creation with:', $bookingData);
+
+            $booking = Booking::create($bookingData);
+
+            \Log::info('Test booking created successfully:', ['id' => $booking->id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test booking created successfully',
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'data_used' => $bookingData
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Test booking creation failed: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
+    }
+
+    /**
      * Store a new booking
      */
     public function store(Request $request): JsonResponse
@@ -110,11 +187,16 @@ class PublicBookingController extends Controller
         } catch (\Exception $e) {
             \Log::error('Booking creation failed: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Error file: ' . $e->getFile());
+            \Log::error('Error line: ' . $e->getLine());
             
             return response()->json([
                 'error' => 'Failed to create booking',
                 'message' => 'An error occurred while processing your booking. Please try again.',
-                'debug' => config('app.debug') ? $e->getMessage() : null
+                'debug_message' => $e->getMessage(),
+                'debug_file' => $e->getFile(),
+                'debug_line' => $e->getLine(),
+                'debug_trace' => $e->getTraceAsString()
             ], 500);
         }
     }
