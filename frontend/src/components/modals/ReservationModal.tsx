@@ -59,7 +59,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
       <Modal.Body className="p-0">
         <div className="modal-content-wrapper" style={{ 
           backgroundColor: '#fff', 
-          borderRadius: '20px',
+          borderRadius: '7px',
           overflow: 'hidden',
           minHeight: '500px'
         }}>
@@ -68,7 +68,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
             <div className="d-flex align-items-center">
               <h5 className="mb-0 fw-bold">Tickets</h5>
               <span className="badge text-white ms-3 px-3 py-2 rounded-pill fs-6" 
-                    style={{ backgroundColor: '#1a0007' }}>
+                    style={{ backgroundColor: '#ff014a' }}>
                 ₹{calculateTotal().toLocaleString()}
               </span>
             </div>
@@ -122,8 +122,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                         style={{ 
                           width: '36px', 
                           height: '36px',
-                          borderColor: '#000000ff',
-                          color: '#000000ff',
+                          borderColor: '#1a0007',
+                          color: '#1a0007',
                           fontSize: '18px'
                         }}
                         onClick={() => handleQuantityChange(-1)}
@@ -140,8 +140,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                         style={{ 
                           width: '36px', 
                           height: '36px',
-                          borderColor: '#00c851',
-                          color: '#00c851',
+                          borderColor: '#1a0007',
+                          color: '#1a0007',
                           fontSize: '16px'
                         }}
                         onClick={() => handleQuantityChange(1)}
@@ -187,7 +187,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
           </Row>
 
           {/* Right Aligned Add to Cart Button */}
-          <div className="px-4 pb-4 d-flex justify-content-end" style={{ backgroundColor: '#000c' }}>
+          <div className="px-4 pt-3 pb-3 d-flex justify-content-end" style={{ backgroundColor: '#BAA73F' }}>
             <Button 
               className="fw-bold py-2 px-4 rounded-3 border-0"
               onClick={handleAddToCart}
