@@ -192,7 +192,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
               className="fw-bold py-2 px-4 rounded-3 border-0"
               onClick={handleAddToCart}
               style={{
-                backgroundColor: '#000c !important',
+                backgroundColor: '#000000 !important',
                 color: '#fff !important',
                 fontSize: '0.9rem'
               }}
