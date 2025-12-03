@@ -11,7 +11,7 @@ class PublicEventController extends Controller
 {
     /**
      * Get all active events for public display
-     * Updated: 2025-12-03 - Deployment test version 5.0 - Fixed Laravel deployment (proper cache exclusion)
+     * Updated: 2025-12-03 - Deployment test version 5.1 - Testing updated deployment workflow
      */
     public function index(Request $request): JsonResponse
     {
