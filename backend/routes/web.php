@@ -111,9 +111,31 @@ Route::middleware(['web'])->group(function () {
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+// Simple test admin route to isolate the issue
+Route::get('/simple-admin', function () {
+    return '<h1>Simple Admin Test</h1><p>Auth: ' . (\Auth::check() ? 'Logged in as ' . \Auth::user()->name : 'Not logged in') . '</p><p>If you see this, routing works fine.</p>';
+})->middleware('auth');
+
 // Admin Dashboard Routes (protected by auth middleware)
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    // Temporarily replace dashboard with simple response to test
+    Route::get('/', function () {
+        return '<h1>Admin Dashboard</h1><p>This is a simple response to test if the route works without view rendering.</p><p>Controller and views will be restored once this works.</p>';
+    })->name('dashboard');
+    
+    // Route to test controller data without complex view
+    Route::get('/debug', function () {
+        try {
+            $controller = new AdminDashboardController();
+            \Auth::loginUsingId(3);
+            $result = $controller->index();
+            $data = $result->getData();
+            
+            return '<h1>Dashboard Debug</h1><pre>' . print_r($data, true) . '</pre>';
+        } catch (\Exception $e) {
+            return '<h1>Controller Error</h1><pre>' . $e->getMessage() . '</pre>';
+        }
+    });
     Route::get('/events', [AdminDashboardController::class, 'events'])->name('events');
     Route::post('/events', [AdminDashboardController::class, 'storeEvent'])->name('events.store');
     Route::get('/events/{event}/edit', [AdminDashboardController::class, 'editEvent'])->name('events.edit');
