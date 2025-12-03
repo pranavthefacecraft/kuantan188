@@ -33,6 +33,49 @@ Route::get('/health', function () {
     }
 });
 
+Route::get('/test-admin', function () {
+    try {
+        return response()->json([
+            'message' => 'Admin route is accessible',
+            'auth_check' => \Auth::check(),
+            'auth_user' => \Auth::user() ? \Auth::user()->toArray() : null,
+            'timestamp' => now()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+Route::get('/test-dashboard', function () {
+    try {
+        // Test the dashboard stats method directly
+        $controller = new \App\Http\Controllers\AdminDashboardController();
+        
+        // Test basic booking query without relationships
+        $bookingCount = \App\Models\Booking::count();
+        
+        // Test the specific query causing issues
+        $recentBookings = \App\Models\Booking::latest()->take(5)->get();
+        
+        return response()->json([
+            'message' => 'Dashboard test successful',
+            'booking_count' => $bookingCount,
+            'recent_bookings' => $recentBookings->toArray(),
+            'timestamp' => now()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
+
 // Authentication routes
 Route::middleware(['web'])->group(function () {
     Auth::routes();
