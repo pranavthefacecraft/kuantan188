@@ -68,7 +68,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
             <div className="d-flex align-items-center">
               <h5 className="mb-0 fw-bold">Tickets</h5>
               <span className="badge text-white ms-3 px-3 py-2 rounded-pill fs-6" 
-                    style={{ backgroundColor: '#00c851' }}>
+                    style={{ backgroundColor: '#1a0007' }}>
                 ₹{calculateTotal().toLocaleString()}
               </span>
             </div>
@@ -122,8 +122,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                         style={{ 
                           width: '36px', 
                           height: '36px',
-                          borderColor: '#00c851',
-                          color: '#00c851',
+                          borderColor: '#000000ff',
+                          color: '#000000ff',
                           fontSize: '18px'
                         }}
                         onClick={() => handleQuantityChange(-1)}
