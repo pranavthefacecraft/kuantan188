@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import { eventsApi, Event } from '../services/api';
 import ReservationModal from '../components/modals/ReservationModal';
@@ -11,6 +12,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
 
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -55,6 +57,10 @@ const Home: React.FC = () => {
   const handleReserveNow = (event: Event) => {
     setSelectedEvent(event);
     setShowModal(true);
+  };
+
+  const handleViewDetails = (eventId: number) => {
+    navigate(`/events/${eventId}`);
   };
 
   const handleCloseModal = () => {
@@ -331,12 +337,21 @@ const Home: React.FC = () => {
                         <div className="mt-auto">
                           <p className="pricing-label mb-1">Starting at</p>
                           <p className="pricing-amount mb-3">{event.price_display}</p>
-                          <Button 
-                            className="reserve-button get-tickets-button"
-                            onClick={() => handleReserveNow(event)}
-                          >
-                            Reserve
-                          </Button>
+                          <div className="d-flex gap-2 flex-column">
+                            <Button 
+                              variant="outline-light"
+                              size="sm"
+                              onClick={() => handleViewDetails(event.id)}
+                            >
+                              View Details
+                            </Button>
+                            <Button 
+                              className="reserve-button get-tickets-button"
+                              onClick={() => handleReserveNow(event)}
+                            >
+                              Reserve
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>

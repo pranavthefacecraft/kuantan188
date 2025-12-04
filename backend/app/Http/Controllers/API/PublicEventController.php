@@ -119,10 +119,12 @@ class PublicEventController extends Controller
             'success' => true,
             'data' => [
                 'id' => $event->id,
+                'name' => $event->title, // Add name field for compatibility
                 'title' => $event->title,
                 'description' => $event->description,
                 'location' => $event->location,
-                'event_date' => $event->event_date->format('Y-m-d H:i:s'),
+                'event_date' => $event->event_date->format('Y-m-d'),
+                'event_time' => $event->event_date->format('H:i:s'),
                 'event_date_formatted' => $event->event_date->format('F j, Y'),
                 'event_time_formatted' => $event->event_date->format('g:i A'),
                 'image_url' => $event->image_url 
@@ -130,11 +132,15 @@ class PublicEventController extends Controller
                         ? $event->image_url 
                         : asset('storage/' . $event->image_url))
                     : 'https://picsum.photos/400/250?random=' . $event->id,
-                'price' => $event->price ?? 'From RM50',
+                'price' => is_numeric($event->price) ? $event->price : 50,
                 'price_display' => $event->price ? "From RM{$event->price}" : 'From RM50',
+                'capacity' => $event->capacity ?? 100,
+                'current_bookings' => $event->bookings()->count(),
+                'status' => $event->is_active ? 'active' : 'inactive',
                 'category' => $this->determineCategory($event->title),
                 'is_booking_open' => $event->isBookingOpen(),
-                'slug' => str_replace(' ', '-', strtolower($event->title))
+                'slug' => str_replace(' ', '-', strtolower($event->title)),
+                'created_at' => $event->created_at->toISOString()
             ]
         ]);
     }

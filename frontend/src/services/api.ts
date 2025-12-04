@@ -95,6 +95,12 @@ export const eventsApi = {
     return response.data;
   },
 
+  // Get single event by ID (alias for consistency)
+  async getEventById(id: number): Promise<ApiResponse<Event>> {
+    const response = await apiClient.get(`/public/events/${id}`);
+    return response.data;
+  },
+
   // Get user tickets/bookings
   async getTickets(): Promise<ApiResponse<any[]>> {
     const response = await apiClient.get('/public/tickets');
