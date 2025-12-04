@@ -165,19 +165,21 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
               <Col md={5}>
                 <div className="ticket-info">
                   {ticket.image_url && (
-                    <div className="ticket-image mb-3">
+                    <div className="ticket-image-container mb-3">
                       <img 
                         src={ticket.image_url} 
                         alt={ticketName}
                         className="img-fluid rounded"
-                        style={{ width: '100%', height: '280px', objectFit: 'cover' }}
+                        style={{ width: '100%', height: '180px', objectFit: 'cover' }}
                       />
                     </div>
                   )}
-                  <h4 className="ticket-title mb-2">{ticketName}</h4>
-                  {ticket.description && (
-                    <p className="ticket-description text-muted small">{ticket.description}</p>
-                  )}
+                  <div className="ticket-content">
+                    <h4 className="ticket-title mb-2">{ticketName}</h4>
+                    {ticket.description && (
+                      <p className="ticket-description text-muted small mb-3">{ticket.description}</p>
+                    )}
+                  </div>
                   
                   {/* Adult Quantity */}
                   <div className="quantity-section mb-3">
@@ -530,7 +532,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                     <Form.Check
                       type="checkbox"
                       id="newsletter-checkbox"
-                      label="I would like Magnicity 360 Chicago to send me exclusive updates and the latest offers."
+                      label="I would like Kuantan 188 to send me exclusive updates and the latest offers."
                       checked={contactForm.receiveUpdates}
                       onChange={(e) => setContactForm({...contactForm, receiveUpdates: e.target.checked})}
                     />
@@ -576,7 +578,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                     </div>
                   </div>
 
-                  <Button className="continue-shopping-btn w-100 mb-4" variant="success">
+                  <Button className="continue-shopping-btn w-100 mb-4" variant="success" size="sm">
                     + Continue shopping
                   </Button>
 

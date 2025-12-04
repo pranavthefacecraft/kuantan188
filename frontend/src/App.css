@@ -538,16 +538,36 @@
   padding: 1.5rem;
 }
 
+.ticket-booking-modal .ticket-info {
+  position: relative;
+  z-index: 1;
+}
+
+.ticket-booking-modal .ticket-image-container {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.ticket-booking-modal .ticket-content {
+  background: white;
+  padding: 0;
+  position: relative;
+  z-index: 2;
+}
+
 .ticket-booking-modal .ticket-info .ticket-title {
   color: #1f2937;
   font-weight: 700;
   font-size: 1.25rem;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 }
 
 .ticket-booking-modal .ticket-description {
   font-size: 0.875rem;
   line-height: 1.5;
   color: #6b7280;
+  margin-bottom: 1rem;
 }
 
 /* Quantity Controls */
