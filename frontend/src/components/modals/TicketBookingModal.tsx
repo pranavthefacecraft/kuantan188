@@ -441,7 +441,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
           <div className="checkout-step">
             <Row>
               {/* Left Side - Contact Details */}
-              <Col md={7}>
+              <Col md={6}>
                 <div className="contact-details">
                   <h5 className="mb-3">Contact Details</h5>
                   <p className="text-muted mb-4"><span className="text-danger">*</span> Required Fields</p>
@@ -541,7 +541,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
               </Col>
 
               {/* Right Side - Order Summary */}
-              <Col md={5}>
+              <Col md={6}>
                 <div className="order-summary-card">
                   <div className="ticket-card mb-4">
                     {ticket.image_url && (
