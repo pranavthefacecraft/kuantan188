@@ -622,8 +622,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             <Row>
               {/* Left Column - Payment Method */}
               <Col md={7}>
-                <h4 className="mb-4">Payment Method</h4>
-                <div className="payment-method-card p-4 border rounded bg-light">
+                
+                <div className="payment-method-card p-4 border rounded bg-light ms-4">
                   <div className="d-flex align-items-center">
                     <div className="payment-icon me-3">
                       <i className="fas fa-money-bill-wave text-success" style={{ fontSize: '2rem' }}></i>
@@ -646,7 +646,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
 
               {/* Right Column - Order Summary */}
               <Col md={5}>
-                <div className="payment-summary p-4 bg-white border rounded">
+                <div className="payment-summary p-4 bg-white border rounded me-4">
                   <h6 className="mb-3">Order Summary</h6>
                   <div className="d-flex justify-content-between mb-2">
                     <span>Subtotal:</span>
