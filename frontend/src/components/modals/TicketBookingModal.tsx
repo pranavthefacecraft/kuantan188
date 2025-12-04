@@ -138,7 +138,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     <Modal 
       show={show} 
       onHide={handleClose}
-      size="lg"
+      size="xl"
       backdrop="static"
       keyboard={false}
       className="ticket-booking-modal"

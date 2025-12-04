@@ -517,6 +517,11 @@
 }
 
 /* TicketBookingModal Styles - New Design */
+.ticket-booking-modal .modal-dialog {
+  max-width: 1200px !important;
+  width: 95%;
+}
+
 .ticket-booking-modal .modal-header-custom {
   background: white;
   border-bottom: 1px solid #e5e7eb;
