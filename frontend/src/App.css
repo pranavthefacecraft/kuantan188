@@ -553,6 +553,11 @@
 /* Quantity Controls */
 .ticket-booking-modal .quantity-section {
   border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.75rem;
+}
+
+.ticket-booking-modal .quantity-section:last-of-type {
+  border-bottom: 2px solid #e5e7eb;
   padding-bottom: 1rem;
 }
 

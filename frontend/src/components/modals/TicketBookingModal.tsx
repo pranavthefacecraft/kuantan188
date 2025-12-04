@@ -173,7 +173,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                   )}
                   
                   {/* Adult Quantity */}
-                  <div className="quantity-section mb-4">
+                  <div className="quantity-section mb-3">
                     <div className="d-flex align-items-center justify-content-between">
                       <div>
                         <span className="fw-bold">Adult</span>
@@ -193,6 +193,34 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                         <Button 
                           className="quantity-btn"
                           onClick={() => handleQuantityChange('adult', 1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Child Quantity */}
+                  <div className="quantity-section mb-4">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div>
+                        <span className="fw-bold">Child</span>
+                        <div className="small text-muted">
+                          from {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.child_price).toFixed(0) : '35'}
+                        </div>
+                      </div>
+                      <div className="quantity-controls d-flex align-items-center">
+                        <Button 
+                          className="quantity-btn"
+                          onClick={() => handleQuantityChange('child', -1)}
+                          disabled={childQuantity === 0}
+                        >
+                          −
+                        </Button>
+                        <span className="quantity-display mx-3">{childQuantity}</span>
+                        <Button 
+                          className="quantity-btn"
+                          onClick={() => handleQuantityChange('child', 1)}
                         >
                           +
                         </Button>
@@ -407,14 +435,24 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             <div className="order-summary mt-4 p-3 bg-light rounded">
               <h5>Order Summary</h5>
               <p><strong>{ticketName}</strong></p>
+              <p className="small text-muted mb-2">📅 {format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}</p>
               {adultQuantity > 0 && (
-                <p>Adult × {adultQuantity}: {selectedCountry?.currency_symbol}{(parseFloat(selectedCountry?.adult_price || '0') * adultQuantity).toFixed(2)}</p>
+                <div className="d-flex justify-content-between mb-1">
+                  <span>Adult × {adultQuantity}:</span>
+                  <span>{selectedCountry?.currency_symbol}{(parseFloat(selectedCountry?.adult_price || '0') * adultQuantity).toFixed(2)}</span>
+                </div>
               )}
               {childQuantity > 0 && (
-                <p>Child × {childQuantity}: {selectedCountry?.currency_symbol}{(parseFloat(selectedCountry?.child_price || '0') * childQuantity).toFixed(2)}</p>
+                <div className="d-flex justify-content-between mb-1">
+                  <span>Child × {childQuantity}:</span>
+                  <span>{selectedCountry?.currency_symbol}{(parseFloat(selectedCountry?.child_price || '0') * childQuantity).toFixed(2)}</span>
+                </div>
               )}
               <hr />
-              <p className="mb-0"><strong>Total: {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</strong></p>
+              <div className="d-flex justify-content-between">
+                <strong>Total:</strong>
+                <strong className="text-primary">{selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</strong>
+              </div>
             </div>
           </div>
         )}
@@ -442,7 +480,12 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             <div className="booking-details mt-4 p-3 bg-light rounded">
               <h6>Booking Details:</h6>
               <p><strong>Ticket:</strong> {ticketName}</p>
-              <p><strong>Quantity:</strong> {getTotalQuantity()} ticket{getTotalQuantity() !== 1 ? 's' : ''}</p>
+              <p><strong>Date & Time:</strong> {format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}</p>
+              <div className="mb-2">
+                <strong>Tickets:</strong>
+                {adultQuantity > 0 && <div className="ms-2">• Adult × {adultQuantity}</div>}
+                {childQuantity > 0 && <div className="ms-2">• Child × {childQuantity}</div>}
+              </div>
               <p><strong>Total Paid:</strong> {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</p>
             </div>
           </div>
