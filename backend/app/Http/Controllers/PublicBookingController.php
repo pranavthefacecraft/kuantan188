@@ -69,7 +69,7 @@ class PublicBookingController extends Controller
                 'payment_reference' => null,
                 'payment_date' => null,
                 'status' => $sampleData['booking_status'],
-                'ticket_id' => 1,
+                'ticket_id' => null, // Test bookings are event bookings, not ticket bookings
             ];
 
             // Add optional fields only if columns exist

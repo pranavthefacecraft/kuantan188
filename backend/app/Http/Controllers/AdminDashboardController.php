@@ -218,9 +218,14 @@ class AdminDashboardController extends Controller
             // Filter by booking type
             if ($request->filled('booking_type')) {
                 if ($request->booking_type === 'event') {
-                    $query->whereNull('ticket_id');
+                    $query->where(function($q) {
+                        $q->whereNull('ticket_id')
+                          ->orWhere('ticket_id', 0)
+                          ->orWhere('ticket_id', '');
+                    });
                 } elseif ($request->booking_type === 'ticket') {
-                    $query->whereNotNull('ticket_id');
+                    $query->whereNotNull('ticket_id')
+                          ->where('ticket_id', '>', 0);
                 }
             }
             

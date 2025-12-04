@@ -81,7 +81,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    @if($booking->ticket_id)
+                                    @if(!empty($booking->ticket_id) && $booking->ticket_id !== null && $booking->ticket_id > 0)
                                         <span class="badge badge-info">
                                             <span class="material-icons" style="font-size: 12px;">confirmation_number</span>
                                             Ticket
