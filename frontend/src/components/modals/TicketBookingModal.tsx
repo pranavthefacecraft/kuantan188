@@ -536,7 +536,6 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       <Modal 
         show={showCalendar} 
         onHide={() => setShowCalendar(false)}
-        size="lg"
         centered
         className="calendar-modal"
       >

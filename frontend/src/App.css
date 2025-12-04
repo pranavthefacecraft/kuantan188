@@ -668,8 +668,37 @@
 }
 
 /* Calendar Modal */
+.calendar-modal .modal-dialog {
+  max-width: 50%;
+  width: 50%;
+}
+
 .calendar-modal .modal-body {
   padding: 1rem;
+}
+
+.calendar-modal .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-modal .modal-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 1.5rem;
+}
+
+.calendar-modal .modal-title {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Responsive calendar modal */
+@media (max-width: 768px) {
+  .calendar-modal .modal-dialog {
+    max-width: 90%;
+    width: 90%;
+  }
 }
 
 /* Time Slots */
