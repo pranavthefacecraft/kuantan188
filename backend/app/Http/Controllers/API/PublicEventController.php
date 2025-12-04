@@ -364,18 +364,23 @@ class PublicEventController extends Controller
      */
     public function getTickets(): JsonResponse
     {
-        $tickets = \App\Models\Ticket::with(['event', 'country'])
+        $tickets = \App\Models\Ticket::with(['event', 'countries'])
                                    ->where('is_active', true)
                                    ->get()
                                    ->map(function ($ticket) {
+            // Get pricing from the first available country or use default
+            $firstCountry = $ticket->countries->first();
+            $adultPrice = $firstCountry ? $firstCountry->pivot->adult_price : null;
+            $childPrice = $firstCountry ? $firstCountry->pivot->child_price : null;
+            
             return [
                 'id' => $ticket->id,
-                'title' => $ticket->title ?? $ticket->name ?? 'Untitled Ticket',
-                'name' => $ticket->name ?? $ticket->title ?? 'Untitled Ticket',
+                'title' => $ticket->ticket_name ?? 'Untitled Ticket',
+                'name' => $ticket->ticket_name ?? 'Untitled Ticket',
                 'description' => $ticket->description,
-                'adult_price' => $ticket->adult_price,
-                'child_price' => $ticket->child_price,
-                'price' => $ticket->adult_price ?? $ticket->price ?? null,
+                'adult_price' => $adultPrice,
+                'child_price' => $childPrice,
+                'price' => $adultPrice ?? 50, // Default price if no country pricing
                 'image_url' => $ticket->image_url 
                     ? (str_starts_with($ticket->image_url, 'http') 
                         ? $ticket->image_url 
@@ -384,16 +389,22 @@ class PublicEventController extends Controller
                 'event_id' => $ticket->event_id,
                 'country_id' => $ticket->country_id,
                 'is_active' => $ticket->is_active,
+                'total_quantity' => $ticket->total_quantity,
+                'available_quantity' => $ticket->available_quantity,
                 'event' => $ticket->event ? [
                     'id' => $ticket->event->id,
                     'title' => $ticket->event->title,
                     'location' => $ticket->event->location
                 ] : null,
-                'country' => $ticket->country ? [
-                    'id' => $ticket->country->id,
-                    'name' => $ticket->country->name,
-                    'currency_symbol' => $ticket->country->currency_symbol
-                ] : null
+                'countries' => $ticket->countries->map(function($country) {
+                    return [
+                        'id' => $country->id,
+                        'name' => $country->name,
+                        'currency_symbol' => $country->currency_symbol,
+                        'adult_price' => $country->pivot->adult_price,
+                        'child_price' => $country->pivot->child_price
+                    ];
+                })
             ];
         });
 
