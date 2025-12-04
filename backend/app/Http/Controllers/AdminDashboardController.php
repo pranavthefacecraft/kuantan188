@@ -212,7 +212,8 @@ class AdminDashboardController extends Controller
     public function bookings(Request $request)
     {
         try {
-            $query = Booking::with(['event', 'country', 'ticket']);
+            // Use simpler query without problematic relationships initially
+            $query = Booking::query();
             
             // Filter by booking type
             if ($request->filled('booking_type')) {
@@ -233,7 +234,16 @@ class AdminDashboardController extends Controller
                 $query->where('status', $request->status_filter);
             }
             
+            // Get bookings without relationships first to isolate the issue
             $bookings = $query->latest()->paginate(20);
+            
+            // Try to load relationships safely
+            try {
+                $bookings->load(['event', 'country', 'ticket']);
+            } catch (\Exception $relationError) {
+                \Log::warning('Could not load booking relationships: ' . $relationError->getMessage());
+                // Continue without relationships
+            }
             
             // Get all countries for filter dropdown
             $countries = Country::orderBy('name')->get();

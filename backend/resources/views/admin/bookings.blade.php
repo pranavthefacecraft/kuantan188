@@ -108,16 +108,16 @@
                                 </td>
                                 <td>
                                     <div>
-                                        <div style="font-weight: 500;">{{ $booking->event->title ?? 'N/A' }}</div>
+                                        <div style="font-weight: 500;">{{ optional($booking->event)->title ?? $booking->event_title ?? 'N/A' }}</div>
                                         <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
-                                            {{ $booking->event->event_date ? $booking->event->event_date->format('M j, Y') : 'N/A' }}
+                                            {{ optional($booking->event)->event_date ? optional($booking->event)->event_date->format('M j, Y') : ($booking->event_date ?? 'N/A') }}
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <span class="material-icons" style="font-size: 16px; color: var(--accent);">public</span>
-                                        {{ $booking->country->name ?? ($booking->country ?? 'N/A') }}
+                                        {{ optional($booking->country)->name ?? ($booking->country ?? 'N/A') }}
                                     </div>
                                 </td>
                                 <td>
@@ -136,8 +136,8 @@
                                     </div>
                                     @if($booking->adult_quantity > 0 && $booking->child_quantity > 0)
                                         <div style="font-size: 0.75rem; color: var(--on-surface-variant);">
-                                            A: RM{{ number_format($booking->ticket->adult_price, 2) }} × {{ $booking->adult_quantity }}<br>
-                                            C: RM{{ number_format($booking->ticket->child_price, 2) }} × {{ $booking->child_quantity }}
+                                            A: RM{{ number_format(optional($booking->ticket)->adult_price ?? $booking->adult_price ?? 0, 2) }} × {{ $booking->adult_quantity }}<br>
+                                            C: RM{{ number_format(optional($booking->ticket)->child_price ?? $booking->child_price ?? 0, 2) }} × {{ $booking->child_quantity }}
                                         </div>
                                     @endif
                                 </td>
