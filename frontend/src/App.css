@@ -589,6 +589,22 @@
   text-align: center;
 }
 
+/* Country Selection */
+.ticket-booking-modal .country-select {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.875rem;
+  background: white;
+  transition: all 0.2s;
+}
+
+.ticket-booking-modal .country-select:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  outline: none;
+}
+
 /* Date Options */
 .ticket-booking-modal .date-options {
   gap: 8px;
@@ -614,10 +630,25 @@
   background-color: #f0fdf4;
 }
 
+.ticket-booking-modal .date-option.other-dates {
+  background: #f8f9ff;
+  border-color: #6366f1;
+}
+
+.ticket-booking-modal .date-option.other-dates:hover {
+  border-color: #4f46e5;
+  background-color: #f0f2ff;
+}
+
 .ticket-booking-modal .date-number {
   font-size: 1.25rem;
   font-weight: 700;
   color: #1f2937;
+}
+
+.ticket-booking-modal .date-icon {
+  font-size: 1.25rem;
+  margin-bottom: 2px;
 }
 
 .ticket-booking-modal .date-label {
@@ -629,6 +660,11 @@
 .ticket-booking-modal .date-price {
   font-size: 0.75rem;
   color: #6b7280;
+}
+
+/* Calendar Modal */
+.calendar-modal .modal-body {
+  padding: 1rem;
 }
 
 /* Time Slots */

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Row, Col, Form } from 'react-bootstrap';
 import { format, addDays } from 'date-fns';
+import Calendar from '../Calendar/Calendar';
 
 interface Ticket {
   id: number;
@@ -35,6 +36,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const [childQuantity, setChildQuantity] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
+  const [showCalendar, setShowCalendar] = useState(false);
   
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -56,6 +58,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       setChildQuantity(0);
       setSelectedDate(new Date());
       setSelectedTime('');
+      setShowCalendar(false);
       setContactForm({
         firstName: '',
         lastName: '',
@@ -202,15 +205,35 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
               {/* Right Side - Date and Time Selection */}
               <Col md={7}>
                 <div className="booking-options">
+                  {/* Country Selection */}
+                  {ticket.countries && ticket.countries.length > 1 && (
+                    <div className="mb-4">
+                      <h6 className="mb-3">Select Country/Region</h6>
+                      <Form.Select
+                        value={selectedCountry?.id || ''}
+                        onChange={(e) => {
+                          const country = ticket.countries?.find(c => c.id === parseInt(e.target.value));
+                          setSelectedCountry(country);
+                        }}
+                        className="country-select"
+                      >
+                        {ticket.countries.map((country) => (
+                          <option key={country.id} value={country.id}>
+                            {country.name} ({country.currency_symbol})
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </div>
+                  )}
+
                   {/* Date Selection */}
                   <div className="mb-4">
                     <h6 className="mb-3">Select Date</h6>
                     <div className="date-options d-flex gap-2">
-                      {[0, 1, 2].map((dayOffset) => {
+                      {[0, 1].map((dayOffset) => {
                         const date = addDays(new Date(), dayOffset);
                         const isSelected = format(selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
                         const isToday = dayOffset === 0;
-                        const isTomorrow = dayOffset === 1;
                         
                         return (
                           <button
@@ -221,7 +244,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                           >
                             <div className="date-number">{format(date, 'd')}</div>
                             <div className="date-label">
-                              {isToday ? 'Today' : isTomorrow ? 'Tomorrow' : 'Other Dates'}
+                              {isToday ? 'Today' : 'Tomorrow'}
                             </div>
                             <div className="date-price">
                               {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.adult_price).toFixed(0) : '49'}
@@ -229,6 +252,37 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                           </button>
                         );
                       })}
+                      
+                      {/* Other Dates - Calendar Trigger or Selected Custom Date */}
+                      {(() => {
+                        const today = new Date();
+                        const tomorrow = addDays(new Date(), 1);
+                        const isCustomDate = format(selectedDate, 'yyyy-MM-dd') !== format(today, 'yyyy-MM-dd') && 
+                                           format(selectedDate, 'yyyy-MM-dd') !== format(tomorrow, 'yyyy-MM-dd');
+                        
+                        return (
+                          <button
+                            className={`date-option other-dates ${isCustomDate ? 'selected' : ''}`}
+                            onClick={() => setShowCalendar(true)}
+                            type="button"
+                          >
+                            {isCustomDate ? (
+                              <>
+                                <div className="date-number">{format(selectedDate, 'd')}</div>
+                                <div className="date-label">{format(selectedDate, 'MMM')}</div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="date-icon">📅</div>
+                                <div className="date-label">Other Dates</div>
+                              </>
+                            )}
+                            <div className="date-price">
+                              {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.adult_price).toFixed(0) : '49'}
+                            </div>
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -434,6 +488,28 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
           </Button>
         )}
       </Modal.Footer>
+      
+      {/* Calendar Modal */}
+      <Modal 
+        show={showCalendar} 
+        onHide={() => setShowCalendar(false)}
+        size="lg"
+        centered
+        className="calendar-modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Select Date</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Calendar
+            selectedDate={selectedDate}
+            onDateSelect={(date: Date) => {
+              setSelectedDate(date);
+              setShowCalendar(false);
+            }}
+          />
+        </Modal.Body>
+      </Modal>
     </Modal>
   );
 };
