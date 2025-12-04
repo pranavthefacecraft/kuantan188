@@ -516,88 +516,67 @@
   color: #475569;
 }
 
-/* TicketBookingModal Styles */
+/* TicketBookingModal Styles - New Design */
 .ticket-booking-modal .modal-header-custom {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  border-bottom: none;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
 }
 
 .ticket-booking-modal .modal-title-custom {
   font-weight: 600;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
+  color: #1f2937;
 }
 
 .ticket-booking-modal .modal-body-custom {
-  padding: 2rem;
+  padding: 0;
+  background-color: #f9fafb;
+}
+
+.ticket-booking-modal .ticket-selection-step {
+  padding: 1.5rem;
 }
 
 .ticket-booking-modal .ticket-info .ticket-title {
-  color: #1e293b;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 1.25rem;
 }
 
 .ticket-booking-modal .ticket-description {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   line-height: 1.5;
+  color: #6b7280;
 }
 
-.ticket-booking-modal .form-label {
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.5rem;
+/* Quantity Controls */
+.ticket-booking-modal .quantity-section {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
 }
 
-.ticket-booking-modal .form-select-custom {
+.ticket-booking-modal .quantity-controls .quantity-btn {
+  background: white;
   border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-}
-
-.ticket-booking-modal .form-select-custom:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-.ticket-booking-modal .ticket-row {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0 !important;
-  transition: all 0.2s ease;
-}
-
-.ticket-booking-modal .ticket-row:hover {
-  background-color: #f1f5f9;
-  border-color: #cbd5e1 !important;
-}
-
-.ticket-booking-modal .ticket-type h6 {
-  color: #1e293b;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-.ticket-booking-modal .quantity-controls .btn {
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #d1d5db;
-  background-color: white;
-  color: #374151;
+  font-size: 16px;
   font-weight: 600;
+  color: #374151;
+  transition: all 0.2s;
 }
 
-.ticket-booking-modal .quantity-controls .btn:hover {
-  border-color: #6366f1;
-  color: #6366f1;
-  background-color: #f8fafc;
+.ticket-booking-modal .quantity-controls .quantity-btn:hover:not(:disabled) {
+  border-color: #22c55e;
+  color: #22c55e;
 }
 
-.ticket-booking-modal .quantity-controls .btn:disabled {
+.ticket-booking-modal .quantity-controls .quantity-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -605,15 +584,146 @@
 .ticket-booking-modal .quantity-display {
   font-weight: 600;
   font-size: 1.1rem;
-  color: #1e293b;
+  color: #1f2937;
   min-width: 30px;
   text-align: center;
 }
 
-.ticket-booking-modal .total-section {
-  background-color: #f0f9ff !important;
-  border: 1px solid #bae6fd;
+/* Date Options */
+.ticket-booking-modal .date-options {
+  gap: 8px;
+}
+
+.ticket-booking-modal .date-option {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.ticket-booking-modal .date-option:hover {
+  border-color: #22c55e;
+}
+
+.ticket-booking-modal .date-option.selected {
+  border-color: #22c55e;
+  background-color: #f0fdf4;
+}
+
+.ticket-booking-modal .date-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.ticket-booking-modal .date-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 2px 0;
+}
+
+.ticket-booking-modal .date-price {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Time Slots */
+.ticket-booking-modal .time-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.ticket-booking-modal .time-slot {
+  background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.ticket-booking-modal .time-slot:hover {
+  border-color: #22c55e;
+  background-color: #f9fafb;
+}
+
+.ticket-booking-modal .time-slot.selected {
+  border-color: #22c55e;
+  background-color: #f0fdf4;
+}
+
+.ticket-booking-modal .time-slot.best-price {
+  border-color: #22c55e;
+}
+
+.ticket-booking-modal .time-label {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.875rem;
+}
+
+.ticket-booking-modal .time-price {
+  color: #22c55e;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-top: 2px;
+}
+
+.ticket-booking-modal .best-price-badge {
+  position: absolute;
+  top: -6px;
+  right: 8px;
+  background: #22c55e;
+  color: white;
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Continue Button */
+.ticket-booking-modal .continue-button {
+  background: #22c55e;
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 16px;
+  font-size: 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.ticket-booking-modal .continue-button:hover:not(:disabled) {
+  background: #16a34a;
+  transform: translateY(-1px);
+}
+
+.ticket-booking-modal .continue-button:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ticket-booking-modal .modal-footer-custom {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  background: white;
+}
+
+/* Form Styles */
+.ticket-booking-modal .form-label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
 }
 
 .ticket-booking-modal .order-summary {
@@ -639,12 +749,6 @@
   border-radius: 8px;
 }
 
-.ticket-booking-modal .modal-footer-custom {
-  padding: 1.5rem 2rem;
-  border-top: 1px solid #e5e7eb;
-  background-color: #f9fafb;
-}
-
 .ticket-booking-modal .payment-simulation {
   padding: 2rem;
 }
@@ -656,7 +760,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .ticket-booking-modal .modal-body-custom {
+  .ticket-booking-modal .ticket-selection-step {
     padding: 1rem;
   }
   
@@ -664,8 +768,11 @@
     padding: 1rem;
   }
   
-  .ticket-booking-modal .quantity-controls {
-    justify-content: center;
-    margin-top: 0.5rem;
+  .ticket-booking-modal .time-slots {
+    grid-template-columns: 1fr;
+  }
+  
+  .ticket-booking-modal .date-options {
+    flex-direction: column;
   }
 }

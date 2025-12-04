@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Button, Row, Col, Form } from 'react-bootstrap';
+import { format, addDays } from 'date-fns';
 
 interface Ticket {
   id: number;
@@ -32,6 +33,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
   const [adultQuantity, setAdultQuantity] = useState(1);
   const [childQuantity, setChildQuantity] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedTime, setSelectedTime] = useState<string>('');
   
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -51,6 +54,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       setSelectedCountry(ticket.countries?.[0] || null);
       setAdultQuantity(1);
       setChildQuantity(0);
+      setSelectedDate(new Date());
+      setSelectedTime('');
       setContactForm({
         firstName: '',
         lastName: '',
@@ -95,6 +100,10 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       alert('Please select at least one ticket');
       return;
     }
+    if (!selectedTime) {
+      alert('Please select a time slot');
+      return;
+    }
     setCurrentStep('details');
   };
 
@@ -134,140 +143,123 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     >
       <Modal.Header closeButton className="modal-header-custom">
         <Modal.Title className="modal-title-custom">
-          🎫 {ticketName}
+          Tickets
         </Modal.Title>
       </Modal.Header>
       
       <Modal.Body className="modal-body-custom">
         {currentStep === 'selection' && (
           <div className="ticket-selection-step">
-            {/* Ticket Info */}
-            <div className="ticket-info mb-4">
-              {ticket.image_url && (
-                <div className="ticket-image mb-3">
-                  <img 
-                    src={ticket.image_url} 
-                    alt={ticketName}
-                    className="img-fluid rounded"
-                    style={{ maxHeight: '200px', width: '100%', objectFit: 'cover' }}
-                  />
-                </div>
-              )}
-              <h4 className="ticket-title">{ticketName}</h4>
-              {ticket.description && (
-                <p className="ticket-description text-muted">{ticket.description}</p>
-              )}
-            </div>
-
-            {/* Country Selection */}
-            {ticket.countries && ticket.countries.length > 1 && (
-              <div className="country-selection mb-4">
-                <label className="form-label fw-bold">Select Your Country/Region:</label>
-                <Form.Select
-                  value={selectedCountry?.id || ''}
-                  onChange={(e) => {
-                    const country = ticket.countries?.find(c => c.id === parseInt(e.target.value));
-                    setSelectedCountry(country);
-                  }}
-                  className="form-select-custom"
-                >
-                  {ticket.countries.map((country) => (
-                    <option key={country.id} value={country.id}>
-                      {country.name} ({country.currency_symbol})
-                    </option>
-                  ))}
-                </Form.Select>
-              </div>
-            )}
-
-            {/* Quantity Selection */}
-            {selectedCountry && (
-              <div className="quantity-selection">
-                <h5 className="mb-3">Select Tickets:</h5>
-                
-                {/* Adult Tickets */}
-                <div className="ticket-row mb-3 p-3 border rounded">
-                  <Row className="align-items-center">
-                    <Col md={6}>
-                      <div className="ticket-type">
-                        <h6 className="mb-1">Adult</h6>
-                        <p className="text-muted mb-0">
-                          {selectedCountry.currency_symbol}{parseFloat(selectedCountry.adult_price).toFixed(2)}
-                        </p>
+            <Row>
+              {/* Left Side - Ticket Image and Info */}
+              <Col md={5}>
+                <div className="ticket-info">
+                  {ticket.image_url && (
+                    <div className="ticket-image mb-3">
+                      <img 
+                        src={ticket.image_url} 
+                        alt={ticketName}
+                        className="img-fluid rounded"
+                        style={{ width: '100%', height: '280px', objectFit: 'cover' }}
+                      />
+                    </div>
+                  )}
+                  <h4 className="ticket-title mb-2">{ticketName}</h4>
+                  {ticket.description && (
+                    <p className="ticket-description text-muted small">{ticket.description}</p>
+                  )}
+                  
+                  {/* Adult Quantity */}
+                  <div className="quantity-section mb-4">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div>
+                        <span className="fw-bold">Adult</span>
+                        <div className="small text-muted">
+                          from {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.adult_price).toFixed(0) : '49'}
+                        </div>
                       </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="quantity-controls d-flex align-items-center justify-content-end">
+                      <div className="quantity-controls d-flex align-items-center">
                         <Button 
-                          variant="outline-secondary" 
-                          size="sm"
+                          className="quantity-btn"
                           onClick={() => handleQuantityChange('adult', -1)}
                           disabled={adultQuantity === 0}
                         >
-                          -
+                          −
                         </Button>
                         <span className="quantity-display mx-3">{adultQuantity}</span>
                         <Button 
-                          variant="outline-secondary" 
-                          size="sm"
+                          className="quantity-btn"
                           onClick={() => handleQuantityChange('adult', 1)}
                         >
                           +
                         </Button>
                       </div>
-                    </Col>
-                  </Row>
+                    </div>
+                  </div>
                 </div>
+              </Col>
 
-                {/* Child Tickets */}
-                <div className="ticket-row mb-3 p-3 border rounded">
-                  <Row className="align-items-center">
-                    <Col md={6}>
-                      <div className="ticket-type">
-                        <h6 className="mb-1">Child</h6>
-                        <p className="text-muted mb-0">
-                          {selectedCountry.currency_symbol}{parseFloat(selectedCountry.child_price).toFixed(2)}
-                        </p>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="quantity-controls d-flex align-items-center justify-content-end">
-                        <Button 
-                          variant="outline-secondary" 
-                          size="sm"
-                          onClick={() => handleQuantityChange('child', -1)}
-                          disabled={childQuantity === 0}
-                        >
-                          -
-                        </Button>
-                        <span className="quantity-display mx-3">{childQuantity}</span>
-                        <Button 
-                          variant="outline-secondary" 
-                          size="sm"
-                          onClick={() => handleQuantityChange('child', 1)}
-                        >
-                          +
-                        </Button>
-                      </div>
-                    </Col>
-                  </Row>
-                </div>
+              {/* Right Side - Date and Time Selection */}
+              <Col md={7}>
+                <div className="booking-options">
+                  {/* Date Selection */}
+                  <div className="mb-4">
+                    <h6 className="mb-3">Select Date</h6>
+                    <div className="date-options d-flex gap-2">
+                      {[0, 1, 2].map((dayOffset) => {
+                        const date = addDays(new Date(), dayOffset);
+                        const isSelected = format(selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+                        const isToday = dayOffset === 0;
+                        const isTomorrow = dayOffset === 1;
+                        
+                        return (
+                          <button
+                            key={dayOffset}
+                            className={`date-option ${isSelected ? 'selected' : ''}`}
+                            onClick={() => setSelectedDate(date)}
+                            type="button"
+                          >
+                            <div className="date-number">{format(date, 'd')}</div>
+                            <div className="date-label">
+                              {isToday ? 'Today' : isTomorrow ? 'Tomorrow' : 'Other Dates'}
+                            </div>
+                            <div className="date-price">
+                              {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.adult_price).toFixed(0) : '49'}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                {/* Total */}
-                <div className="total-section mt-4 p-3 bg-light rounded">
-                  <Row>
-                    <Col>
-                      <strong>Total ({getTotalQuantity()} ticket{getTotalQuantity() !== 1 ? 's' : ''}):</strong>
-                    </Col>
-                    <Col className="text-end">
-                      <strong className="text-primary">
-                        {selectedCountry.currency_symbol}{calculateTotal().toFixed(2)}
-                      </strong>
-                    </Col>
-                  </Row>
+                  {/* Time Selection */}
+                  <div>
+                    <h6 className="mb-3">Select time</h6>
+                    <div className="time-slots">
+                      {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30'].map((time, index) => {
+                        const isBestPrice = index < 4; // First 4 slots are "best price"
+                        const price = selectedCountry ? parseFloat(selectedCountry.adult_price) + (isBestPrice ? 0 : 5) : (44 + (isBestPrice ? 0 : 5));
+                        
+                        return (
+                          <button
+                            key={time}
+                            className={`time-slot ${selectedTime === time ? 'selected' : ''} ${isBestPrice ? 'best-price' : ''}`}
+                            onClick={() => setSelectedTime(time)}
+                            type="button"
+                          >
+                            <div className="time-label">{time}</div>
+                            <div className="time-price">
+                              {selectedCountry?.currency_symbol || '$'}{price}
+                            </div>
+                            {isBestPrice && <div className="best-price-badge">Best price</div>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              </Col>
+            </Row>
           </div>
         )}
 
@@ -405,18 +397,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       
       <Modal.Footer className="modal-footer-custom">
         {currentStep === 'selection' && (
-          <>
-            <Button variant="secondary" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button 
-              variant="primary" 
-              onClick={handleContinueToDetails}
-              disabled={getTotalQuantity() === 0}
-            >
-              Continue to Details
-            </Button>
-          </>
+          <Button 
+            className="continue-button w-100"
+            onClick={handleContinueToDetails}
+            disabled={getTotalQuantity() === 0 || !selectedTime}
+          >
+            Continue →
+          </Button>
         )}
         
         {currentStep === 'details' && (
