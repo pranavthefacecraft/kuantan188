@@ -36,6 +36,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [showCalendar, setShowCalendar] = useState(false);
+  const [bookingResult, setBookingResult] = useState<any>(null);
   
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -118,15 +119,57 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     setCurrentStep('payment');
   };
 
-  const handlePayment = () => {
-    // Simulate payment processing
-    setTimeout(() => {
-      setCurrentStep('thankyou');
-    }, 2000);
+  const handlePayment = async () => {
+    try {
+      const bookingData = {
+        event_id: ticket?.id || 1,
+        event_title: `${ticketName} - ${format(selectedDate, 'MMMM d, yyyy')}`,
+        customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
+        email: contactForm.email,
+        mobile_phone: contactForm.mobilePhone,
+        country: contactForm.country || selectedCountry?.name || 'Malaysia',
+        postal_code: contactForm.postalCode,
+        adult_tickets: adultQuantity,
+        child_tickets: childQuantity,
+        quantity: getTotalQuantity(),
+        adult_price: parseFloat(selectedCountry?.adult_price || '0'),
+        child_price: parseFloat(selectedCountry?.child_price || '0'),
+        event_date: format(selectedDate, 'yyyy-MM-dd'),
+        total_amount: calculateTotal(),
+        payment_method: 'cash_on_delivery',
+        booking_status: 'confirmed',
+        receive_updates: contactForm.receiveUpdates
+      };
+
+      console.log('Submitting booking:', bookingData);
+
+      const response = await fetch('/api/public/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('Booking successful:', result);
+        setBookingResult(result);
+        setCurrentStep('thankyou');
+      } else {
+        console.error('Booking failed:', result);
+        alert('Booking failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+      alert('An error occurred. Please try again.');
+    }
   };
 
   const handleClose = () => {
     setCurrentStep('selection');
+    setBookingResult(null);
     onHide();
   };
 
@@ -674,6 +717,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             </div>
             <h4 className="text-success mb-3">Booking Confirmed!</h4>
             <p>Thank you for your purchase. Your ticket confirmation has been sent to {contactForm.email}</p>
+            
+            {bookingResult && (
+              <div className="alert alert-success mt-3">
+                <strong>Booking Reference:</strong> {bookingResult.booking_reference}
+              </div>
+            )}
+            
             <div className="booking-details mt-4 p-3 bg-light rounded">
               <h6>Booking Details:</h6>
               <p><strong>Ticket:</strong> {ticketName}</p>
@@ -683,7 +733,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                 {adultQuantity > 0 && <div className="ms-2">• Adult × {adultQuantity}</div>}
                 {childQuantity > 0 && <div className="ms-2">• Child × {childQuantity}</div>}
               </div>
-              <p><strong>Total Paid:</strong> {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</p>
+              <p><strong>Total Amount (Cash on Delivery):</strong> {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</p>
+              <p><strong>Payment Method:</strong> Cash on Delivery</p>
             </div>
           </div>
         )}
