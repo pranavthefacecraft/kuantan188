@@ -30,6 +30,8 @@ class Booking extends Model
         'customer_phone',
         'adult_tickets',
         'child_tickets',
+        'adult_quantity',
+        'child_quantity',
         'adult_price',
         'child_price',
         'payment_status',
@@ -60,6 +62,17 @@ class Booking extends Model
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
+    }
+
+    // Accessor methods to handle different field names
+    public function getAdultQuantityAttribute()
+    {
+        return $this->adult_tickets ?? 0;
+    }
+
+    public function getChildQuantityAttribute()
+    {
+        return $this->child_tickets ?? 0;
     }
 
     protected static function boot()

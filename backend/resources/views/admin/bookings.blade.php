@@ -12,12 +12,33 @@
                 <p style="margin: 0.5rem 0 0 0; color: var(--on-surface-variant);">View and manage customer bookings</p>
             </div>
             <div style="display: flex; gap: 1rem;">
-                <select class="btn btn-outline" style="padding: 0.5rem 1rem;">
-                    <option>All Statuses</option>
-                    <option>Confirmed</option>
-                    <option>Pending</option>
-                    <option>Cancelled</option>
-                </select>
+                <form method="GET" style="display: flex; gap: 1rem; align-items: center;">
+                    <select name="booking_type" class="btn btn-outline" style="padding: 0.5rem 1rem;" onchange="this.form.submit()">
+                        <option value="">All Booking Types</option>
+                        <option value="event" {{ request('booking_type') === 'event' ? 'selected' : '' }}>Event Bookings</option>
+                        <option value="ticket" {{ request('booking_type') === 'ticket' ? 'selected' : '' }}>Ticket Bookings</option>
+                    </select>
+                    <select name="country_filter" class="btn btn-outline" style="padding: 0.5rem 1rem;" onchange="this.form.submit()">
+                        <option value="">All Countries</option>
+                        @foreach($countries as $country)
+                            <option value="{{ $country->id }}" {{ request('country_filter') == $country->id ? 'selected' : '' }}>
+                                {{ $country->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <select name="status_filter" class="btn btn-outline" style="padding: 0.5rem 1rem;" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        <option value="confirmed" {{ request('status_filter') === 'confirmed' ? 'selected' : '' }}>Confirmed</option>
+                        <option value="pending" {{ request('status_filter') === 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="cancelled" {{ request('status_filter') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                    </select>
+                    @if(request()->hasAny(['booking_type', 'country_filter', 'status_filter']))
+                        <a href="{{ route('admin.bookings') }}" class="btn btn-outline" style="padding: 0.5rem 1rem;">
+                            <span class="material-icons" style="font-size: 18px;">clear</span>
+                            Clear
+                        </a>
+                    @endif
+                </form>
                 <button class="btn btn-outline">
                     <span class="material-icons" style="font-size: 18px;">download</span>
                     Export
@@ -34,6 +55,7 @@
                     <thead>
                         <tr>
                             <th>Booking Reference</th>
+                            <th>Type</th>
                             <th>Customer</th>
                             <th>Event</th>
                             <th>Country</th>
@@ -51,6 +73,19 @@
                                     <div style="font-weight: 600; color: var(--primary);">
                                         {{ $booking->booking_reference }}
                                     </div>
+                                </td>
+                                <td>
+                                    @if($booking->ticket_id)
+                                        <span class="badge badge-info">
+                                            <span class="material-icons" style="font-size: 12px;">confirmation_number</span>
+                                            Ticket
+                                        </span>
+                                    @else
+                                        <span class="badge badge-primary">
+                                            <span class="material-icons" style="font-size: 12px;">event</span>
+                                            Event
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
                                     <div>
@@ -76,7 +111,7 @@
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <span class="material-icons" style="font-size: 16px; color: var(--accent);">public</span>
-                                        {{ $booking->country->name ?? 'N/A' }}
+                                        {{ $booking->country->name ?? ($booking->country ?? 'N/A') }}
                                     </div>
                                 </td>
                                 <td>
@@ -144,7 +179,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" style="text-align: center; padding: 3rem; color: var(--on-surface-variant);">
+                                <td colspan="10" style="text-align: center; padding: 3rem; color: var(--on-surface-variant);">
                                     <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
                                         <span class="material-icons" style="font-size: 48px; opacity: 0.3;">book_online</span>
                                         <div>
@@ -161,12 +196,26 @@
 
             @if($bookings->hasPages())
                 <div style="margin-top: 1.5rem;">
-                    {{ $bookings->links() }}
+                    {{ $bookings->appends(request()->query())->links() }}
                 </div>
             @endif
         </div>
     </div>
 </div>
+@endsection
+
+@section('styles')
+<style>
+    .badge-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+    
+    .badge-primary {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
 @endsection
 
 @section('scripts')

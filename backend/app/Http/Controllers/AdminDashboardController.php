@@ -209,12 +209,35 @@ class AdminDashboardController extends Controller
     /**
      * Show bookings management
      */
-    public function bookings()
+    public function bookings(Request $request)
     {
-        $bookings = Booking::with(['event', 'country', 'ticket'])
-            ->latest()
-            ->paginate(20);
-        return view('admin.bookings', compact('bookings'));
+        $query = Booking::with(['event', 'country', 'ticket']);
+        
+        // Filter by booking type
+        if ($request->filled('booking_type')) {
+            if ($request->booking_type === 'event') {
+                $query->whereNull('ticket_id');
+            } elseif ($request->booking_type === 'ticket') {
+                $query->whereNotNull('ticket_id');
+            }
+        }
+        
+        // Filter by country
+        if ($request->filled('country_filter')) {
+            $query->where('country_id', $request->country_filter);
+        }
+        
+        // Filter by status
+        if ($request->filled('status_filter')) {
+            $query->where('status', $request->status_filter);
+        }
+        
+        $bookings = $query->latest()->paginate(20);
+        
+        // Get all countries for filter dropdown
+        $countries = Country::orderBy('name')->get();
+        
+        return view('admin.bookings', compact('bookings', 'countries'));
     }
 
     /**
