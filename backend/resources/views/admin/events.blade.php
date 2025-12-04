@@ -78,13 +78,26 @@
                                 <td>{{ $event->location }}</td>
                                 <td>
                                     <div style="font-size: 0.875rem;">
-                                        @if($event->price)
-                                            <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                                <span class="material-icons" style="font-size: 14px; color: var(--primary);">person</span>
-                                                <div>
-                                                    <div style="font-weight: 600;">RM {{ number_format($event->price, 2) }}</div>
-                                                    <div style="font-size: 0.75rem; color: var(--on-surface-variant);">per person</div>
-                                                </div>
+                                        @if($event->price || $event->child_price)
+                                            <div>
+                                                @if($event->price)
+                                                    <div style="display: flex; align-items: center; gap: 0.25rem; margin-bottom: 0.25rem;">
+                                                        <span class="material-icons" style="font-size: 14px; color: var(--primary);">person</span>
+                                                        <div>
+                                                            <div style="font-weight: 600;">RM {{ number_format($event->price, 2) }}</div>
+                                                            <div style="font-size: 0.75rem; color: var(--on-surface-variant);">adult</div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                                @if($event->child_price)
+                                                    <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                                        <span class="material-icons" style="font-size: 14px; color: var(--secondary);">child_care</span>
+                                                        <div>
+                                                            <div style="font-weight: 600;">RM {{ number_format($event->child_price, 2) }}</div>
+                                                            <div style="font-size: 0.75rem; color: var(--on-surface-variant);">child</div>
+                                                        </div>
+                                                    </div>
+                                                @endif
                                             </div>
                                         @else
                                             <span style="color: var(--on-surface-variant); font-style: italic;">Free</span>
@@ -222,7 +235,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="price" class="form-label">Price Per Person (RM)</label>
+                            <label for="price" class="form-label">Adult Price (RM)</label>
                             <input type="number" 
                                    id="price" 
                                    name="price" 
@@ -230,8 +243,19 @@
                                    step="0.01" 
                                    min="0" 
                                    placeholder="0.00">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="child_price" class="form-label">Child Price (RM)</label>
+                            <input type="number" 
+                                   id="child_price" 
+                                   name="child_price" 
+                                   class="form-input" 
+                                   step="0.01" 
+                                   min="0" 
+                                   placeholder="0.00">
                             <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
-                                Customers can select quantity when booking tickets
+                                Customers can select adult and child quantities when booking
                             </small>
                         </div>
 
@@ -655,7 +679,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="edit_price" class="form-label">Price Per Person (RM)</label>
+                            <label for="edit_price" class="form-label">Adult Price (RM)</label>
                             <input type="number" 
                                    id="edit_price" 
                                    name="price" 
@@ -663,8 +687,19 @@
                                    step="0.01" 
                                    min="0" 
                                    placeholder="0.00">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_child_price" class="form-label">Child Price (RM)</label>
+                            <input type="number" 
+                                   id="edit_child_price" 
+                                   name="child_price" 
+                                   class="form-input" 
+                                   step="0.01" 
+                                   min="0" 
+                                   placeholder="0.00">
                             <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
-                                Customers can select quantity when booking tickets
+                                Customers can select adult and child quantities when booking
                             </small>
                         </div>
 
@@ -986,6 +1021,7 @@
                 document.getElementById('edit_title').value = event.title;
                 document.getElementById('edit_location').value = event.location;
                 document.getElementById('edit_price').value = event.price || '';
+                document.getElementById('edit_child_price').value = event.child_price || '';
                 document.getElementById('edit_description').value = event.description || '';
                 document.getElementById('edit_is_active').checked = event.is_active;
                 

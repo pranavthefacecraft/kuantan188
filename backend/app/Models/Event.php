@@ -17,6 +17,7 @@ class Event extends Model
         'booking_end_date',
         'image_url',
         'price',
+        'child_price',
         'is_active'
     ];
 
