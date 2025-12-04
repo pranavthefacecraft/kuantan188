@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/static/css/main.8d92e06c.css",
+    "main.js": "/static/js/main.f9965d12.js",
+    "static/js/206.0df2a5df.chunk.js": "/static/js/206.0df2a5df.chunk.js",
+    "static/media/Erstoria-Regular.ttf": "/static/media/Erstoria-Regular.ecede68229d3292207a9.ttf",
+    "static/media/Erstoria-Regular.woff": "/static/media/Erstoria-Regular.117cac554f71acb2eb66.woff",
+    "static/media/bg-ticket-1.webp": "/static/media/bg-ticket-1.b76fb618bdbfc0e46384.webp",
+    "static/media/Erstoria-Regular.woff2": "/static/media/Erstoria-Regular.cfc6de9198ee5bd01731.woff2",
+    "index.html": "/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.8d92e06c.css",
+    "static/js/main.f9965d12.js"
+  ]
+}

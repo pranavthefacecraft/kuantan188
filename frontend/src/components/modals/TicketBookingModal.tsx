@@ -143,10 +143,16 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
 
       console.log('[BOOKING] Starting booking process');
       console.log('[BOOKING] Booking data:', bookingData);
-      console.log('[BOOKING] API URL:', '/api/public/bookings');
+      console.log('[BOOKING] Environment:', process.env.NODE_ENV);
       console.log('[BOOKING] Request headers:', { 'Content-Type': 'application/json' });
 
-      const response = await fetch('/api/public/bookings', {
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://admin.tfcmockup.com/api/public/bookings'
+        : 'http://localhost:8000/api/public/bookings';
+      
+      console.log('[BOOKING] Using API URL:', apiUrl);
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -158,13 +164,14 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       console.log('[BOOKING] Response headers:', Object.fromEntries(response.headers.entries()));
 
       let result;
+      let responseText;
       try {
-        const responseText = await response.text();
-        console.log('[BOOKING] Raw response text:', responseText);
+        responseText = await response.text();
+        console.log('[BOOKING] Raw response text:', responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''));
         result = JSON.parse(responseText);
       } catch (parseError) {
         console.error('[BOOKING] Failed to parse response as JSON:', parseError);
-        throw new Error(`Invalid JSON response. Status: ${response.status}. Response: ${await response.text()}`);
+        throw new Error(`Invalid JSON response. Status: ${response.status}. Content-Type: ${response.headers.get('content-type')}. Response preview: ${responseText?.substring(0, 200) || 'No response text'}...`);
       }
 
       console.log('[BOOKING] Parsed response:', result);
