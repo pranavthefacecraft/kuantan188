@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import { eventsApi, Event } from '../services/api';
 import ReservationModal from '../components/modals/ReservationModal';
+import TicketBookingModal from '../components/modals/TicketBookingModal';
 import { ReviewsWidget } from '../components/GoogleReviews';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, FreeMode } from 'swiper/modules';
@@ -16,6 +17,10 @@ const Home: React.FC = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  
+  // Ticket booking modal state
+  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
 
 
   // Tickets from API
@@ -58,9 +63,19 @@ const Home: React.FC = () => {
 
 
 
-  const handleReserveNow = (event: Event) => {
+  const handleReserve = (event: Event) => {
     setSelectedEvent(event);
     setShowModal(true);
+  };
+
+  const handleGetTickets = (ticket: any) => {
+    setSelectedTicket(ticket);
+    setShowTicketModal(true);
+  };
+
+  const handleCloseTicketModal = () => {
+    setShowTicketModal(false);
+    setSelectedTicket(null);
   };
 
   const handleViewDetails = (eventId: number) => {
@@ -212,7 +227,10 @@ const Home: React.FC = () => {
                           {ticket.adult_price ? `RM ${ticket.adult_price}` : 
                            ticket.price ? `RM ${ticket.price}` : 'RM 20.00'}
                         </p>
-                        <Button className="reserve-button get-tickets-button">
+                        <Button 
+                          className="reserve-button get-tickets-button"
+                          onClick={() => handleGetTickets(ticket)}
+                        >
                           Get Tickets
                         </Button>
                       </div>
@@ -379,7 +397,7 @@ const Home: React.FC = () => {
                             </Button>
                             <Button 
                               className="reserve-button get-tickets-button"
-                              onClick={() => handleReserveNow(event)}
+                              onClick={() => handleReserve(event)}
                             >
                               Reserve
                             </Button>
@@ -440,8 +458,15 @@ const Home: React.FC = () => {
       {/* Reservation Modal */}
       <ReservationModal 
         show={showModal}
-        onHide={handleCloseModal}
+        onHide={() => setShowModal(false)}
         event={selectedEvent}
+      />
+
+      {/* Ticket Booking Modal */}
+      <TicketBookingModal
+        show={showTicketModal}
+        onHide={handleCloseTicketModal}
+        ticket={selectedTicket}
       />
     </div>
   );
