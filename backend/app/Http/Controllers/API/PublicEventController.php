@@ -364,30 +364,43 @@ class PublicEventController extends Controller
      */
     public function getTickets(): JsonResponse
     {
-        $bookings = \App\Models\Booking::with(['event', 'ticket'])
-                                     ->where('status', '!=', 'cancelled')
-                                     ->orderBy('created_at', 'desc')
-                                     ->get()
-                                     ->map(function ($booking) {
+        $tickets = \App\Models\Ticket::with(['event', 'country'])
+                                   ->where('is_active', true)
+                                   ->get()
+                                   ->map(function ($ticket) {
             return [
-                'id' => $booking->booking_reference ?: 'TKT' . str_pad($booking->id, 3, '0', STR_PAD_LEFT),
-                'eventTitle' => $booking->event->title ?? 'Unknown Event',
-                'eventDate' => $booking->event ? $booking->event->event_date->format('F j, Y \a\t g:i A') : 'TBD',
-                'location' => $booking->event->location ?? 'TBD',
-                'quantity' => ($booking->adult_tickets ?? 0) + ($booking->child_tickets ?? 0),
-                'totalAmount' => number_format($booking->total_amount ?? 0, 2),
-                'bookingDate' => $booking->created_at->format('M j, Y'),
-                'status' => ucfirst($booking->status ?? 'pending'),
-                'customerName' => $booking->customer_name,
-                'customerEmail' => $booking->customer_email,
-                'paymentStatus' => ucfirst($booking->payment_status ?? 'pending')
+                'id' => $ticket->id,
+                'title' => $ticket->title ?? $ticket->name ?? 'Untitled Ticket',
+                'name' => $ticket->name ?? $ticket->title ?? 'Untitled Ticket',
+                'description' => $ticket->description,
+                'adult_price' => $ticket->adult_price,
+                'child_price' => $ticket->child_price,
+                'price' => $ticket->adult_price ?? $ticket->price ?? null,
+                'image_url' => $ticket->image_url 
+                    ? (str_starts_with($ticket->image_url, 'http') 
+                        ? $ticket->image_url 
+                        : 'https://admin.tfcmockup.com/' . $ticket->image_url)
+                    : null,
+                'event_id' => $ticket->event_id,
+                'country_id' => $ticket->country_id,
+                'is_active' => $ticket->is_active,
+                'event' => $ticket->event ? [
+                    'id' => $ticket->event->id,
+                    'title' => $ticket->event->title,
+                    'location' => $ticket->event->location
+                ] : null,
+                'country' => $ticket->country ? [
+                    'id' => $ticket->country->id,
+                    'name' => $ticket->country->name,
+                    'currency_symbol' => $ticket->country->currency_symbol
+                ] : null
             ];
         });
 
         return response()->json([
             'success' => true,
-            'data' => $bookings,
-            'total' => $bookings->count()
+            'data' => $tickets,
+            'total' => $tickets->count()
         ]);
     }
 
