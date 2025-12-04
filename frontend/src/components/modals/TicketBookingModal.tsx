@@ -141,7 +141,10 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         receive_updates: contactForm.receiveUpdates
       };
 
-      console.log('Submitting booking:', bookingData);
+      console.log('[BOOKING] Starting booking process');
+      console.log('[BOOKING] Booking data:', bookingData);
+      console.log('[BOOKING] API URL:', '/api/public/bookings');
+      console.log('[BOOKING] Request headers:', { 'Content-Type': 'application/json' });
 
       const response = await fetch('/api/public/bookings', {
         method: 'POST',
@@ -151,19 +154,41 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         body: JSON.stringify(bookingData),
       });
 
-      const result = await response.json();
+      console.log('[BOOKING] Response status:', response.status);
+      console.log('[BOOKING] Response headers:', Object.fromEntries(response.headers.entries()));
 
-      if (result.success) {
-        console.log('Booking successful:', result);
+      let result;
+      try {
+        const responseText = await response.text();
+        console.log('[BOOKING] Raw response text:', responseText);
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('[BOOKING] Failed to parse response as JSON:', parseError);
+        throw new Error(`Invalid JSON response. Status: ${response.status}. Response: ${await response.text()}`);
+      }
+
+      console.log('[BOOKING] Parsed response:', result);
+
+      if (response.ok && result.success) {
+        console.log('[BOOKING] Booking successful:', result);
         setBookingResult(result);
         setCurrentStep('thankyou');
       } else {
-        console.error('Booking failed:', result);
-        alert('Booking failed. Please try again.');
+        console.error('[BOOKING] Booking failed. Response status:', response.status);
+        console.error('[BOOKING] Error details:', result);
+        alert(`Booking failed: ${result.message || result.error || 'Unknown error'}. Please check the logs for details.`);
       }
     } catch (error) {
-      console.error('Error submitting booking:', error);
-      alert('An error occurred. Please try again.');
+      console.error('[BOOKING] Catch block - Error submitting booking:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorName = error instanceof Error ? error.name : 'Unknown';
+      const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+      
+      console.error('[BOOKING] Error name:', errorName);
+      console.error('[BOOKING] Error message:', errorMessage);
+      console.error('[BOOKING] Error stack:', errorStack);
+      alert(`An error occurred: ${errorMessage}. Please check the browser console and logs for details.`);
     }
   };
 

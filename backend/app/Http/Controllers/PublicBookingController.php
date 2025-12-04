@@ -120,8 +120,13 @@ class PublicBookingController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            \Log::info('Booking request received:', $request->all());
-            \Log::info('Database columns available:', \Schema::getColumnListing('bookings'));
+            \Log::info('[BOOKING_API] ===== NEW BOOKING REQUEST STARTED =====');
+            \Log::info('[BOOKING_API] Request method:', [$request->method()]);
+            \Log::info('[BOOKING_API] Request URL:', [$request->url()]);
+            \Log::info('[BOOKING_API] Request headers:', $request->headers->all());
+            \Log::info('[BOOKING_API] Request body (raw):', [$request->getContent()]);
+            \Log::info('[BOOKING_API] Request data (parsed):', $request->all());
+            \Log::info('[BOOKING_API] Database columns available:', \Schema::getColumnListing('bookings'));
             
             $validator = Validator::make($request->all(), [
                 'event_id' => 'required|integer',
@@ -139,18 +144,21 @@ class PublicBookingController extends Controller
             ]);
 
             if ($validator->fails()) {
-                \Log::error('Validation failed:', $validator->errors()->toArray());
+                \Log::error('[BOOKING_API] Validation failed:', $validator->errors()->toArray());
+                \Log::error('[BOOKING_API] Failed validation rules for data:', $request->all());
                 return response()->json([
+                    'success' => false,
                     'error' => 'Validation failed',
-                    'messages' => $validator->errors()
+                    'messages' => $validator->errors(),
+                    'received_data' => $request->all()
                 ], 422);
             }
 
-            \Log::info('Validation passed, creating booking...');
+            \Log::info('[BOOKING_API] Validation passed, proceeding to create booking...');
 
             // Generate booking reference
             $bookingReference = 'KB' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            \Log::info('Generated booking reference:', ['reference' => $bookingReference]);
+            \Log::info('[BOOKING_API] Generated booking reference:', ['reference' => $bookingReference]);
 
             // Only include fields that exist in the database schema
             $bookingData = [
@@ -190,11 +198,21 @@ class PublicBookingController extends Controller
                 $bookingData['country'] = $request->country;
             }
 
-            \Log::info('Attempting to create booking with data:', $bookingData);
+            \Log::info('[BOOKING_API] Final booking data to be inserted:', $bookingData);
+            \Log::info('[BOOKING_API] Attempting to create booking in database...');
 
             $booking = Booking::create($bookingData);
 
-            \Log::info('Booking created successfully:', ['id' => $booking->id, 'reference' => $booking->booking_reference]);
+            \Log::info('[BOOKING_API] Booking created successfully in database');
+            \Log::info('[BOOKING_API] Created booking details:', [
+                'id' => $booking->id, 
+                'reference' => $booking->booking_reference,
+                'customer_name' => $booking->customer_name,
+                'email' => $booking->email ?? $booking->customer_email,
+                'total_amount' => $booking->total_amount
+            ]);
+
+            \Log::info('[BOOKING_API] ===== BOOKING REQUEST COMPLETED SUCCESSFULLY =====');
 
             return response()->json([
                 'success' => true,
@@ -215,18 +233,26 @@ class PublicBookingController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            \Log::error('Booking creation failed: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            \Log::error('Error file: ' . $e->getFile());
-            \Log::error('Error line: ' . $e->getLine());
+            \Log::error('[BOOKING_API] ===== BOOKING REQUEST FAILED =====');
+            \Log::error('[BOOKING_API] Exception type: ' . get_class($e));
+            \Log::error('[BOOKING_API] Error message: ' . $e->getMessage());
+            \Log::error('[BOOKING_API] Error file: ' . $e->getFile());
+            \Log::error('[BOOKING_API] Error line: ' . $e->getLine());
+            \Log::error('[BOOKING_API] Stack trace: ' . $e->getTraceAsString());
+            \Log::error('[BOOKING_API] Request data that caused error:', $request->all());
+            \Log::error('[BOOKING_API] Database connection status: ' . (\DB::connection()->getPdo() ? 'Connected' : 'Not Connected'));
             
             return response()->json([
+                'success' => false,
                 'error' => 'Failed to create booking',
-                'message' => 'An error occurred while processing your booking. Please try again.',
-                'debug_message' => $e->getMessage(),
-                'debug_file' => $e->getFile(),
-                'debug_line' => $e->getLine(),
-                'debug_trace' => $e->getTraceAsString()
+                'message' => 'An error occurred while processing your booking. Please check the logs for details.',
+                'debug_info' => [
+                    'exception_type' => get_class($e),
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
             ], 500);
         }
     }
