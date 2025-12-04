@@ -135,57 +135,34 @@ const EventDetail: React.FC = () => {
           {/* Event Image */}
           <Col lg={6}>
             <Card className="h-100 border-0 shadow-sm">
-              {event.image_url ? (
-                <div 
-                  style={{
-                    height: '400px',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    borderRadius: '0.375rem'
-                  }}
-                >
-                  <img 
-                    src={event.image_url}
-                    alt={event.name || event.title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                    onError={(e) => {
-                      console.log('Image failed to load:', event.image_url);
-                      const target = e.target as HTMLElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.style.background = 'linear-gradient(135deg, #1A0007 0%, #4A0E15 100%)';
-                        parent.innerHTML = `
-                          <div class="d-flex align-items-center justify-content-center h-100">
-                            <div class="text-center text-white">
-                              <div style="font-size: 64px; margin-bottom: 16px;">📅</div>
-                              <h4>Event Image</h4>
-                            </div>
-                          </div>
-                        `;
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <div 
-                  style={{
-                    height: '400px',
-                    background: 'linear-gradient(135deg, #1A0007 0%, #4A0E15 100%)',
-                    borderRadius: '0.375rem'
-                  }}
-                  className="d-flex align-items-center justify-content-center"
-                >
-                  <div className="text-center text-white">
-                    <Calendar size={64} className="mb-3" />
-                    <h4>Event Image</h4>
+              <div 
+                className="event-card-background h-100 d-flex flex-column"
+                style={{
+                  height: '400px',
+                  backgroundImage: event.image_url 
+                    ? `url(${event.image_url})` 
+                    : `linear-gradient(135deg, #1A0007 0%, #4A0E15 100%)`,
+                  backgroundColor: '#1A0007',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  borderRadius: '0.375rem'
+                }}
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  const target = e.target as HTMLElement;
+                  target.style.backgroundImage = 'linear-gradient(135deg, #1A0007 0%, #4A0E15 100%)';
+                }}
+              >
+                <div className="event-card-overlay"></div>
+                {!event.image_url && (
+                  <div className="d-flex align-items-center justify-content-center h-100">
+                    <div className="text-center text-white">
+                      <Calendar size={64} className="mb-3" />
+                      <h4>Event Image</h4>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </Card>
           </Col>
 

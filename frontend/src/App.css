@@ -476,6 +476,7 @@
 .event-detail-page {
   background-color: #1a0007;
   min-height: 100vh;
+  padding-top: 100px;
 }
 
 .event-detail-page .card {
