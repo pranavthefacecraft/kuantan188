@@ -211,33 +211,45 @@ class AdminDashboardController extends Controller
      */
     public function bookings(Request $request)
     {
-        $query = Booking::with(['event', 'country', 'ticket']);
-        
-        // Filter by booking type
-        if ($request->filled('booking_type')) {
-            if ($request->booking_type === 'event') {
-                $query->whereNull('ticket_id');
-            } elseif ($request->booking_type === 'ticket') {
-                $query->whereNotNull('ticket_id');
+        try {
+            $query = Booking::with(['event', 'country', 'ticket']);
+            
+            // Filter by booking type
+            if ($request->filled('booking_type')) {
+                if ($request->booking_type === 'event') {
+                    $query->whereNull('ticket_id');
+                } elseif ($request->booking_type === 'ticket') {
+                    $query->whereNotNull('ticket_id');
+                }
             }
+            
+            // Filter by country
+            if ($request->filled('country_filter')) {
+                $query->where('country_id', $request->country_filter);
+            }
+            
+            // Filter by status
+            if ($request->filled('status_filter')) {
+                $query->where('status', $request->status_filter);
+            }
+            
+            $bookings = $query->latest()->paginate(20);
+            
+            // Get all countries for filter dropdown
+            $countries = Country::orderBy('name')->get();
+            
+            return view('admin.bookings', compact('bookings', 'countries'));
+        } catch (\Exception $e) {
+            \Log::error('Error in admin bookings page: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            // Return empty data to prevent 500 error
+            $bookings = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+            $countries = collect([]);
+            
+            return view('admin.bookings', compact('bookings', 'countries'))
+                ->with('error', 'There was an error loading bookings. Please check the logs.');
         }
-        
-        // Filter by country
-        if ($request->filled('country_filter')) {
-            $query->where('country_id', $request->country_filter);
-        }
-        
-        // Filter by status
-        if ($request->filled('status_filter')) {
-            $query->where('status', $request->status_filter);
-        }
-        
-        $bookings = $query->latest()->paginate(20);
-        
-        // Get all countries for filter dropdown
-        $countries = Country::orderBy('name')->get();
-        
-        return view('admin.bookings', compact('bookings', 'countries'));
     }
 
     /**

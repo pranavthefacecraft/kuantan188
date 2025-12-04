@@ -4,6 +4,12 @@
 
 @section('content')
 <div class="grid">
+    @if(isset($error))
+        <div class="alert alert-danger">
+            {{ $error }}
+        </div>
+    @endif
+    
     <!-- Header Actions -->
     <div class="card">
         <div class="card-body" style="display: flex; justify-content: space-between; align-items: center;">
