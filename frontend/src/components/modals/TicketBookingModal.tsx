@@ -618,14 +618,45 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         )}
 
         {currentStep === 'payment' && (
-          <div className="payment-step text-center">
-            <h4 className="mb-4">Payment Processing</h4>
-            <div className="payment-simulation">
-              <div className="spinner-border text-primary mb-3" role="status">
-                <span className="visually-hidden">Processing...</span>
+          <div className="payment-step">
+            <h4 className="mb-4 text-center">Payment Method</h4>
+            <div className="payment-options">
+              <div className="payment-method-card p-4 border rounded bg-light">
+                <div className="d-flex align-items-center">
+                  <div className="payment-icon me-3">
+                    <i className="fas fa-money-bill-wave text-success" style={{ fontSize: '2rem' }}></i>
+                  </div>
+                  <div className="flex-grow-1">
+                    <h5 className="mb-2 text-success">Cash on Delivery</h5>
+                    <p className="text-muted mb-2">Pay with cash when you receive your tickets</p>
+                    <small className="text-muted">
+                      • No advance payment required<br/>
+                      • Pay the exact amount upon delivery<br/>
+                      • Secure and convenient
+                    </small>
+                  </div>
+                  <div className="payment-check">
+                    <i className="fas fa-check-circle text-success" style={{ fontSize: '1.5rem' }}></i>
+                  </div>
+                </div>
               </div>
-              <p>Processing your payment securely...</p>
-              <p className="text-muted">This is a demo - no actual payment will be processed</p>
+              
+              <div className="payment-summary mt-4 p-3 bg-white border rounded">
+                <h6 className="text-center mb-3">Order Summary</h6>
+                <div className="d-flex justify-content-between mb-2">
+                  <span>Subtotal:</span>
+                  <span>{selectedCountry?.currency_symbol || '$'}{calculateTotal().toFixed(2)}</span>
+                </div>
+                <div className="d-flex justify-content-between mb-2">
+                  <span>Delivery Fee:</span>
+                  <span className="text-success">FREE</span>
+                </div>
+                <hr />
+                <div className="d-flex justify-content-between">
+                  <strong>Total Amount (Cash on Delivery):</strong>
+                  <strong className="text-success">{selectedCountry?.currency_symbol || '$'}{calculateTotal().toFixed(2)}</strong>
+                </div>
+              </div>
             </div>
           </div>
         )}

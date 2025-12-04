@@ -988,6 +988,33 @@
   text-decoration: underline;
 }
 
+/* Payment Step Styles */
+.payment-method-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #28a745 !important;
+  background: #f8fff9 !important;
+}
+
+.payment-method-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
+.payment-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: rgba(40, 167, 69, 0.1);
+  border-radius: 50%;
+}
+
+.payment-summary {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* Inline Calendar Styles */
 .inline-calendar-container {
   border: 2px solid #28a745;
