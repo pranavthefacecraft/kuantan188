@@ -85,7 +85,7 @@ class PublicEventController extends Controller
                               'image_url' => $event->image_url 
                                   ? (str_starts_with($event->image_url, 'http') 
                                       ? $event->image_url 
-                                      : 'https://ticketsadmin.tfcmockup.com/storage/' . $event->image_url)
+                                      : 'https://admin.tfcmockup.com/' . $event->image_url)
                                   : 'https://picsum.photos/400/250?random=' . $event->id,
                               'price' => $event->price ?? 'From RM50',
                               'price_display' => $event->price ? "From RM{$event->price}" : 'From RM50',
@@ -130,7 +130,7 @@ class PublicEventController extends Controller
                 'image_url' => $event->image_url 
                     ? (str_starts_with($event->image_url, 'http') 
                         ? $event->image_url 
-                        : asset('storage/' . $event->image_url))
+                        : 'https://admin.tfcmockup.com/' . $event->image_url)
                     : 'https://picsum.photos/400/250?random=' . $event->id,
                 'price' => is_numeric($event->price) ? $event->price : 50,
                 'price_display' => $event->price ? "From RM{$event->price}" : 'From RM50',
