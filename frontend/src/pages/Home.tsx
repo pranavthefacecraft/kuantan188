@@ -82,11 +82,6 @@ const Home: React.FC = () => {
     navigate(`/events/${eventId}`);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedEvent(null);
-  };
-
   // Debug Swiper initialization
   useEffect(() => {
     console.log('🔍 Swiper Debug - Component mounted');
