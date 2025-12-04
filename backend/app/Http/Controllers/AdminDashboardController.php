@@ -248,6 +248,15 @@ class AdminDashboardController extends Controller
         ]);
 
         try {
+            // Handle image upload
+            $imageUrl = null;
+            if ($request->hasFile('ticket_image')) {
+                $image = $request->file('ticket_image');
+                $imageName = 'ticket_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $image->move(public_path('storage/tickets'), $imageName);
+                $imageUrl = 'storage/tickets/' . $imageName;
+            }
+
             // Create the base ticket
             $ticket = Ticket::create([
                 'ticket_name' => $request->ticket_name,
@@ -255,6 +264,7 @@ class AdminDashboardController extends Controller
                 'total_quantity' => $request->total_quantity,
                 'available_quantity' => $request->total_quantity, // Initially all tickets are available
                 'description' => $request->description,
+                'image_url' => $imageUrl,
                 'is_active' => $request->is_active === '1'
             ]);
 
@@ -334,15 +344,35 @@ class AdminDashboardController extends Controller
                 'countries_data' => $request->countries_data
             ]);
 
-            // Update the base ticket
-            $ticket->update([
+            // Handle image upload
+            $updateData = [
                 'ticket_name' => $request->ticket_name,
                 'event_id' => $request->event_id,
                 'total_quantity' => $request->total_quantity,
                 'available_quantity' => $request->total_quantity, // Update available quantity if total changed
                 'description' => $request->description,
                 'is_active' => $request->is_active === '1'
-            ]);
+            ];
+
+            // Process image upload if provided
+            if ($request->hasFile('ticket_image')) {
+                // Delete old image if it exists
+                if ($ticket->image_url) {
+                    $oldImagePath = public_path($ticket->image_url);
+                    if (file_exists($oldImagePath)) {
+                        unlink($oldImagePath);
+                    }
+                }
+
+                // Upload new image
+                $image = $request->file('ticket_image');
+                $imageName = 'ticket_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $image->move(public_path('storage/tickets'), $imageName);
+                $updateData['image_url'] = 'storage/tickets/' . $imageName;
+            }
+
+            // Update the base ticket
+            $ticket->update($updateData);
 
             // Sync countries with their respective prices
             $countriesData = [];

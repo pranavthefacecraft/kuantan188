@@ -381,7 +381,11 @@ class PublicEventController extends Controller
                 'adult_price' => $adultPrice,
                 'child_price' => $childPrice,
                 'price' => $adultPrice ?? 50, // Default price if no country pricing
-                'image_url' => 'https://via.placeholder.com/400x250/6c63ff/ffffff?text=' . urlencode($ticket->ticket_name ?? 'Ticket'),
+                'image_url' => $ticket->image_url 
+                    ? (str_starts_with($ticket->image_url, 'http') 
+                        ? $ticket->image_url 
+                        : 'https://admin.tfcmockup.com/' . $ticket->image_url)
+                    : 'https://via.placeholder.com/400x250/6c63ff/ffffff?text=' . urlencode($ticket->ticket_name ?? 'Ticket'),
                 'event_id' => $ticket->event_id,
                 'country_id' => $ticket->country_id,
                 'is_active' => $ticket->is_active,

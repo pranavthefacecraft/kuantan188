@@ -15,6 +15,7 @@ class Ticket extends Model
         'total_quantity',
         'available_quantity',
         'description',
+        'image_url',
         'is_active'
     ];
 

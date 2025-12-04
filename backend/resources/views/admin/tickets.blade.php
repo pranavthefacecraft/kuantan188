@@ -279,6 +279,34 @@
                     </div>
 
                     <div class="form-group full-width">
+                        <label for="edit_ticket_image" class="form-label">Ticket Image</label>
+                        <input type="file" 
+                               id="edit_ticket_image" 
+                               name="ticket_image" 
+                               class="form-input" 
+                               accept="image/*"
+                               onchange="previewTicketImage(this, 'edit')">
+                        <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
+                            Upload a new image to replace the current one (JPG, PNG, WebP - Max: 2MB)
+                        </small>
+                        <div id="editImagePreview" style="margin-top: 1rem; display: none;">
+                            <div id="editCurrentImage" style="margin-bottom: 0.5rem;">
+                                <label style="font-size: 0.875rem; color: var(--on-surface-variant);">Current Image:</label>
+                                <div id="editCurrentImageContainer"></div>
+                            </div>
+                            <div id="editNewImagePreview" style="display: none;">
+                                <label style="font-size: 0.875rem; color: var(--on-surface-variant);">New Image Preview:</label>
+                                <div>
+                                    <img id="editPreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid var(--outline);">
+                                    <button type="button" onclick="removeImagePreview('edit')" style="margin-left: 0.5rem; color: var(--error); background: none; border: none; cursor: pointer;">
+                                        <span class="material-icons" style="font-size: 16px;">close</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
                         <label for="edit_description" class="form-label">Description</label>
                         <textarea id="edit_description" 
                                   name="description" 
@@ -336,7 +364,7 @@
             </button>
         </div>
         
-        <form id="ticketForm" method="POST" action="{{ route('admin.tickets.store') }}">
+        <form id="ticketForm" method="POST" action="{{ route('admin.tickets.store') }}" enctype="multipart/form-data">
             @csrf
             <div class="modal-body">
                 <div class="form-grid">
@@ -392,6 +420,25 @@
                         <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
                             Maximum number of tickets available (optional)
                         </small>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="ticket_image" class="form-label">Ticket Image</label>
+                        <input type="file" 
+                               id="ticket_image" 
+                               name="ticket_image" 
+                               class="form-input" 
+                               accept="image/*"
+                               onchange="previewTicketImage(this, 'add')">
+                        <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
+                            Upload an image for this ticket (JPG, PNG, WebP - Max: 2MB)
+                        </small>
+                        <div id="addImagePreview" style="margin-top: 1rem; display: none;">
+                            <img id="addPreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid var(--outline);">
+                            <button type="button" onclick="removeImagePreview('add')" style="margin-left: 0.5rem; color: var(--error); background: none; border: none; cursor: pointer;">
+                                <span class="material-icons" style="font-size: 16px;">close</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="form-group full-width">
@@ -846,6 +893,9 @@ function openEditTicketModal(ticketId) {
             const section = document.getElementById('editCountryPricingSection');
             section.style.display = 'block';
             rebuildCountryPricingFields(countriesForForm);
+            
+            // Show current image
+            showCurrentImage(ticket);
             
             // Set form action
             document.getElementById('editTicketForm').action = `/admin/tickets/${ticketId}`;
@@ -1719,6 +1769,81 @@ function openTicketModal() {
                 alert('Error deleting tickets: ' + error.message);
             });
         }
+    }
+
+    // Image preview functions
+    function previewTicketImage(input, modalType) {
+        const file = input.files[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file (JPG, PNG, WebP)');
+                input.value = '';
+                return;
+            }
+
+            // Validate file size (2MB max)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Image size must be less than 2MB');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (modalType === 'add') {
+                    const previewContainer = document.getElementById('addImagePreview');
+                    const previewImg = document.getElementById('addPreviewImg');
+                    
+                    previewImg.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                } else if (modalType === 'edit') {
+                    const previewContainer = document.getElementById('editImagePreview');
+                    const newImagePreview = document.getElementById('editNewImagePreview');
+                    const previewImg = document.getElementById('editPreviewImg');
+                    
+                    previewImg.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                    newImagePreview.style.display = 'block';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function removeImagePreview(modalType) {
+        if (modalType === 'add') {
+            document.getElementById('ticket_image').value = '';
+            document.getElementById('addImagePreview').style.display = 'none';
+            document.getElementById('addPreviewImg').src = '';
+        } else if (modalType === 'edit') {
+            document.getElementById('edit_ticket_image').value = '';
+            document.getElementById('editNewImagePreview').style.display = 'none';
+            document.getElementById('editPreviewImg').src = '';
+        }
+    }
+
+    function showCurrentImage(ticket) {
+        const currentImageContainer = document.getElementById('editCurrentImageContainer');
+        const editImagePreview = document.getElementById('editImagePreview');
+        
+        if (ticket.image_url) {
+            const imageUrl = ticket.image_url.startsWith('http') 
+                ? ticket.image_url 
+                : 'https://admin.tfcmockup.com/' + ticket.image_url;
+                
+            currentImageContainer.innerHTML = `
+                <img src="${imageUrl}" alt="Current ticket image" 
+                     style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid var(--outline);">
+            `;
+            editImagePreview.style.display = 'block';
+        } else {
+            currentImageContainer.innerHTML = '<p style="color: var(--on-surface-variant); font-style: italic;">No image uploaded</p>';
+            editImagePreview.style.display = 'block';
+        }
+        
+        // Hide new image preview initially
+        document.getElementById('editNewImagePreview').style.display = 'none';
     }
 </script>
 @endsection
