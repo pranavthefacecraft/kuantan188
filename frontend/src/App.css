@@ -828,6 +828,235 @@
   height: 3rem;
 }
 
+/* Checkout Step Styles */
+.checkout-step {
+  background: #f8f9fa;
+  min-height: 500px;
+  padding: 20px 0;
+}
+
+.contact-details {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.contact-details h5 {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.contact-details .form-label {
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.contact-details .form-control,
+.contact-details .form-select {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 12px 15px;
+  font-size: 14px;
+}
+
+.contact-details .form-control:focus,
+.contact-details .form-select:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.order-summary-card {
+  background: white;
+  padding: 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 20px;
+}
+
+.ticket-card {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.ticket-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.ticket-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 16px;
+}
+
+.ticket-subtitle {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.ticket-datetime {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.ticket-quantity {
+  margin-bottom: 15px;
+}
+
+.ticket-actions .btn-link {
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.ticket-actions .btn-link:hover {
+  text-decoration: underline;
+}
+
+.continue-shopping-btn {
+  background-color: #28a745 !important;
+  border: none;
+  padding: 12px 20px;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+.continue-shopping-btn:hover {
+  background-color: #218838 !important;
+}
+
+.pricing-breakdown {
+  padding: 20px;
+}
+
+.pricing-breakdown .d-flex {
+  font-size: 14px;
+  color: #666;
+}
+
+.pricing-breakdown hr {
+  margin: 15px 0;
+  border-color: #eee;
+}
+
+.total-due {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.promo-section .btn-link {
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.promo-section .btn-link:hover {
+  text-decoration: underline;
+}
+
+/* Inline Calendar Styles */
+.inline-calendar-container {
+  border: 2px solid #28a745;
+  border-radius: 8px;
+  padding: 20px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-header h6 {
+  color: #333;
+  font-size: 16px;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.weekday {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-align: center;
+  padding: 4px;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  padding: 4px;
+  min-height: 45px;
+}
+
+.calendar-day:hover {
+  border-color: #28a745;
+  background-color: #f8f9fa;
+}
+
+.calendar-day.highlight {
+  border-color: #28a745;
+  background-color: #e8f5e8;
+}
+
+.calendar-day.selected {
+  background-color: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.calendar-day .day-number {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.calendar-day .day-price {
+  font-size: 10px;
+  line-height: 1;
+  margin-top: 2px;
+  color: inherit;
+}
+
+.calendar-day.selected .day-price {
+  color: white;
+}
+
+.calendar-time-slots .btn {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-color: #ddd;
+}
+
+.calendar-time-slots .btn:hover {
+  border-color: #28a745;
+  background-color: #f8f9fa;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .ticket-booking-modal .ticket-selection-step {
@@ -844,5 +1073,15 @@
   
   .ticket-booking-modal .date-options {
     flex-direction: column;
+  }
+
+  .checkout-step .col-md-7,
+  .checkout-step .col-md-5 {
+    margin-bottom: 20px;
+  }
+  
+  .order-summary-card {
+    position: relative;
+    top: auto;
   }
 }

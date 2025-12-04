@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Button, Row, Col, Form } from 'react-bootstrap';
 import { format, addDays } from 'date-fns';
-import Calendar from '../Calendar/Calendar';
 
 interface Ticket {
   id: number;
@@ -146,7 +145,15 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     >
       <Modal.Header closeButton className="modal-header-custom">
         <Modal.Title className="modal-title-custom">
-          Tickets
+          {currentStep === 'selection' && 'Tickets'}
+          {currentStep === 'details' && (
+            <div className="d-flex align-items-center">
+              <i className="fas fa-arrow-left me-3" style={{cursor: 'pointer', color: '#666'}} onClick={() => setCurrentStep('selection')}></i>
+              Checkout
+            </div>
+          )}
+          {currentStep === 'payment' && 'Payment'}
+          {currentStep === 'thankyou' && 'Booking Confirmed'}
         </Modal.Title>
       </Modal.Header>
       
@@ -267,7 +274,10 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                           <button
                             key={dayOffset}
                             className={`date-option ${isSelected ? 'selected' : ''}`}
-                            onClick={() => setSelectedDate(date)}
+                            onClick={() => {
+                              setSelectedDate(date);
+                              setShowCalendar(false);
+                            }}
                             type="button"
                           >
                             <div className="date-number">{format(date, 'd')}</div>
@@ -291,7 +301,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                         return (
                           <button
                             className={`date-option other-dates ${isCustomDate ? 'selected' : ''}`}
-                            onClick={() => setShowCalendar(true)}
+                            onClick={() => setShowCalendar(!showCalendar)}
                             type="button"
                           >
                             {isCustomDate ? (
@@ -312,6 +322,86 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                         );
                       })()}
                     </div>
+
+                    {/* Inline Calendar */}
+                    {showCalendar && (
+                      <div className="inline-calendar-container mt-3">
+                        <div className="calendar-header d-flex justify-content-between align-items-center mb-3">
+                          <Button variant="link" className="p-0 text-muted">
+                            <i className="fas fa-chevron-left"></i>
+                          </Button>
+                          <h6 className="mb-0 fw-bold">December 2025</h6>
+                          <Button variant="link" className="p-0 text-muted">
+                            <i className="fas fa-chevron-right"></i>
+                          </Button>
+                        </div>
+                        
+                        <div className="calendar-grid">
+                          <div className="calendar-weekdays mb-2">
+                            {['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'].map(day => (
+                              <div key={day} className="weekday text-muted text-center small">{day}</div>
+                            ))}
+                          </div>
+                          
+                          <div className="calendar-days">
+                            {Array.from({length: 31}, (_, i) => i + 1).map(day => {
+                              const isToday = day === 4;
+                              const isTomorrow = day === 5;
+                              const isSelected = day === 12;
+                              
+                              return (
+                                <div 
+                                  key={day}
+                                  className={`calendar-day ${isToday || isTomorrow ? 'highlight' : ''} ${isSelected ? 'selected' : ''}`}
+                                  onClick={() => {
+                                    const newDate = new Date(2025, 11, day); // December 2025
+                                    setSelectedDate(newDate);
+                                    setShowCalendar(false);
+                                  }}
+                                >
+                                  <div className="day-number">{day}</div>
+                                  <div className="day-price small">$49</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Time Slots in Calendar */}
+                        <div className="calendar-time-slots mt-3 pt-3 border-top">
+                          <div className="row g-2">
+                            <div className="col-6">
+                              <Button 
+                                variant="outline-secondary" 
+                                size="sm"
+                                className="w-100 d-flex justify-content-between"
+                                onClick={() => {
+                                  setSelectedTime('15:00');
+                                  setShowCalendar(false);
+                                }}
+                              >
+                                <span>15:00</span>
+                                <span className="text-muted">$49</span>
+                              </Button>
+                            </div>
+                            <div className="col-6">
+                              <Button 
+                                variant="outline-secondary" 
+                                size="sm"
+                                className="w-100 d-flex justify-content-between"
+                                onClick={() => {
+                                  setSelectedTime('15:30');
+                                  setShowCalendar(false);
+                                }}
+                              >
+                                <span>15:30</span>
+                                <span className="text-muted">$49</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Time Selection */}
@@ -346,114 +436,182 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         )}
 
         {currentStep === 'details' && (
-          <div className="contact-details-step">
-            <h4 className="mb-4">Contact Details</h4>
-            
+          <div className="checkout-step">
             <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>First Name *</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={contactForm.firstName}
-                    onChange={(e) => setContactForm({...contactForm, firstName: e.target.value})}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Last Name *</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={contactForm.lastName}
-                    onChange={(e) => setContactForm({...contactForm, lastName: e.target.value})}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
+              {/* Left Side - Contact Details */}
+              <Col md={7}>
+                <div className="contact-details">
+                  <h5 className="mb-3">Contact Details</h5>
+                  <p className="text-muted mb-4"><span className="text-danger">*</span> Required Fields</p>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label>First name <span className="text-danger">*</span></Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={contactForm.firstName}
+                      onChange={(e) => setContactForm({...contactForm, firstName: e.target.value})}
+                      required
+                    />
+                  </Form.Group>
 
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Email *</Form.Label>
-                  <Form.Control
-                    type="email"
-                    value={contactForm.email}
-                    onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Mobile Phone *</Form.Label>
-                  <Form.Control
-                    type="tel"
-                    value={contactForm.mobilePhone}
-                    onChange={(e) => setContactForm({...contactForm, mobilePhone: e.target.value})}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Last name <span className="text-danger">*</span></Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={contactForm.lastName}
+                      onChange={(e) => setContactForm({...contactForm, lastName: e.target.value})}
+                      required
+                    />
+                  </Form.Group>
 
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Country</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={contactForm.country}
-                    onChange={(e) => setContactForm({...contactForm, country: e.target.value})}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Postal Code</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={contactForm.postalCode}
-                    onChange={(e) => setContactForm({...contactForm, postalCode: e.target.value})}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Email <span className="text-danger">*</span></Form.Label>
+                    <Form.Control
+                      type="email"
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
+                      required
+                    />
+                  </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="I would like to receive updates about events and special offers"
-                checked={contactForm.receiveUpdates}
-                onChange={(e) => setContactForm({...contactForm, receiveUpdates: e.target.checked})}
-              />
-            </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Mobile phone</Form.Label>
+                    <Form.Control
+                      type="tel"
+                      value={contactForm.mobilePhone}
+                      onChange={(e) => setContactForm({...contactForm, mobilePhone: e.target.value})}
+                    />
+                  </Form.Group>
 
-            {/* Order Summary */}
-            <div className="order-summary mt-4 p-3 bg-light rounded">
-              <h5>Order Summary</h5>
-              <p><strong>{ticketName}</strong></p>
-              <p className="small text-muted mb-2">📅 {format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}</p>
-              {adultQuantity > 0 && (
-                <div className="d-flex justify-content-between mb-1">
-                  <span>Adult × {adultQuantity}:</span>
-                  <span>{selectedCountry?.currency_symbol}{(parseFloat(selectedCountry?.adult_price || '0') * adultQuantity).toFixed(2)}</span>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Country <span className="text-danger">*</span></Form.Label>
+                    <Form.Select
+                      value={contactForm.country}
+                      onChange={(e) => setContactForm({...contactForm, country: e.target.value})}
+                      required
+                    >
+                      <option value="">Select country</option>
+                      <option value="Malaysia">Malaysia</option>
+                      <option value="Singapore">Singapore</option>
+                      <option value="United States">United States</option>
+                      <option value="United Kingdom">United Kingdom</option>
+                      <option value="Australia">Australia</option>
+                      <option value="India">India</option>
+                    </Form.Select>
+                  </Form.Group>
+
+                  <Form.Group className="mb-4">
+                    <Form.Label>ZIP / Postal Code <span className="text-danger">*</span></Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={contactForm.postalCode}
+                      onChange={(e) => setContactForm({...contactForm, postalCode: e.target.value})}
+                      required
+                    />
+                  </Form.Group>
+
+                  {/* Terms and Newsletter */}
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="checkbox"
+                      id="terms-checkbox"
+                      label={
+                        <span>
+                          I agree to the <button type="button" className="btn btn-link p-0 text-primary" style={{textDecoration: 'underline', fontSize: 'inherit'}}>booking terms</button> needed to complete the order <span className="text-danger">*</span>
+                        </span>
+                      }
+                      checked={contactForm.receiveUpdates}
+                      onChange={(e) => setContactForm({...contactForm, receiveUpdates: e.target.checked})}
+                      required
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="checkbox"
+                      id="newsletter-checkbox"
+                      label="I would like Magnicity 360 Chicago to send me exclusive updates and the latest offers."
+                      checked={contactForm.receiveUpdates}
+                      onChange={(e) => setContactForm({...contactForm, receiveUpdates: e.target.checked})}
+                    />
+                  </Form.Group>
                 </div>
-              )}
-              {childQuantity > 0 && (
-                <div className="d-flex justify-content-between mb-1">
-                  <span>Child × {childQuantity}:</span>
-                  <span>{selectedCountry?.currency_symbol}{(parseFloat(selectedCountry?.child_price || '0') * childQuantity).toFixed(2)}</span>
+              </Col>
+
+              {/* Right Side - Order Summary */}
+              <Col md={5}>
+                <div className="order-summary-card">
+                  <div className="ticket-card mb-4">
+                    {ticket.image_url && (
+                      <img 
+                        src={ticket.image_url} 
+                        alt={ticketName}
+                        className="ticket-image"
+                      />
+                    )}
+                    <div className="ticket-info">
+                      <h6 className="ticket-title">360 CHICAGO {ticketName}</h6>
+                      <p className="ticket-subtitle">{ticketName}</p>
+                      <p className="ticket-datetime">{format(selectedDate, 'd MMMM yyyy HH:mm')}</p>
+                      
+                      <div className="ticket-quantity">
+                        {adultQuantity > 0 && (
+                          <div className="d-flex justify-content-between align-items-center">
+                            <span className="text-success">{adultQuantity}× Adult</span>
+                            <span>{selectedCountry?.currency_symbol || '$'}{(parseFloat(selectedCountry?.adult_price || '0') * adultQuantity).toFixed(0)}</span>
+                          </div>
+                        )}
+                        {childQuantity > 0 && (
+                          <div className="d-flex justify-content-between align-items-center mt-1">
+                            <span className="text-success">{childQuantity}× Child</span>
+                            <span>{selectedCountry?.currency_symbol || '$'}{(parseFloat(selectedCountry?.child_price || '0') * childQuantity).toFixed(0)}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="ticket-actions mt-3">
+                        <Button variant="link" className="p-0 text-success me-3" size="sm">Edit</Button>
+                        <Button variant="link" className="p-0 text-success" size="sm">Remove</Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button className="continue-shopping-btn w-100 mb-4" variant="success">
+                    + Continue shopping
+                  </Button>
+
+                  {/* Pricing Breakdown */}
+                  <div className="pricing-breakdown">
+                    <div className="d-flex justify-content-between mb-2">
+                      <span>Subtotal</span>
+                      <span>{selectedCountry?.currency_symbol || '$'}{calculateTotal().toFixed(2)}</span>
+                    </div>
+                    <div className="d-flex justify-content-between mb-2">
+                      <span>Amusement Tax</span>
+                      <span>{selectedCountry?.currency_symbol || '$'}{(calculateTotal() * 0.05).toFixed(2)}</span>
+                    </div>
+                    <div className="d-flex justify-content-between mb-3">
+                      <span>Bar Tax</span>
+                      <span>{selectedCountry?.currency_symbol || '$'}{(calculateTotal() * 0.03).toFixed(2)}</span>
+                    </div>
+                    
+                    <hr />
+                    
+                    <div className="d-flex justify-content-between total-due">
+                      <strong>Total Due</strong>
+                      <strong>{selectedCountry?.currency_symbol || '$'}{(calculateTotal() * 1.08).toFixed(2)}</strong>
+                    </div>
+
+                    <div className="promo-section mt-3">
+                      <Button variant="link" className="p-0 text-success">
+                        <i className="fas fa-plus-circle me-2"></i>
+                        Enter promo / gift card code
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <hr />
-              <div className="d-flex justify-content-between">
-                <strong>Total:</strong>
-                <strong className="text-primary">{selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</strong>
-              </div>
-            </div>
+              </Col>
+            </Row>
           </div>
         )}
 
@@ -532,26 +690,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         )}
       </Modal.Footer>
       
-      {/* Calendar Modal */}
-      <Modal 
-        show={showCalendar} 
-        onHide={() => setShowCalendar(false)}
-        centered
-        className="calendar-modal"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Select Date</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Calendar
-            selectedDate={selectedDate}
-            onDateSelect={(date: Date) => {
-              setSelectedDate(date);
-              setShowCalendar(false);
-            }}
-          />
-        </Modal.Body>
-      </Modal>
+
     </Modal>
   );
 };
