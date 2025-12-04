@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import { eventsApi, Event } from '../services/api';
@@ -18,13 +18,8 @@ const Home: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
 
-  // Top slider - Tickets (Sky Deck, Observation Deck, Sky Walk)
-  const ticketTypes = useMemo(() => [
-    { name: 'Sky Deck', price: 'RM 20.00', image: '/skydeck.webp' },
-    { name: 'Observation Deck', price: 'RM 20.00', image: '/skydeck.webp' },
-    { name: 'Sky Walk', price: 'RM 20.00', image: '/skydeck.webp' },
-    { name: 'Sky Walk1', price: 'RM 20.00', image: '/skydeck.webp' }
-  ], []);
+  // Tickets from API
+  const [tickets, setTickets] = useState<any[]>([]);
 
   // Book Now events from API
   const [bookNowEvents, setBookNowEvents] = useState<Event[]>([]);
@@ -33,8 +28,17 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch book now events
-        const bookNowResponse = await eventsApi.getBookNowEvents();
+        // Fetch tickets and events
+        const [ticketsResponse, bookNowResponse] = await Promise.all([
+          eventsApi.getTickets(),
+          eventsApi.getBookNowEvents()
+        ]);
+        
+        if (ticketsResponse.success) {
+          setTickets(ticketsResponse.data);
+        } else {
+          console.error('Failed to load tickets');
+        }
         
         if (bookNowResponse.success) {
           setBookNowEvents(bookNowResponse.data);
@@ -71,7 +75,7 @@ const Home: React.FC = () => {
   // Debug Swiper initialization
   useEffect(() => {
     console.log('🔍 Swiper Debug - Component mounted');
-    console.log('📊 Ticket types count:', ticketTypes.length, ticketTypes);
+    console.log('📊 Tickets count:', tickets.length, tickets);
     console.log('📊 Book Now events count:', bookNowEvents.length, bookNowEvents);
     
     // Check if Swiper elements exist
@@ -100,7 +104,7 @@ const Home: React.FC = () => {
       const heroSections = document.querySelectorAll('.hero-section');
       console.log('🏛️ Hero sections found:', heroSections.length);
     }, 2000);
-  }, [ticketTypes, bookNowEvents]);
+  }, [tickets, bookNowEvents]);
 
 
 
@@ -188,23 +192,26 @@ const Home: React.FC = () => {
                 },
               }}
             >
-              {ticketTypes.map((ticket, ticketIndex) => (
-                <SwiperSlide key={ticketIndex} className="event-card-item">
+              {tickets.length > 0 ? tickets.map((ticket, ticketIndex) => (
+                <SwiperSlide key={ticket.id || ticketIndex} className="event-card-item">
                   <div 
                     className="event-card-background h-100 d-flex flex-column"
                     style={{
-                      backgroundImage: ticket.image 
-                        ? `url(${ticket.image})` 
+                      backgroundImage: ticket.image_url 
+                        ? `url(${ticket.image_url})` 
                         : `linear-gradient(135deg, #1A0007 0%, #4A0E15 100%)`,
                       backgroundColor: '#1A0007' // Fallback color
                     }}
                   >
                     <div className="event-card-overlay"></div>
                     <div className="event-card-content p-4 d-flex flex-column h-100">
-                      <h3 className="column-title mb-2">{ticket.name}</h3>
+                      <h3 className="column-title mb-2">{ticket.title || ticket.name}</h3>
                       <div className="mt-auto">
                         <p className="pricing-label mb-1">Starting at</p>
-                        <p className="pricing-amount mb-3">{ticket.price}</p>
+                        <p className="pricing-amount mb-3">
+                          {ticket.adult_price ? `RM ${ticket.adult_price}` : 
+                           ticket.price ? `RM ${ticket.price}` : 'RM 20.00'}
+                        </p>
                         <Button className="reserve-button get-tickets-button">
                           Get Tickets
                         </Button>
@@ -212,7 +219,32 @@ const Home: React.FC = () => {
                     </div>
                   </div>
                 </SwiperSlide>
-              ))}
+              )) : (
+                // Fallback when no tickets are loaded
+                [1,2,3].map((index) => (
+                  <SwiperSlide key={index} className="event-card-item">
+                    <div 
+                      className="event-card-background h-100 d-flex flex-column"
+                      style={{
+                        background: 'linear-gradient(135deg, #1A0007 0%, #4A0E15 100%)',
+                        backgroundColor: '#1A0007'
+                      }}
+                    >
+                      <div className="event-card-overlay"></div>
+                      <div className="event-card-content p-4 d-flex flex-column h-100">
+                        <h3 className="column-title mb-2">Loading...</h3>
+                        <div className="mt-auto">
+                          <p className="pricing-label mb-1">Starting at</p>
+                          <p className="pricing-amount mb-3">RM --</p>
+                          <Button className="reserve-button get-tickets-button" disabled>
+                            Get Tickets
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </SwiperSlide>
+                ))
+              )}
             </Swiper>
 
             {/* Custom Navigation Arrows for Tickets */}
