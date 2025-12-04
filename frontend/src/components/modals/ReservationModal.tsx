@@ -11,7 +11,8 @@ interface ReservationModalProps {
 }
 
 const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event }) => {
-  const [quantity, setQuantity] = useState(2);
+  const [adultQuantity, setAdultQuantity] = useState(2);
+  const [childQuantity, setChildQuantity] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentStep, setCurrentStep] = useState<'tickets' | 'checkout' | 'payment' | 'thankyou'>('tickets');
   
@@ -26,19 +27,31 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
     receiveUpdates: false
   });
 
-  const handleQuantityChange = (change: number) => {
-    const newQuantity = quantity + change;
-    if (newQuantity >= 1) {
-      setQuantity(newQuantity);
+  const handleAdultQuantityChange = (change: number) => {
+    const newQuantity = adultQuantity + change;
+    if (newQuantity >= 0) {
+      setAdultQuantity(newQuantity);
     }
+  };
+
+  const handleChildQuantityChange = (change: number) => {
+    const newQuantity = childQuantity + change;
+    if (newQuantity >= 0) {
+      setChildQuantity(newQuantity);
+    }
+  };
+
+  const getTotalQuantity = () => {
+    return adultQuantity + childQuantity;
   };
 
   const calculateTotal = () => {
     if (!event) return 1000;
-    const price = typeof event.price === 'string' 
+    const adultPrice = typeof event.price === 'string' 
       ? parseFloat(event.price.replace(/[^0-9.]/g, '')) || 500
       : event.price || 500;
-    return price * quantity;
+    const childPrice = event.child_price || (adultPrice * 0.7); // Child price is 70% of adult if not specified
+    return (adultPrice * adultQuantity) + (childPrice * childQuantity);
   };
 
   const handleDateSelect = (date: Date) => {
@@ -46,6 +59,10 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
   };
 
   const handleAddToCart = () => {
+    if (getTotalQuantity() === 0) {
+      alert('Please select at least one ticket.');
+      return;
+    }
     setCurrentStep('checkout');
   };
 
@@ -78,7 +95,9 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
         mobile_phone: contactForm.mobilePhone,
         country: contactForm.country,
         postal_code: contactForm.postalCode,
-        quantity: quantity,
+        quantity: getTotalQuantity(),
+        adult_tickets: adultQuantity,
+        child_tickets: childQuantity,
         event_date: selectedDate.toISOString().split('T')[0],
         total_amount: calculateTotal(),
         payment_method: 'cash_on_delivery',
@@ -229,12 +248,17 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                     {event.description || "Propose in style. 1,000 feet above the city with our exclusive package featuring a floral heart display with attached Marry Me signage, romantic LED candles, rose petals, a white carpet runner leading up to the display, and a high-top table and chairs, all set against the breathtaking backdrop of Chicago's skyline from our Merrill Semi-Private Event Space. Located on the 94th floor observation deck, this 380 sqft space offers unparalleled views of the city. Enjoy exclusivity for one hour as you pop the question in this unforgettable setting."}
                   </p>
                   
-                  {/* Quantity Selector */}
+                  {/* Quantity Selectors */}
                   <div className="mb-4">
-                    <div className="d-flex justify-content-between align-items-center">
+                    {/* Adult Tickets */}
+                    <div className="d-flex justify-content-between align-items-center mb-3">
                       <div>
                         <div className="fw-bold mb-1" style={{ fontSize: '1rem' }}>Adult</div>
-                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>from $500</small>
+                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>
+                          from ${typeof event.price === 'string' 
+                            ? parseFloat(event.price.replace(/[^0-9.]/g, '')) || 500
+                            : event.price || 500}
+                        </small>
                       </div>
                       <div className="d-flex align-items-center">
                         <Button 
@@ -247,13 +271,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                             color: '#1a0007',
                             fontSize: '18px'
                           }}
-                          onClick={() => handleQuantityChange(-1)}
-                          disabled={quantity <= 1}
+                          onClick={() => handleAdultQuantityChange(-1)}
+                          disabled={adultQuantity <= 0}
                         >
                           −
                         </Button>
                         <span className="mx-4 fw-bold" style={{ fontSize: '1.2rem' }}>
-                          {quantity}
+                          {adultQuantity}
                         </span>
                         <Button 
                           variant="outline-success"
@@ -265,7 +289,53 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                             color: '#1a0007',
                             fontSize: '16px'
                           }}
-                          onClick={() => handleQuantityChange(1)}
+                          onClick={() => handleAdultQuantityChange(1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Child Tickets */}
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="fw-bold mb-1" style={{ fontSize: '1rem' }}>Child</div>
+                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>
+                          from ${event.child_price || Math.round((typeof event.price === 'string' 
+                            ? parseFloat(event.price.replace(/[^0-9.]/g, '')) || 500
+                            : event.price || 500) * 0.7)}
+                        </small>
+                      </div>
+                      <div className="d-flex align-items-center">
+                        <Button 
+                          variant="outline-success"
+                          className="rounded-circle d-flex align-items-center justify-content-center border-2"
+                          style={{ 
+                            width: '36px', 
+                            height: '36px',
+                            borderColor: '#1a0007',
+                            color: '#1a0007',
+                            fontSize: '18px'
+                          }}
+                          onClick={() => handleChildQuantityChange(-1)}
+                          disabled={childQuantity <= 0}
+                        >
+                          −
+                        </Button>
+                        <span className="mx-4 fw-bold" style={{ fontSize: '1.2rem' }}>
+                          {childQuantity}
+                        </span>
+                        <Button 
+                          variant="outline-success"
+                          className="rounded-circle d-flex align-items-center justify-content-center border-2"
+                          style={{ 
+                            width: '36px', 
+                            height: '36px',
+                            borderColor: '#1a0007',
+                            color: '#1a0007',
+                            fontSize: '16px'
+                          }}
+                          onClick={() => handleChildQuantityChange(1)}
                         >
                           +
                         </Button>
@@ -332,10 +402,22 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                       </div>
                     </div>
                     <hr className="my-3" />
-                    <div className="d-flex justify-content-between mb-2">
-                      <span>Tickets ({quantity})</span>
-                      <span>₹{calculateTotal().toLocaleString()}</span>
-                    </div>
+                    {adultQuantity > 0 && (
+                      <div className="d-flex justify-content-between mb-2">
+                        <span>Adult Tickets ({adultQuantity})</span>
+                        <span>₹{(adultQuantity * (typeof event.price === 'string' 
+                          ? parseFloat(event.price.replace(/[^0-9.]/g, '')) || 500
+                          : event.price || 500)).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {childQuantity > 0 && (
+                      <div className="d-flex justify-content-between mb-2">
+                        <span>Child Tickets ({childQuantity})</span>
+                        <span>₹{(childQuantity * (event.child_price || Math.round((typeof event.price === 'string' 
+                          ? parseFloat(event.price.replace(/[^0-9.]/g, '')) || 500
+                          : event.price || 500) * 0.7))).toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="d-flex justify-content-between mb-2">
                       <span>Taxes & Fees</span>
                       <span>₹0</span>
@@ -502,10 +584,22 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                       </div>
                     </div>
                     <hr className="my-3" />
-                    <div className="d-flex justify-content-between mb-2">
-                      <span>Tickets ({quantity})</span>
-                      <span>₹{calculateTotal().toLocaleString()}</span>
-                    </div>
+                    {adultQuantity > 0 && (
+                      <div className="d-flex justify-content-between mb-2">
+                        <span>Adult Tickets ({adultQuantity})</span>
+                        <span>₹{(adultQuantity * (typeof event.price === 'string' 
+                          ? parseFloat(event.price.replace(/[^0-9.]/g, '')) || 500
+                          : event.price || 500)).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {childQuantity > 0 && (
+                      <div className="d-flex justify-content-between mb-2">
+                        <span>Child Tickets ({childQuantity})</span>
+                        <span>₹{(childQuantity * (event.child_price || Math.round((typeof event.price === 'string' 
+                          ? parseFloat(event.price.replace(/[^0-9.]/g, '')) || 500
+                          : event.price || 500) * 0.7))).toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="d-flex justify-content-between mb-2">
                       <span>Taxes & Fees</span>
                       <span>₹0</span>
@@ -610,7 +704,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                     <strong>Date:</strong> {format(selectedDate, 'PPP')}
                   </div>
                   <div className="col-6 mt-2">
-                    <strong>Tickets:</strong> {quantity}
+                    <strong>Tickets:</strong> {adultQuantity > 0 && `${adultQuantity} Adult${adultQuantity > 1 ? 's' : ''}`}{childQuantity > 0 && (adultQuantity > 0 ? `, ${childQuantity} Child${childQuantity > 1 ? 'ren' : ''}` : `${childQuantity} Child${childQuantity > 1 ? 'ren' : ''}`)}
                   </div>
                   <div className="col-6 mt-2">
                     <strong>Total:</strong> ₹{calculateTotal().toLocaleString()}

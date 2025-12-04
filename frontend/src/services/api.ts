@@ -12,6 +12,7 @@ export interface Event {
   event_time_formatted: string;
   image_url: string;
   price: string | number;
+  child_price?: number;
   price_display: string;
   category: string;
   is_booking_open: boolean;
