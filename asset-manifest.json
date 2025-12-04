@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.8d92e06c.css",
-    "main.js": "/static/js/main.91b1bb6e.js",
+    "main.js": "/static/js/main.6a5a3257.js",
     "static/js/206.0df2a5df.chunk.js": "/static/js/206.0df2a5df.chunk.js",
     "static/media/Erstoria-Regular.ttf": "/static/media/Erstoria-Regular.ecede68229d3292207a9.ttf",
     "static/media/Erstoria-Regular.woff": "/static/media/Erstoria-Regular.117cac554f71acb2eb66.woff",
@@ -11,6 +11,6 @@
   },
   "entrypoints": [
     "static/css/main.8d92e06c.css",
-    "static/js/main.91b1bb6e.js"
+    "static/js/main.6a5a3257.js"
   ]
 }

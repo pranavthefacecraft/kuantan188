@@ -4,6 +4,7 @@ import { format, addDays } from 'date-fns';
 
 interface Ticket {
   id: number;
+  event_id?: number;
   title?: string;
   name?: string;
   description?: string;
@@ -122,7 +123,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const handlePayment = async () => {
     try {
       const bookingData = {
-        event_id: ticket?.id || 1,
+        ticket_id: ticket?.id || 1,
+        event_id: ticket?.event_id || null, // Use ticket's event_id if available
         event_title: `${ticketName} - ${format(selectedDate, 'MMMM d, yyyy')}`,
         customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
         email: contactForm.email,

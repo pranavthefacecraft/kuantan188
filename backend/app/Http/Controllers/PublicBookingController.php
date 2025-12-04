@@ -129,7 +129,8 @@ class PublicBookingController extends Controller
             \Log::info('[BOOKING_API] Database columns available:', \Schema::getColumnListing('bookings'));
             
             $validator = Validator::make($request->all(), [
-                'event_id' => 'required|integer',
+                'event_id' => 'nullable|integer', // Made optional for ticket bookings
+                'ticket_id' => 'nullable|integer', // Added ticket_id validation
                 'event_title' => 'nullable|string|max:255',
                 'customer_name' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
@@ -156,6 +157,31 @@ class PublicBookingController extends Controller
 
             \Log::info('[BOOKING_API] Validation passed, proceeding to create booking...');
 
+            // Handle ticket_id and event_id relationship
+            $finalEventId = $request->event_id;
+            $finalTicketId = $request->ticket_id;
+            
+            if ($request->ticket_id) {
+                \Log::info('[BOOKING_API] This is a ticket booking, ticket_id:', ['ticket_id' => $request->ticket_id]);
+                // If ticket_id is provided, try to get the event_id from the ticket
+                try {
+                    $ticket = \App\Models\Ticket::find($request->ticket_id);
+                    if ($ticket && $ticket->event_id) {
+                        $finalEventId = $ticket->event_id;
+                        \Log::info('[BOOKING_API] Found event_id from ticket:', ['event_id' => $finalEventId]);
+                    } else {
+                        \Log::info('[BOOKING_API] Ticket has no event_id or ticket not found, making event_id null for standalone ticket');
+                        $finalEventId = null;
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('[BOOKING_API] Could not fetch ticket details:', ['error' => $e->getMessage()]);
+                    $finalEventId = null;
+                }
+            } elseif ($request->event_id) {
+                \Log::info('[BOOKING_API] This is a direct event booking, event_id:', ['event_id' => $request->event_id]);
+                $finalTicketId = null; // Direct event bookings don't have ticket_id
+            }
+
             // Generate booking reference
             $bookingReference = 'KB' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
             \Log::info('[BOOKING_API] Generated booking reference:', ['reference' => $bookingReference]);
@@ -163,7 +189,8 @@ class PublicBookingController extends Controller
             // Only include fields that exist in the database schema
             $bookingData = [
                 'booking_reference' => $bookingReference,
-                'event_id' => $request->event_id,
+                'event_id' => $finalEventId, // Use resolved event_id (could be null for standalone tickets)
+                'ticket_id' => $finalTicketId, // Use resolved ticket_id (could be null for direct events)
                 'country_id' => 1, // Default country ID
                 'postal_code' => $request->postal_code,
                 'customer_name' => $request->customer_name,
@@ -181,7 +208,6 @@ class PublicBookingController extends Controller
                 'payment_reference' => null,
                 'payment_date' => null,
                 'status' => $request->booking_status ?? 'confirmed',
-                'ticket_id' => 1, // Default ticket ID
             ];
 
             // Add optional fields only if they exist in database
