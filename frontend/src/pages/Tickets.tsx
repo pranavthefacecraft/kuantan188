@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Spinner } from 'react-bootstrap';
+import ShareButton from '../components/ShareButton';
 import { testTickets } from '../data/testTickets';
 
 const Tickets: React.FC = () => {
@@ -98,13 +99,20 @@ const Tickets: React.FC = () => {
             ) : (
               tickets.map((ticket, index) => (
                 <Col lg={4} md={6} key={index} className="mb-4">
-                  <Card className="h-100 border-0 shadow-sm hover-shadow">
+                  <Card className="h-100 border-0 shadow-sm hover-shadow position-relative">
                     <Card.Header className="bg-gradient" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
                       <div className="d-flex justify-content-between align-items-center text-white">
                         <span className="fw-bold">🎫 Ticket #{ticket.id}</span>
-                        <Badge bg={ticket.status === 'confirmed' ? 'success' : ticket.status === 'pending' ? 'warning' : 'secondary'}>
-                          {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
-                        </Badge>
+                        <div className="d-flex align-items-center gap-2">
+                          <Badge bg={ticket.status === 'confirmed' ? 'success' : ticket.status === 'pending' ? 'warning' : 'secondary'}>
+                            {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                          </Badge>
+                          <ShareButton 
+                            ticket={ticket} 
+                            variant="light" 
+                            size="sm"
+                          />
+                        </div>
                       </div>
                     </Card.Header>
                     <Card.Body className="p-4">

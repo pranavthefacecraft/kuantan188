@@ -1137,3 +1137,114 @@
     top: auto;
   }
 }
+
+/* Share Button Styles */
+.share-button {
+  transition: all 0.3s ease;
+  border-radius: 50% !important;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.share-button:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.share-button:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3) !important;
+}
+
+.share-dropdown-menu {
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 8px 0;
+  margin-top: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: shareDropdownSlideIn 0.2s ease-out;
+}
+
+@keyframes shareDropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.share-dropdown-menu .dropdown-item {
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin: 2px 8px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.share-dropdown-menu .dropdown-item:hover {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  transform: translateX(4px);
+}
+
+.share-dropdown-menu .dropdown-item:active {
+  background-color: rgba(0, 123, 255, 0.15) !important;
+}
+
+.share-dropdown-menu .dropdown-divider {
+  margin: 8px 16px;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Platform specific icon colors */
+.share-dropdown-menu .dropdown-item:hover [style*="color: #1877F2"] {
+  color: #1877F2 !important;
+}
+
+.share-dropdown-menu .dropdown-item:hover [style*="color: #1DA1F2"] {
+  color: #1DA1F2 !important;
+}
+
+.share-dropdown-menu .dropdown-item:hover [style*="color: #25D366"] {
+  color: #25D366 !important;
+}
+
+.share-dropdown-menu .dropdown-item:hover [style*="color: #0A66C2"] {
+  color: #0A66C2 !important;
+}
+
+.share-dropdown-menu .dropdown-item:hover [style*="color: #0088cc"] {
+  color: #0088cc !important;
+}
+
+/* Responsive adjustments for share button */
+@media (max-width: 768px) {
+  .share-button {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .share-dropdown-menu {
+    min-width: 180px !important;
+  }
+}
+
+/* Share button animation on card hover */
+.event-card-item:hover .share-button,
+.hover-shadow:hover .share-button {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}

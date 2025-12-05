@@ -4,6 +4,7 @@ import { Container, Row, Col, Button } from 'react-bootstrap';
 import { eventsApi, Event } from '../services/api';
 import ReservationModal from '../components/modals/ReservationModal';
 import TicketBookingModal from '../components/modals/TicketBookingModal';
+import ShareButton from '../components/ShareButton';
 import { ReviewsWidget } from '../components/GoogleReviews';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, FreeMode } from 'swiper/modules';
@@ -205,7 +206,7 @@ const Home: React.FC = () => {
               {tickets.length > 0 ? tickets.map((ticket, ticketIndex) => (
                 <SwiperSlide key={ticket.id || ticketIndex} className="event-card-item">
                   <div 
-                    className="event-card-background h-100 d-flex flex-column"
+                    className="event-card-background h-100 d-flex flex-column position-relative"
                     style={{
                       backgroundImage: ticket.image_url 
                         ? `url(${ticket.image_url})` 
@@ -214,6 +215,16 @@ const Home: React.FC = () => {
                     }}
                   >
                     <div className="event-card-overlay"></div>
+                    
+                    {/* Share Button - Top Right Corner */}
+                    <div className="position-absolute top-0 end-0 m-2" style={{ zIndex: 10 }}>
+                      <ShareButton 
+                        ticket={ticket} 
+                        variant="light" 
+                        size="sm"
+                      />
+                    </div>
+
                     <div className="event-card-content p-4 d-flex flex-column h-100">
                       <h3 className="column-title mb-2">{ticket.title || ticket.name}</h3>
                       <div className="mt-auto">
@@ -360,7 +371,7 @@ const Home: React.FC = () => {
                 bookNowEvents.map((event, eventIndex) => (
                   <SwiperSlide key={event.id} className="event-card-item">
                     <div 
-                      className="event-card-background h-100 d-flex flex-column"
+                      className="event-card-background h-100 d-flex flex-column position-relative"
                       style={{
                         backgroundImage: event.image_url 
                           ? `url(${event.image_url})` 
@@ -374,6 +385,16 @@ const Home: React.FC = () => {
                       }}
                     >
                       <div className="event-card-overlay"></div>
+                      
+                      {/* Share Button - Top Right Corner */}
+                      <div className="position-absolute top-0 end-0 m-2" style={{ zIndex: 10 }}>
+                        <ShareButton 
+                          ticket={event} 
+                          variant="light" 
+                          size="sm"
+                        />
+                      </div>
+
                       <div className="event-card-content p-4 d-flex flex-column h-100">
                         <h3 className="column-title mb-2">{event.title}</h3>
                         <p className="event-description mb-3 flex-grow-1">
