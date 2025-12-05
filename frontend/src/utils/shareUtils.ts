@@ -10,7 +10,6 @@ export const generateShareUrls = (data: ShareData) => {
   const encodedTitle = encodeURIComponent(title);
   const encodedDescription = encodeURIComponent(description);
   const encodedUrl = encodeURIComponent(url);
-  const hashtagString = hashtags.map(tag => `#${tag}`).join(' ');
 
   return {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedTitle} - ${encodedDescription}`,
