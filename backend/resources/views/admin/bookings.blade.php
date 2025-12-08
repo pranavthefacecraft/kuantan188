@@ -187,9 +187,11 @@
                                                 <span class="material-icons" style="font-size: 16px;">check</span>
                                             </button>
                                         @endif
-                                        <a href="#" class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                        <button class="btn btn-outline" 
+                                                style="padding: 0.25rem 0.5rem;" 
+                                                onclick="showBookingDetails('{{ $booking->id }}')">
                                             <span class="material-icons" style="font-size: 16px;">visibility</span>
-                                        </a>
+                                        </button>
                                         <a href="#" class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
                                             <span class="material-icons" style="font-size: 16px;">email</span>
                                         </a>
@@ -288,6 +290,44 @@
                 <button type="button" class="btn btn-outline" onclick="closeBookingDetailsModal()">
                     Close
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Individual Booking Details Modal -->
+    <div id="individualBookingModal" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="closeIndividualBookingModal()"></div>
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">receipt</span>
+                    Booking Details
+                </h3>
+                <button type="button" class="modal-close" onclick="closeIndividualBookingModal()">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="individualBookingContent">
+                    <!-- Individual booking details will be loaded here -->
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeIndividualBookingModal()">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="updateStatusBtn" style="display: none;" onclick="updateBookingStatusFromModal()">
+                        <span class="material-icons" style="font-size: 16px; margin-right: 0.5rem;">check_circle</span>
+                        Confirm Booking
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="sendBookingEmail()">
+                        <span class="material-icons" style="font-size: 16px; margin-right: 0.5rem;">email</span>
+                        Send Email
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -564,6 +604,62 @@
             grid-template-columns: 1fr !important;
         }
     }
+
+    /* Individual Booking Modal Styles */
+    #individualBookingModal .modal-container {
+        max-width: 700px;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .badge-success {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: rgb(22, 163, 74);
+    }
+
+    .badge-warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: rgb(217, 119, 6);
+    }
+
+    .badge-error {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: rgb(220, 38, 38);
+    }
+
+    .badge-info {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: rgb(37, 99, 235);
+    }
+
+    .badge-primary {
+        background-color: rgba(99, 102, 241, 0.1);
+        color: rgb(79, 70, 229);
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--border);
+        border-top: 4px solid var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 @endsection
 
@@ -727,16 +823,16 @@
                         failureCallback(error.message);
                     });
             },
-            dayCellDidMount: function(info) {
-                // Add booking dots to calendar days
-                addBookingDots(info);
-            },
-            dateClick: function(info) {
-                showBookingsForDate(info.dateStr);
+            eventClick: function(info) {
+                showBookingDetails(info.event);
             },
             eventDidMount: function(info) {
-                // Hide default events as we show dots instead
-                info.el.style.display = 'none';
+                // Style event elements
+                const booking = info.event.extendedProps;
+                info.el.style.cursor = 'pointer';
+                
+                // Add tooltip
+                info.el.title = `${booking.customer_name} - ${booking.status.toUpperCase()}`;
             }
         });
 
@@ -920,6 +1016,71 @@
             });
     }
 
+    function showBookingDetails(event) {
+        const booking = event.extendedProps;
+        
+        // Create modal content
+        const modalContent = `
+            <div class="modal fade" id="bookingDetailsModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Booking Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Reference:</strong> ${booking.booking_reference}</p>
+                                    <p><strong>Type:</strong> ${booking.booking_type}</p>
+                                    <p><strong>Status:</strong> <span class="badge bg-${getStatusBadgeColor(booking.status)}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></p>
+                                    <p><strong>Amount:</strong> RM ${parseFloat(booking.total_amount).toFixed(2)}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Customer:</strong> ${booking.customer_name}</p>
+                                    <p><strong>Email:</strong> ${booking.customer_email}</p>
+                                    <p><strong>Adults:</strong> ${booking.adult_quantity}</p>
+                                    ${booking.child_quantity > 0 ? `<p><strong>Children:</strong> ${booking.child_quantity}</p>` : ''}
+                                </div>
+                            </div>
+                            ${booking.booking_type === 'Event' ? `
+                                <hr>
+                                <p><strong>Event:</strong> ${booking.event_title}</p>
+                                <p><strong>Event Date:</strong> ${booking.event_date}</p>
+                            ` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('bookingDetailsModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body and show it
+        document.body.insertAdjacentHTML('beforeend', modalContent);
+        
+        // Show modal using Bootstrap 5 syntax
+        const modalElement = document.getElementById('bookingDetailsModal');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    }
+
+    function getStatusBadgeColor(status) {
+        switch(status) {
+            case 'confirmed': return 'success';
+            case 'pending': return 'warning';
+            case 'cancelled': return 'danger';
+            default: return 'secondary';
+        }
+    }
+
     function updateBookingStatus(bookingId, status) {
         if (confirm('Are you sure you want to update this booking status?')) {
             fetch(`/api/bookings/${bookingId}`, {
@@ -951,10 +1112,219 @@
         }
     }
 
+    // Individual Booking Modal Functions
+    let currentBookingId = null;
+
+    function showBookingDetails(bookingId) {
+        currentBookingId = bookingId;
+        const modal = document.getElementById('individualBookingModal');
+        const content = document.getElementById('individualBookingContent');
+        
+        // Show loading state
+        content.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <div class="spinner" style="margin: 0 auto 1rem;"></div>
+                <p>Loading booking details...</p>
+            </div>
+        `;
+        
+        // Show modal
+        modal.style.display = 'flex';
+        
+        // Fetch booking details
+        fetch(`/admin/api/bookings/${bookingId}/details`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderBookingDetails(data.booking);
+                } else {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--error);">
+                            <span class="material-icons" style="font-size: 48px; margin-bottom: 1rem;">error</span>
+                            <p>Error loading booking details: ${data.message}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading booking details:', error);
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--error);">
+                        <span class="material-icons" style="font-size: 48px; margin-bottom: 1rem;">error</span>
+                        <p>Error loading booking details</p>
+                    </div>
+                `;
+            });
+    }
+
+    function renderBookingDetails(booking) {
+        const content = document.getElementById('individualBookingContent');
+        const updateBtn = document.getElementById('updateStatusBtn');
+        
+        // Show update button only for pending bookings
+        if (booking.status === 'pending') {
+            updateBtn.style.display = 'inline-flex';
+        } else {
+            updateBtn.style.display = 'none';
+        }
+        
+        // Format dates
+        const createdDate = new Date(booking.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const eventDate = booking.event_date ? new Date(booking.event_date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }) : 'N/A';
+
+        // Get status badge
+        let statusBadge = '';
+        if (booking.status === 'confirmed') {
+            statusBadge = '<span class="badge badge-success"><span class="material-icons" style="font-size: 12px;">check_circle</span> Confirmed</span>';
+        } else if (booking.status === 'pending') {
+            statusBadge = '<span class="badge badge-warning"><span class="material-icons" style="font-size: 12px;">schedule</span> Pending</span>';
+        } else {
+            statusBadge = '<span class="badge badge-error"><span class="material-icons" style="font-size: 12px;">cancel</span> Cancelled</span>';
+        }
+
+        // Get booking type
+        const bookingType = booking.ticket_id && booking.ticket_id > 0 ? 
+            '<span class="badge badge-info"><span class="material-icons" style="font-size: 12px;">confirmation_number</span> Ticket</span>' :
+            '<span class="badge badge-primary"><span class="material-icons" style="font-size: 12px;">event</span> Event</span>';
+
+        content.innerHTML = `
+            <div style="display: grid; gap: 1.5rem;">
+                <!-- Header Info -->
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start; padding: 1rem; background: var(--surface-variant); border-radius: 0.75rem;">
+                    <div>
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 1.25rem;">
+                            ${booking.booking_reference}
+                        </h4>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            ${bookingType}
+                            ${statusBadge}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--success);">
+                            RM ${parseFloat(booking.total_amount).toFixed(2)}
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                            Total Amount
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div>
+                    <h5 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="material-icons" style="color: var(--primary);">person</span>
+                        Customer Information
+                    </h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Name</label>
+                            <div style="font-weight: 500;">${booking.customer_name}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Email</label>
+                            <div>${booking.customer_email}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Phone</label>
+                            <div>${booking.customer_phone || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Country</label>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="material-icons" style="font-size: 16px; color: var(--accent);">public</span>
+                                ${booking.country_name || booking.country || 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Information -->
+                <div>
+                    <h5 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="material-icons" style="color: var(--primary);">event</span>
+                        Event Information
+                    </h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Event/Ticket Name</label>
+                            <div style="font-weight: 500;">${booking.event_title || booking.ticket_name || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Event Date</label>
+                            <div>${eventDate}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Booking Date</label>
+                            <div>${createdDate}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ticket Information -->
+                <div>
+                    <h5 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="material-icons" style="color: var(--primary);">confirmation_number</span>
+                        Ticket Information
+                    </h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Adults</label>
+                            <div style="font-size: 1.25rem; font-weight: 600;">${booking.adult_quantity || 0}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Children</label>
+                            <div style="font-size: 1.25rem; font-weight: 600;">${booking.child_quantity || 0}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Adult Price</label>
+                            <div>RM ${parseFloat(booking.adult_price || 0).toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Child Price</label>
+                            <div>RM ${parseFloat(booking.child_price || 0).toFixed(2)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function closeIndividualBookingModal() {
+        const modal = document.getElementById('individualBookingModal');
+        modal.style.display = 'none';
+        currentBookingId = null;
+    }
+
+    function updateBookingStatusFromModal() {
+        if (currentBookingId) {
+            updateBookingStatus(currentBookingId, 'confirmed');
+        }
+    }
+
+    function sendBookingEmail() {
+        if (currentBookingId) {
+            alert('Email functionality to be implemented');
+            // TODO: Implement email sending functionality
+        }
+    }
+
     // Close modal on Escape key
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
             closeBookingDetailsModal();
+            closeIndividualBookingModal();
         }
     });
 </script>

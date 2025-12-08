@@ -157,6 +157,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/api/bookings/date-summary', [AdminDashboardController::class, 'dateSummary'])->name('bookings.date-summary');
     Route::get('/api/bookings/date-details', [AdminDashboardController::class, 'dateDetails'])->name('bookings.date-details');
     Route::get('/api/bookings/stats', [AdminDashboardController::class, 'calendarStats'])->name('bookings.stats');
+    Route::get('/api/bookings/{booking}/details', [AdminDashboardController::class, 'getBookingDetails'])->name('bookings.details');
     
     Route::get('/tickets', [AdminDashboardController::class, 'tickets'])->name('tickets');
     Route::post('/tickets', [AdminDashboardController::class, 'storeTicket'])->name('tickets.store');

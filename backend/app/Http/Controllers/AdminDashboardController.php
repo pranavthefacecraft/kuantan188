@@ -276,7 +276,27 @@ class AdminDashboardController extends Controller
             $start = Carbon::parse($request->start)->startOfDay();
             $end = Carbon::parse($request->end)->endOfDay();
             
-            $query = Booking::whereBetween('created_at', [$start, $end]);
+            // Build query to get all bookings that should appear in the calendar date range
+            // Priority: event_date > related_event.event_date > created_at
+            $query = Booking::where(function($q) use ($start, $end) {
+                // Primary: Bookings with event_date in range
+                $q->where(function($subQ) use ($start, $end) {
+                    $subQ->whereNotNull('event_date')
+                         ->whereBetween('event_date', [$start, $end]);
+                });
+                
+                // Secondary: Bookings with related event dates in range
+                $q->orWhereHas('event', function($eventQ) use ($start, $end) {
+                    $eventQ->whereBetween('event_date', [$start, $end]);
+                });
+                
+                // Tertiary: Bookings created in range (fallback for tickets without event dates)
+                $q->orWhere(function($subQ) use ($start, $end) {
+                    $subQ->whereNull('event_date')
+                         ->whereDoesntHave('event')
+                         ->whereBetween('created_at', [$start, $end]);
+                });
+            });
             
             // Apply filters
             if ($request->filled('booking_type')) {
@@ -300,36 +320,173 @@ class AdminDashboardController extends Controller
                 $query->where('status', $request->status_filter);
             }
             
-            $bookings = $query->get();
+            // Load relationships for better data access
+            $bookings = $query->with(['event', 'ticket', 'country'])->get();
             
-            // Group bookings by date for FullCalendar
+            // Create calendar events - show bookings on their event date (preferred) or booking date (fallback)
             $events = [];
-            $bookingsByDate = $bookings->groupBy(function($booking) {
-                return $booking->created_at->format('Y-m-d');
-            });
             
-            foreach ($bookingsByDate as $date => $dayBookings) {
+            foreach ($bookings as $booking) {
+                $isTicketBooking = !empty($booking->ticket_id) && $booking->ticket_id > 0;
+                
+                // Determine the date to display the booking on calendar
+                $displayDate = null;
+                
+                // Priority 1: Use event_date from booking record
+                if ($booking->event_date) {
+                    $displayDate = Carbon::parse($booking->event_date)->format('Y-m-d');
+                }
+                // Priority 2: Use event_date from related event
+                elseif ($booking->event && $booking->event->event_date) {
+                    $displayDate = Carbon::parse($booking->event->event_date)->format('Y-m-d');
+                }
+                // Priority 3: Fallback to booking creation date (for tickets without specific event dates)
+                else {
+                    $displayDate = $booking->created_at->format('Y-m-d');
+                }
+                
+                $bookingDate = $displayDate;
+                
+                // Determine title based on booking type
+                if ($isTicketBooking) {
+                    $title = $booking->booking_reference . ' (Ticket)';
+                    if ($booking->ticket && is_object($booking->ticket) && isset($booking->ticket->title)) {
+                        $title = $booking->ticket->title . ' - ' . $booking->booking_reference;
+                    } elseif ($booking->ticket && is_object($booking->ticket) && isset($booking->ticket->name)) {
+                        $title = $booking->ticket->name . ' - ' . $booking->booking_reference;
+                    }
+                    $backgroundColor = $this->getTicketStatusColor($booking->status);
+                } else {
+                    $title = $booking->booking_reference . ' (Event)';
+                    if ($booking->event_title) {
+                        $title = $booking->event_title . ' - ' . $booking->booking_reference;
+                    } elseif ($booking->event && is_object($booking->event) && isset($booking->event->title)) {
+                        $title = $booking->event->title . ' - ' . $booking->booking_reference;
+                    }
+                    $backgroundColor = $this->getEventStatusColor($booking->status);
+                }
+                
+                // Add booking event
                 $events[] = [
-                    'id' => 'bookings-' . $date,
-                    'title' => $dayBookings->count() . ' booking(s)',
-                    'start' => $date,
+                    'id' => $booking->id,
+                    'title' => $title,
+                    'start' => $bookingDate,
                     'allDay' => true,
-                    'display' => 'background',
-                    'backgroundColor' => '#e3f2fd'
+                    'backgroundColor' => $backgroundColor,
+                    'borderColor' => $backgroundColor,
+                    'textColor' => '#ffffff',
+                    'extendedProps' => [
+                        'booking_id' => $booking->id,
+                        'booking_reference' => $booking->booking_reference,
+                        'customer_name' => $booking->customer_name,
+                        'customer_email' => $booking->customer_email ?? $booking->email,
+                        'status' => $booking->status ?? $booking->booking_status,
+                        'total_amount' => $booking->total_amount,
+                        'adult_quantity' => $booking->adult_quantity ?? $booking->quantity,
+                        'child_quantity' => $booking->child_quantity ?? 0,
+                        'booking_type' => $isTicketBooking ? 'Ticket' : 'Event',
+                        'event_title' => $booking->event_title ?? ($booking->event ? $booking->event->title : 'N/A'),
+                        'event_date' => $booking->event_date ? Carbon::parse($booking->event_date)->format('M j, Y') : 
+                                      ($booking->event ? Carbon::parse($booking->event->event_date)->format('M j, Y') : 'N/A'),
+                        'country' => $this->getCountryName($booking)
+                    ]
                 ];
+                
+                // For event bookings, also show on the actual event date if different
+                if (!$isTicketBooking) {
+                    $eventDate = null;
+                    if ($booking->event_date) {
+                        $eventDate = Carbon::parse($booking->event_date)->format('Y-m-d');
+                    } elseif ($booking->event && $booking->event->event_date) {
+                        $eventDate = Carbon::parse($booking->event->event_date)->format('Y-m-d');
+                    }
+                    
+                    // Add event date entry if different from booking date
+                    if ($eventDate && $eventDate !== $bookingDate) {
+                        $eventTitle = ($booking->event_title ?? ($booking->event ? $booking->event->title : 'Event')) . ' (Event Day)';
+                        
+                        $events[] = [
+                            'id' => $booking->id . '_event',
+                            'title' => $eventTitle,
+                            'start' => $eventDate,
+                            'allDay' => true,
+                            'backgroundColor' => '#17a2b8', // Different color for event day
+                            'borderColor' => '#17a2b8',
+                            'textColor' => '#ffffff',
+                            'extendedProps' => array_merge($events[count($events) - 1]['extendedProps'], [
+                                'is_event_day' => true
+                            ])
+                        ];
+                    }
+                }
             }
             
             return response()->json([
                 'success' => true,
-                'events' => $events
+                'events' => $events,
+                'total_bookings' => $bookings->count()
             ]);
             
         } catch (\Exception $e) {
             \Log::error('Error loading calendar events: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading calendar events'
+                'message' => 'Error loading calendar events: ' . $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Safely get country name from booking
+     */
+    private function getCountryName($booking)
+    {
+        try {
+            if ($booking->country && is_object($booking->country) && isset($booking->country->name)) {
+                return $booking->country->name;
+            } elseif (is_string($booking->country) && !empty($booking->country)) {
+                return $booking->country;
+            } else {
+                return 'N/A';
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Error getting country name for booking ' . $booking->id . ': ' . $e->getMessage());
+            return 'N/A';
+        }
+    }
+
+    /**
+     * Get color for event bookings based on status
+     */
+    private function getEventStatusColor($status)
+    {
+        switch ($status) {
+            case 'confirmed':
+                return '#28a745'; // Green for confirmed events
+            case 'pending':
+                return '#ffc107'; // Yellow for pending events
+            case 'cancelled':
+                return '#dc3545'; // Red for cancelled events
+            default:
+                return '#6c757d'; // Gray for unknown status
+        }
+    }
+
+    /**
+     * Get color for ticket bookings based on status
+     */
+    private function getTicketStatusColor($status)
+    {
+        switch ($status) {
+            case 'confirmed':
+                return '#007bff'; // Blue for confirmed tickets
+            case 'pending':
+                return '#fd7e14'; // Orange for pending tickets
+            case 'cancelled':
+                return '#6f42c1'; // Purple for cancelled tickets
+            default:
+                return '#6c757d'; // Gray for unknown status
         }
     }
 
@@ -343,7 +500,26 @@ class AdminDashboardController extends Controller
             $startOfDay = $date->startOfDay();
             $endOfDay = $date->copy()->endOfDay();
             
-            $query = Booking::whereBetween('created_at', [$startOfDay, $endOfDay]);
+            // Query for bookings that should appear on this date (prioritize event_date over created_at)
+            $query = Booking::where(function($q) use ($startOfDay, $endOfDay) {
+                // Primary: Bookings with event_date on this date
+                $q->where(function($subQ) use ($startOfDay, $endOfDay) {
+                    $subQ->whereNotNull('event_date')
+                         ->whereBetween('event_date', [$startOfDay, $endOfDay]);
+                });
+                
+                // Secondary: Bookings with related event dates on this date  
+                $q->orWhereHas('event', function($eventQ) use ($startOfDay, $endOfDay) {
+                    $eventQ->whereBetween('event_date', [$startOfDay, $endOfDay]);
+                });
+                
+                // Tertiary: Bookings created on this date (fallback for tickets without event dates)
+                $q->orWhere(function($subQ) use ($startOfDay, $endOfDay) {
+                    $subQ->whereNull('event_date')
+                         ->whereDoesntHave('event')  
+                         ->whereBetween('created_at', [$startOfDay, $endOfDay]);
+                });
+            });
             
             // Apply filters
             if ($request->filled('booking_type')) {
@@ -381,7 +557,7 @@ class AdminDashboardController extends Controller
             
             foreach ($bookings as $booking) {
                 $type = (!empty($booking->ticket_id) && $booking->ticket_id !== null && $booking->ticket_id > 0) ? 'ticket' : 'event';
-                $status = $booking->status;
+                $status = $booking->status ?? $booking->booking_status ?? 'pending';
                 
                 $key = $type . '_' . $status;
                 if (isset($summary[$key])) {
@@ -413,8 +589,27 @@ class AdminDashboardController extends Controller
             $startOfDay = $date->startOfDay();
             $endOfDay = $date->copy()->endOfDay();
             
+            // Get all bookings that should appear on this date (prioritize event_date)
             $query = Booking::with(['event', 'country', 'ticket'])
-                ->whereBetween('created_at', [$startOfDay, $endOfDay]);
+                ->where(function($q) use ($startOfDay, $endOfDay) {
+                    // Primary: Bookings with event_date on this date
+                    $q->where(function($subQ) use ($startOfDay, $endOfDay) {
+                        $subQ->whereNotNull('event_date')
+                             ->whereBetween('event_date', [$startOfDay, $endOfDay]);
+                    });
+                    
+                    // Secondary: Bookings with related event dates on this date
+                    $q->orWhereHas('event', function($eventQ) use ($startOfDay, $endOfDay) {
+                        $eventQ->whereBetween('event_date', [$startOfDay, $endOfDay]);
+                    });
+                    
+                    // Tertiary: Bookings created on this date (fallback for tickets without event dates)
+                    $q->orWhere(function($subQ) use ($startOfDay, $endOfDay) {
+                        $subQ->whereNull('event_date')
+                             ->whereDoesntHave('event')
+                             ->whereBetween('created_at', [$startOfDay, $endOfDay]);
+                    });
+                });
             
             // Apply filters
             if ($request->filled('booking_type')) {
@@ -445,16 +640,18 @@ class AdminDashboardController extends Controller
                     'id' => $booking->id,
                     'booking_reference' => $booking->booking_reference,
                     'customer_name' => $booking->customer_name,
-                    'customer_email' => $booking->customer_email,
-                    'customer_phone' => $booking->customer_phone,
+                    'customer_email' => $booking->customer_email ?? $booking->email,
+                    'customer_phone' => $booking->customer_phone ?? $booking->mobile_phone,
                     'event_title' => optional($booking->event)->title ?? $booking->event_title ?? 'N/A',
-                    'adult_quantity' => $booking->adult_quantity,
-                    'child_quantity' => $booking->child_quantity,
+                    'adult_quantity' => $booking->adult_quantity ?? $booking->quantity ?? 0,
+                    'child_quantity' => $booking->child_quantity ?? 0,
                     'total_amount' => $booking->total_amount,
-                    'status' => $booking->status,
-                    'type' => (!empty($booking->ticket_id) && $booking->ticket_id !== null && $booking->ticket_id > 0) ? 'ticket' : 'event',
-                    'country' => optional($booking->country)->name ?? $booking->country ?? 'N/A',
-                    'created_at' => $booking->created_at->format('H:i')
+                    'status' => $booking->status ?? $booking->booking_status,
+                    'type' => (!empty($booking->ticket_id) && $booking->ticket_id !== null && $booking->ticket_id > 0) ? 'Ticket' : 'Event',
+                    'country' => $this->getCountryName($booking),
+                    'created_at' => $booking->created_at->format('H:i'),
+                    'event_date' => $booking->event_date ? Carbon::parse($booking->event_date)->format('M j, Y') : 
+                                   (optional($booking->event)->event_date ? Carbon::parse($booking->event->event_date)->format('M j, Y') : 'N/A'),
                 ];
             });
             
@@ -1051,5 +1248,73 @@ class AdminDashboardController extends Controller
         
         return redirect()->route('admin.reviews')
             ->with('success', "Review by {$review->author_name} has been {$status}.");
+    }
+
+    /**
+     * Get detailed information for a specific booking
+     */
+    public function getBookingDetails($bookingId)
+    {
+        try {
+            $booking = Booking::with(['event', 'ticket', 'country'])
+                ->findOrFail($bookingId);
+
+            // Get country name safely
+            $countryName = null;
+            if ($booking->country) {
+                $countryName = is_object($booking->country) ? $booking->country->name : $booking->country;
+            }
+
+            // Get event/ticket information
+            $eventTitle = null;
+            $ticketName = null;
+            $eventDate = null;
+
+            if ($booking->event) {
+                $eventTitle = $booking->event->title;
+                $eventDate = $booking->event->event_date;
+            }
+
+            if ($booking->ticket) {
+                $ticketName = is_object($booking->ticket) ? $booking->ticket->title : $booking->ticket;
+            }
+
+            // Use event_date from booking if available, otherwise from event
+            if ($booking->event_date) {
+                $eventDate = $booking->event_date;
+            }
+
+            return response()->json([
+                'success' => true,
+                'booking' => [
+                    'id' => $booking->id,
+                    'booking_reference' => $booking->booking_reference,
+                    'customer_name' => $booking->customer_name,
+                    'customer_email' => $booking->customer_email,
+                    'customer_phone' => $booking->customer_phone,
+                    'event_title' => $eventTitle ?: $booking->event_title,
+                    'ticket_name' => $ticketName,
+                    'event_date' => $eventDate,
+                    'adult_quantity' => $booking->adult_quantity,
+                    'child_quantity' => $booking->child_quantity,
+                    'adult_price' => $booking->adult_price,
+                    'child_price' => $booking->child_price,
+                    'total_amount' => $booking->total_amount,
+                    'status' => $booking->status,
+                    'country_name' => $countryName,
+                    'country' => $booking->country,
+                    'ticket_id' => $booking->ticket_id,
+                    'event_id' => $booking->event_id,
+                    'created_at' => $booking->created_at,
+                    'updated_at' => $booking->updated_at
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading booking details: ' . $e->getMessage()
+            ]);
+        }
     }
 }
