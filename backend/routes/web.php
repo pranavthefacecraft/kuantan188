@@ -151,6 +151,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::put('/events/{event}', [AdminDashboardController::class, 'updateEvent'])->name('events.update');
     Route::post('/events/{event}/toggle-status', [AdminDashboardController::class, 'toggleEventStatus'])->name('events.toggle-status');
     Route::get('/bookings', [AdminDashboardController::class, 'bookings'])->name('bookings');
+    
+    // Calendar API routes
+    Route::get('/api/bookings/calendar', [AdminDashboardController::class, 'calendarEvents'])->name('bookings.calendar');
+    Route::get('/api/bookings/date-summary', [AdminDashboardController::class, 'dateSummary'])->name('bookings.date-summary');
+    Route::get('/api/bookings/date-details', [AdminDashboardController::class, 'dateDetails'])->name('bookings.date-details');
+    Route::get('/api/bookings/stats', [AdminDashboardController::class, 'calendarStats'])->name('bookings.stats');
+    
     Route::get('/tickets', [AdminDashboardController::class, 'tickets'])->name('tickets');
     Route::post('/tickets', [AdminDashboardController::class, 'storeTicket'])->name('tickets.store');
     Route::get('/tickets/{ticket}/edit', [AdminDashboardController::class, 'editTicket'])->name('tickets.edit');

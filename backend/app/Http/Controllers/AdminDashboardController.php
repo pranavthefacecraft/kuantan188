@@ -268,6 +268,268 @@ class AdminDashboardController extends Controller
     }
 
     /**
+     * Get calendar events for bookings
+     */
+    public function calendarEvents(Request $request)
+    {
+        try {
+            $start = Carbon::parse($request->start)->startOfDay();
+            $end = Carbon::parse($request->end)->endOfDay();
+            
+            $query = Booking::whereBetween('created_at', [$start, $end]);
+            
+            // Apply filters
+            if ($request->filled('booking_type')) {
+                if ($request->booking_type === 'event') {
+                    $query->where(function($q) {
+                        $q->whereNull('ticket_id')
+                          ->orWhere('ticket_id', 0)
+                          ->orWhere('ticket_id', '');
+                    });
+                } elseif ($request->booking_type === 'ticket') {
+                    $query->whereNotNull('ticket_id')
+                          ->where('ticket_id', '>', 0);
+                }
+            }
+            
+            if ($request->filled('country_filter')) {
+                $query->where('country_id', $request->country_filter);
+            }
+            
+            if ($request->filled('status_filter')) {
+                $query->where('status', $request->status_filter);
+            }
+            
+            $bookings = $query->get();
+            
+            // Group bookings by date for FullCalendar
+            $events = [];
+            $bookingsByDate = $bookings->groupBy(function($booking) {
+                return $booking->created_at->format('Y-m-d');
+            });
+            
+            foreach ($bookingsByDate as $date => $dayBookings) {
+                $events[] = [
+                    'id' => 'bookings-' . $date,
+                    'title' => $dayBookings->count() . ' booking(s)',
+                    'start' => $date,
+                    'allDay' => true,
+                    'display' => 'background',
+                    'backgroundColor' => '#e3f2fd'
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'events' => $events
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error loading calendar events: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading calendar events'
+            ]);
+        }
+    }
+
+    /**
+     * Get booking summary for a specific date
+     */
+    public function dateSummary(Request $request)
+    {
+        try {
+            $date = Carbon::parse($request->date);
+            $startOfDay = $date->startOfDay();
+            $endOfDay = $date->copy()->endOfDay();
+            
+            $query = Booking::whereBetween('created_at', [$startOfDay, $endOfDay]);
+            
+            // Apply filters
+            if ($request->filled('booking_type')) {
+                if ($request->booking_type === 'event') {
+                    $query->where(function($q) {
+                        $q->whereNull('ticket_id')
+                          ->orWhere('ticket_id', 0)
+                          ->orWhere('ticket_id', '');
+                    });
+                } elseif ($request->booking_type === 'ticket') {
+                    $query->whereNotNull('ticket_id')
+                          ->where('ticket_id', '>', 0);
+                }
+            }
+            
+            if ($request->filled('country_filter')) {
+                $query->where('country_id', $request->country_filter);
+            }
+            
+            if ($request->filled('status_filter')) {
+                $query->where('status', $request->status_filter);
+            }
+            
+            $bookings = $query->get();
+            
+            $summary = [
+                'total' => $bookings->count(),
+                'event_confirmed' => 0,
+                'event_pending' => 0,
+                'event_cancelled' => 0,
+                'ticket_confirmed' => 0,
+                'ticket_pending' => 0,
+                'ticket_cancelled' => 0,
+            ];
+            
+            foreach ($bookings as $booking) {
+                $type = (!empty($booking->ticket_id) && $booking->ticket_id !== null && $booking->ticket_id > 0) ? 'ticket' : 'event';
+                $status = $booking->status;
+                
+                $key = $type . '_' . $status;
+                if (isset($summary[$key])) {
+                    $summary[$key]++;
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'summary' => $summary
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error loading date summary: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading date summary'
+            ]);
+        }
+    }
+
+    /**
+     * Get detailed bookings for a specific date
+     */
+    public function dateDetails(Request $request)
+    {
+        try {
+            $date = Carbon::parse($request->date);
+            $startOfDay = $date->startOfDay();
+            $endOfDay = $date->copy()->endOfDay();
+            
+            $query = Booking::with(['event', 'country', 'ticket'])
+                ->whereBetween('created_at', [$startOfDay, $endOfDay]);
+            
+            // Apply filters
+            if ($request->filled('booking_type')) {
+                if ($request->booking_type === 'event') {
+                    $query->where(function($q) {
+                        $q->whereNull('ticket_id')
+                          ->orWhere('ticket_id', 0)
+                          ->orWhere('ticket_id', '');
+                    });
+                } elseif ($request->booking_type === 'ticket') {
+                    $query->whereNotNull('ticket_id')
+                          ->where('ticket_id', '>', 0);
+                }
+            }
+            
+            if ($request->filled('country_filter')) {
+                $query->where('country_id', $request->country_filter);
+            }
+            
+            if ($request->filled('status_filter')) {
+                $query->where('status', $request->status_filter);
+            }
+            
+            $bookings = $query->orderBy('created_at', 'desc')->get();
+            
+            $bookingData = $bookings->map(function($booking) {
+                return [
+                    'id' => $booking->id,
+                    'booking_reference' => $booking->booking_reference,
+                    'customer_name' => $booking->customer_name,
+                    'customer_email' => $booking->customer_email,
+                    'customer_phone' => $booking->customer_phone,
+                    'event_title' => optional($booking->event)->title ?? $booking->event_title ?? 'N/A',
+                    'adult_quantity' => $booking->adult_quantity,
+                    'child_quantity' => $booking->child_quantity,
+                    'total_amount' => $booking->total_amount,
+                    'status' => $booking->status,
+                    'type' => (!empty($booking->ticket_id) && $booking->ticket_id !== null && $booking->ticket_id > 0) ? 'ticket' : 'event',
+                    'country' => optional($booking->country)->name ?? $booking->country ?? 'N/A',
+                    'created_at' => $booking->created_at->format('H:i')
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'bookings' => $bookingData
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error loading date details: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading date details'
+            ]);
+        }
+    }
+
+    /**
+     * Get calendar statistics
+     */
+    public function calendarStats(Request $request)
+    {
+        try {
+            $now = Carbon::now();
+            $startOfMonth = $now->copy()->startOfMonth();
+            $endOfMonth = $now->copy()->endOfMonth();
+            $today = $now->copy()->startOfDay();
+            
+            // Base queries with filters
+            $baseQuery = Booking::query();
+            
+            if ($request->filled('booking_type')) {
+                if ($request->booking_type === 'event') {
+                    $baseQuery->where(function($q) {
+                        $q->whereNull('ticket_id')
+                          ->orWhere('ticket_id', 0)
+                          ->orWhere('ticket_id', '');
+                    });
+                } elseif ($request->booking_type === 'ticket') {
+                    $baseQuery->whereNotNull('ticket_id')
+                          ->where('ticket_id', '>', 0);
+                }
+            }
+            
+            if ($request->filled('country_filter')) {
+                $baseQuery->where('country_id', $request->country_filter);
+            }
+            
+            if ($request->filled('status_filter')) {
+                $baseQuery->where('status', $request->status_filter);
+            }
+            
+            $stats = [
+                'monthly_bookings' => (clone $baseQuery)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count(),
+                'monthly_revenue' => (clone $baseQuery)->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                    ->where('status', 'confirmed')->sum('total_amount'),
+                'pending_bookings' => (clone $baseQuery)->where('status', 'pending')->count(),
+                'today_bookings' => (clone $baseQuery)->whereDate('created_at', $today)->count()
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'stats' => $stats
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error loading calendar stats: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading calendar stats'
+            ]);
+        }
+    }
+
+    /**
      * Show tickets management
      */
     public function tickets()
