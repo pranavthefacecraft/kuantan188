@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Row, Col, Form } from 'react-bootstrap';
 import { format, addDays } from 'date-fns';
+import PaymentMethodSelector, { PaymentMethod } from './PaymentMethodSelector';
 
 interface Ticket {
   id: number;
@@ -38,6 +39,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [showCalendar, setShowCalendar] = useState(false);
   const [bookingResult, setBookingResult] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery');
   
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -69,6 +71,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         postalCode: '',
         receiveUpdates: false
       });
+      setPaymentMethod('cash_on_delivery');
     }
   }, [show, ticket]);
 
@@ -111,6 +114,51 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     setCurrentStep('details');
   };
 
+  const handleBillplzPayment = async (booking: any) => {
+    try {
+      console.log('[BILLPLZ] Starting payment process for booking:', booking.id);
+      
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://admin.tfcmockup.com/api/public/payment/billplz/create'
+        : 'http://localhost:8000/api/public/payment/billplz/create';
+
+      const paymentData = {
+        booking_id: booking.id,
+        amount: calculateTotal(),
+        customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
+        customer_email: contactForm.email,
+        description: `Event Ticket Payment - ${ticketName}`
+      };
+
+      console.log('[BILLPLZ] Payment data:', paymentData);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData),
+      });
+
+      const result = await response.json();
+      console.log('[BILLPLZ] Payment creation result:', result);
+
+      if (response.ok && result.success) {
+        console.log('[BILLPLZ] Redirecting to payment URL:', result.data.payment_url);
+        // Redirect to Billplz payment page
+        window.open(result.data.payment_url, '_blank');
+        // Close the modal and show success message
+        setCurrentStep('thankyou');
+      } else {
+        console.error('[BILLPLZ] Payment creation failed:', result);
+        alert(`Payment creation failed: ${result.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('[BILLPLZ] Payment creation error:', error);
+      alert('Failed to create payment. Please try again or contact support.');
+    }
+  };
+
   const handleContinueToPayment = () => {
     // Validate contact form
     if (!contactForm.firstName || !contactForm.lastName || !contactForm.email || !contactForm.mobilePhone) {
@@ -138,7 +186,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         child_price: parseFloat(selectedCountry?.child_price || '0'),
         event_date: format(selectedDate, 'yyyy-MM-dd'),
         total_amount: calculateTotal(),
-        payment_method: 'cash_on_delivery',
+        payment_method: paymentMethod,
         booking_status: 'confirmed',
         receive_updates: contactForm.receiveUpdates
       };
@@ -181,7 +229,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       if (response.ok && result.success) {
         console.log('[BOOKING] Booking successful:', result);
         setBookingResult(result);
-        setCurrentStep('thankyou');
+        
+        // If Billplz payment is selected, create payment bill and redirect
+        if (paymentMethod === 'billplz') {
+          await handleBillplzPayment(result.booking);
+        } else {
+          setCurrentStep('thankyou');
+        }
       } else {
         console.error('[BOOKING] Booking failed. Response status:', response.status);
         console.error('[BOOKING] Error details:', result);
@@ -699,25 +753,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             <Row>
               {/* Left Column - Payment Method */}
               <Col md={7}>
-                
-                <div className="payment-method-card p-4 border rounded bg-light ms-4">
-                  <div className="d-flex align-items-center">
-                    <div className="payment-icon me-3">
-                      <i className="fas fa-money-bill-wave text-success" style={{ fontSize: '2rem' }}></i>
-                    </div>
-                    <div className="flex-grow-1">
-                      <h5 className="mb-2 text-success">Cash on Delivery</h5>
-                      <p className="text-muted mb-2">Pay with cash when you receive your tickets</p>
-                      <small className="text-muted">
-                        • No advance payment required<br/>
-                        • Pay the exact amount upon delivery<br/>
-                        • Secure and convenient
-                      </small>
-                    </div>
-                    <div className="payment-check">
-                      <i className="fas fa-check-circle text-success" style={{ fontSize: '1.5rem' }}></i>
-                    </div>
-                  </div>
+                <div className="ms-4">
+                  <PaymentMethodSelector
+                    selectedMethod={paymentMethod}
+                    onMethodChange={setPaymentMethod}
+                    totalAmount={calculateTotal()}
+                    currency={selectedCountry?.currency_symbol || 'RM'}
+                  />
                 </div>
               </Col>
 
@@ -735,8 +777,17 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                   </div>
                   <hr />
                   <div className="d-flex justify-content-between">
-                    <strong>Total Amount (Cash on Delivery):</strong>
-                    <strong className="text-success">{selectedCountry?.currency_symbol || 'RM'}{calculateTotal().toFixed(2)}</strong>
+                    <strong>Total Amount:</strong>
+                    <strong className="text-primary">{selectedCountry?.currency_symbol || 'RM'}{calculateTotal().toFixed(2)}</strong>
+                  </div>
+                  
+                  <div className="mt-3 p-3 bg-light border rounded">
+                    <div className="d-flex align-items-center">
+                      <span className="fw-bold">Payment Method:</span>
+                      <span className="ms-2 badge bg-primary">
+                        {paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Billplz Online Payment'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </Col>
@@ -750,7 +801,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
               <i className="fas fa-check-circle text-success" style={{ fontSize: '4rem' }}></i>
             </div>
             <h4 className="text-success mb-3">Booking Confirmed!</h4>
-            <p>Thank you for your purchase. Your ticket confirmation has been sent to {contactForm.email}</p>
+            <p>Thank you for your booking. 
+              {paymentMethod === 'billplz' ? (
+                <>Your payment page has opened in a new tab. Please complete the payment to secure your booking.</>
+              ) : (
+                <>Your ticket confirmation has been sent to {contactForm.email}</>
+              )}
+            </p>
             
             {bookingResult && (
               <div className="alert alert-success mt-3">
@@ -767,8 +824,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                 {adultQuantity > 0 && <div className="ms-2">• Adult × {adultQuantity}</div>}
                 {childQuantity > 0 && <div className="ms-2">• Child × {childQuantity}</div>}
               </div>
-              <p><strong>Total Amount (Cash on Delivery):</strong> {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</p>
-              <p><strong>Payment Method:</strong> Cash on Delivery</p>
+              <p><strong>Total Amount:</strong> {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</p>
+              <p><strong>Payment Method:</strong> {paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Billplz Online Payment'}</p>
             </div>
           </div>
         )}

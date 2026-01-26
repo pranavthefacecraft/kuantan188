@@ -1,0 +1,57 @@
+/* PaymentMethodSelector Styles */
+.payment-method-selector .payment-option {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.payment-method-selector .payment-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.payment-method-selector .payment-option .border {
+  border: 2px solid #dee2e6 !important;
+  transition: border-color 0.3s ease;
+}
+
+.payment-method-selector .payment-option input[type="radio"]:checked + label ~ .border,
+.payment-method-selector .payment-option input[type="radio"]:checked ~ * .border {
+  border-color: #0d6efd !important;
+  background-color: #f8f9ff;
+}
+
+.payment-method-selector .accepted-methods .badge {
+  font-size: 0.75rem;
+  border-radius: 15px;
+}
+
+.payment-method-selector .payment-summary {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+}
+
+/* Animation for payment method selection */
+@keyframes paymentSelect {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.payment-method-selector .payment-option input[type="radio"]:checked ~ * {
+  animation: paymentSelect 0.3s ease;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .payment-method-selector .payment-option {
+    margin-bottom: 1rem;
+  }
+  
+  .payment-method-selector .accepted-methods {
+    justify-content: center;
+  }
+  
+  .payment-method-selector .payment-summary {
+    margin-top: 1.5rem;
+  }
+}

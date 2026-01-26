@@ -3,6 +3,7 @@ import { Modal, Button, Row, Col } from 'react-bootstrap';
 import { Event } from '../../services/api';
 import { format } from 'date-fns';
 import Calendar from '../Calendar/Calendar';
+import PaymentMethodSelector, { PaymentMethod } from './PaymentMethodSelector';
 
 interface ReservationModalProps {
   show: boolean;
@@ -15,6 +16,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
   const [childQuantity, setChildQuantity] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentStep, setCurrentStep] = useState<'tickets' | 'checkout' | 'payment' | 'thankyou'>('tickets');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery');
   
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -43,6 +45,51 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
 
   const getTotalQuantity = () => {
     return adultQuantity + childQuantity;
+  };
+
+  const handleBillplzPayment = async (booking: any) => {
+    try {
+      console.log('[BILLPLZ] Starting payment process for booking:', booking.id);
+      
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://admin.tfcmockup.com/api/public/payment/billplz/create'
+        : 'http://localhost:8000/api/public/payment/billplz/create';
+
+      const paymentData = {
+        booking_id: booking.id,
+        amount: calculateTotal(),
+        customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
+        customer_email: contactForm.email,
+        description: `Event Ticket Payment - ${event?.title || 'Event Booking'}`
+      };
+
+      console.log('[BILLPLZ] Payment data:', paymentData);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData),
+      });
+
+      const result = await response.json();
+      console.log('[BILLPLZ] Payment creation result:', result);
+
+      if (response.ok && result.success) {
+        console.log('[BILLPLZ] Redirecting to payment URL:', result.data.payment_url);
+        // Redirect to Billplz payment page
+        window.open(result.data.payment_url, '_blank');
+        // Close the modal and show success message
+        setCurrentStep('thankyou');
+      } else {
+        console.error('[BILLPLZ] Payment creation failed:', result);
+        alert(`Payment creation failed: ${result.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('[BILLPLZ] Payment creation error:', error);
+      alert('Failed to create payment. Please try again or contact support.');
+    }
   };
 
   const calculateTotal = () => {
@@ -100,7 +147,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
         child_tickets: childQuantity,
         event_date: selectedDate.toISOString().split('T')[0],
         total_amount: calculateTotal(),
-        payment_method: 'cash_on_delivery',
+        payment_method: paymentMethod,
         receive_updates: contactForm.receiveUpdates,
         booking_status: 'confirmed'
       };
@@ -124,7 +171,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
 
       if (response.ok) {
         console.log('Booking created successfully:', result);
-        setCurrentStep('thankyou');
+        
+        // If Billplz payment is selected, create payment bill and redirect
+        if (paymentMethod === 'billplz') {
+          await handleBillplzPayment(result.booking);
+        } else {
+          setCurrentStep('thankyou');
+        }
       } else {
         console.error('API Error:', result);
         throw new Error(result.message || 'Failed to create booking');
@@ -624,49 +677,14 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
 
                 <Col md={8}>
                   <div className="payment-section">
-                    <h6 className="fw-bold mb-3">Payment Method</h6>
-                    
-                    <div className="border rounded-3 p-4 mb-4">
-                      <div className="d-flex align-items-center mb-3">
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="paymentMethod"
-                            id="cashOnDelivery"
-                            defaultChecked
-                            style={{ transform: 'scale(1.2)' }}
-                          />
-                          <label className="form-check-label fw-semibold ms-2" htmlFor="cashOnDelivery">
-                            Cash on Delivery
-                          </label>
-                        </div>
-                        <div className="ms-auto">
-                          <i className="fas fa-money-bill-wave fs-4 text-success"></i>
-                        </div>
-                      </div>
-                      
-                      <div className="text-muted small mb-3">
-                        Pay with cash when your booking is confirmed. No advance payment required.
-                      </div>
+                    <PaymentMethodSelector
+                      selectedMethod={paymentMethod}
+                      onMethodChange={setPaymentMethod}
+                      totalAmount={calculateTotal()}
+                      currency="₹"
+                    />
 
-                      <div className="alert alert-info border-0" style={{ backgroundColor: '#e7f3ff' }}>
-                        <div className="d-flex align-items-center">
-                          <i className="fas fa-info-circle text-primary me-2"></i>
-                          <div className="small">
-                            <strong>How it works:</strong>
-                            <ul className="mb-0 mt-1 ps-3">
-                              <li>Your booking will be confirmed immediately</li>
-                              <li>Pay the full amount in cash at the venue</li>
-                              <li>Bring a valid ID for verification</li>
-                              <li>Payment due on the event date: {format(selectedDate, 'PPP')}</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border rounded-3 p-3" style={{ backgroundColor: '#f8f9fa' }}>
+                    <div className="border rounded-3 p-3 mt-4" style={{ backgroundColor: '#f8f9fa' }}>
                       <div className="form-check">
                         <input
                           className="form-check-input"
@@ -716,7 +734,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                     <strong>Email:</strong> {contactForm.email}
                   </div>
                   <div className="col-12 mt-1">
-                    <strong>Payment:</strong> Cash on Delivery
+                    <strong>Payment:</strong> {paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Billplz Online Payment'}
                   </div>
                 </div>
               </div>
