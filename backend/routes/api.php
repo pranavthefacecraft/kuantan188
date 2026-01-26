@@ -9,6 +9,8 @@ use App\Http\Controllers\API\BookingController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PublicEventController;
 use App\Http\Controllers\API\ReviewController;
+use App\Http\Controllers\BillplzController;
+use App\Http\Controllers\TestPaymentController;
 
 // Authentication routes
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -38,6 +40,15 @@ Route::get('/public/bookings', [App\Http\Controllers\PublicBookingController::cl
 // Public Google Reviews routes
 Route::get('/public/reviews', [ReviewController::class, 'index']);
 Route::get('/public/reviews/stats', [ReviewController::class, 'stats']);
+
+// Public Billplz Payment routes
+Route::post('/public/payment/billplz/create', [BillplzController::class, 'createPayment']);
+Route::post('/public/payment/billplz/callback', [BillplzController::class, 'handleCallback']);
+Route::get('/public/payment/billplz/status/{billId}', [BillplzController::class, 'checkPaymentStatus']);
+Route::get('/public/payment/billplz/test', [BillplzController::class, 'testConnection']);
+Route::get('/public/payment/billplz/booking/{bookingId}', [BillplzController::class, 'getPaymentDetails']);
+Route::post('/public/payment/billplz/cancel/{billId}', [BillplzController::class, 'cancelPayment']);
+
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
 Route::get('/events/{event}/countries/{country}/tickets', [TicketController::class, 'getByEventAndCountry']);
@@ -71,3 +82,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews/fetch', [ReviewController::class, 'fetchFromGoogle']);
     Route::put('/reviews/{review}/toggle-status', [ReviewController::class, 'toggleStatus']);
 });
+
+// Test payment route (temporary)
+Route::get('/test/payment/billplz', [TestPaymentController::class, 'testPaymentCreation']);

@@ -23,6 +23,13 @@ class Booking extends Model
         'payment_method',
         'receive_updates',
         'booking_status',
+        // Payment Gateway Fields
+        'payment_gateway',
+        'payment_reference',
+        'payment_url',
+        'payment_status',
+        'payment_completed_at',
+        'payment_metadata',
         // Legacy fields for backward compatibility
         'country_id',
         'ticket_id',
@@ -34,8 +41,6 @@ class Booking extends Model
         'child_quantity',
         'adult_price',
         'child_price',
-        'payment_status',
-        'payment_reference',
         'payment_date',
         'status'
     ];
@@ -45,8 +50,10 @@ class Booking extends Model
         'child_price' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'payment_date' => 'datetime',
+        'payment_completed_at' => 'datetime',
         'event_date' => 'date',
-        'receive_updates' => 'boolean'
+        'receive_updates' => 'boolean',
+        'payment_metadata' => 'array'
     ];
 
     public function event(): BelongsTo
@@ -73,6 +80,54 @@ class Booking extends Model
     public function getChildQuantityAttribute()
     {
         return $this->child_tickets ?? 0;
+    }
+
+    // Payment Status Helper Methods
+    public function isPending()
+    {
+        return $this->payment_status === 'pending';
+    }
+
+    public function isPaid()
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    public function isFailed()
+    {
+        return $this->payment_status === 'failed';
+    }
+
+    public function isCancelled()
+    {
+        return $this->payment_status === 'cancelled';
+    }
+
+    public function isBillplzPayment()
+    {
+        return $this->payment_gateway === 'billplz';
+    }
+
+    public function isCashPayment()
+    {
+        return $this->payment_gateway === 'cash_on_delivery';
+    }
+
+    public function markAsPaid()
+    {
+        $this->update([
+            'payment_status' => 'paid',
+            'payment_completed_at' => now(),
+            'booking_status' => 'confirmed'
+        ]);
+    }
+
+    public function markAsFailed()
+    {
+        $this->update([
+            'payment_status' => 'failed',
+            'booking_status' => 'cancelled'
+        ]);
     }
 
     protected static function boot()
