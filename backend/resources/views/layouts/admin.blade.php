@@ -474,7 +474,8 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Account</div>
                     <div class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="{{ route('admin.settings') }}" 
+                           class="nav-link {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
                             <span class="material-icons nav-icon">settings</span>
                             Settings
                         </a>

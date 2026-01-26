@@ -26,7 +26,7 @@ const Footer: React.FC = () => {
             </div>
             
             {/* Kuantan188 Title */}
-            <h2 className="footer-title mb-4">Kuantan188</h2>
+            <h2 className="footer-title mb-4 mb-4 fs-4 fs-sm-3 fs-md-2 fs-lg-1">Kuantan188ss</h2>
             
             {/* Footer Menu */}
             <div className="footer-menu">

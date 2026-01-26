@@ -127,7 +127,7 @@ const Home: React.FC = () => {
     <div>
       {/* Top Section - Get Your Tickets */}
       <section className="bg-custom-dark position-relative overflow-hidden hero-section d-flex align-items-center">
-        <div className="hero-container position-relative d-flex align-items-center w-100 mx-auto mt-300" style={{ zIndex: 1 }}>
+        <Container fluid className="hero-container position-relative d-block d-md-flex  align-items-center mt-300" style={{ zIndex: 1 }}>
           {/* Left Side - Get Your Tickets Section */}
           <div className="hero-book-section flex-shrink-0">
             <div>
@@ -286,12 +286,12 @@ const Home: React.FC = () => {
             </button>
           </div>
           </div>
-        </div>
+        </Container>
       </section>
 
       {/* Bottom Section - Book Now Events */}
       <section className="bg-custom-dark position-relative overflow-hidden hero-section d-flex align-items-center">
-        <div className="hero-container position-relative d-flex align-items-center w-100 mx-auto" style={{ zIndex: 1 }}>
+        <Container fluid className="hero-container position-relative d-flex d-md-flex d-block align-items-center" style={{ zIndex: 1 }}>
           {/* Left Side - Book Now Section */}
           <div className="hero-book-section flex-shrink-0">
             <div>
@@ -450,7 +450,7 @@ const Home: React.FC = () => {
             </button>
           </div>
           </div>
-        </div>
+        </Container>
       </section>
 
       {/* Customer Reviews Section */}

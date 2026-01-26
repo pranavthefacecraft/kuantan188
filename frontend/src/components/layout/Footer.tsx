@@ -22,7 +22,7 @@ const Footer: React.FC = () => {
             </div>
             
             {/* Kuantan188 Title */}
-            <h2 className="footer-title mb-4" style={{ marginTop: '100px' }}>Kuantan188</h2>
+            <h2 className="footer-title footer-title-responsive mb-4">Kuantan188</h2>
             
             {/* Footer Menu */}
             <div className="footer-menu" style={{ marginTop: '80px' }}>

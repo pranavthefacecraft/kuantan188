@@ -1317,4 +1317,155 @@ class AdminDashboardController extends Controller
             ]);
         }
     }
+
+    /**
+     * Show settings page
+     */
+    public function settings()
+    {
+        try {
+            // Get current settings from config/env or database
+            $settings = [
+                'smtp' => [
+                    'host' => config('mail.mailers.smtp.host'),
+                    'port' => config('mail.mailers.smtp.port'),
+                    'username' => config('mail.mailers.smtp.username'),
+                    'encryption' => config('mail.mailers.smtp.encryption'),
+                    'from_email' => config('mail.from.address'),
+                    'from_name' => config('mail.from.name'),
+                ],
+                'general' => [
+                    'app_name' => config('app.name'),
+                    'app_url' => config('app.url'),
+                    'timezone' => config('app.timezone'),
+                ],
+                'booking' => [
+                    'send_confirmation_email' => env('SEND_BOOKING_CONFIRMATION', true),
+                    'send_admin_notification' => env('SEND_ADMIN_NOTIFICATION', true),
+                    'admin_email' => env('ADMIN_EMAIL', 'admin@kuantan188.com'),
+                ]
+            ];
+
+            return view('admin.settings', compact('settings'));
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error loading settings: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update settings
+     */
+    public function updateSettings(Request $request)
+    {
+        $request->validate([
+            // SMTP Settings
+            'smtp_host' => 'required|string|max:255',
+            'smtp_port' => 'required|integer|min:1|max:65535',
+            'smtp_username' => 'required|string|max:255',
+            'smtp_password' => 'nullable|string|max:255',
+            'smtp_encryption' => 'required|in:tls,ssl,null',
+            'from_email' => 'required|email|max:255',
+            'from_name' => 'required|string|max:255',
+            
+            // General Settings
+            'app_name' => 'required|string|max:255',
+            'app_url' => 'required|url|max:255',
+            'timezone' => 'required|string|max:50',
+            
+            // Booking Settings
+            'send_confirmation_email' => 'boolean',
+            'send_admin_notification' => 'boolean',
+            'admin_email' => 'required|email|max:255',
+        ]);
+
+        try {
+            // Update .env file
+            $this->updateEnvFile([
+                'MAIL_HOST' => $request->smtp_host,
+                'MAIL_PORT' => $request->smtp_port,
+                'MAIL_USERNAME' => $request->smtp_username,
+                'MAIL_ENCRYPTION' => $request->smtp_encryption,
+                'MAIL_FROM_ADDRESS' => $request->from_email,
+                'MAIL_FROM_NAME' => '"' . $request->from_name . '"',
+                'APP_NAME' => '"' . $request->app_name . '"',
+                'APP_URL' => $request->app_url,
+                'APP_TIMEZONE' => $request->timezone,
+                'SEND_BOOKING_CONFIRMATION' => $request->has('send_confirmation_email') ? 'true' : 'false',
+                'SEND_ADMIN_NOTIFICATION' => $request->has('send_admin_notification') ? 'true' : 'false',
+                'ADMIN_EMAIL' => $request->admin_email,
+            ]);
+
+            // Update password only if provided
+            if ($request->filled('smtp_password')) {
+                $this->updateEnvFile([
+                    'MAIL_PASSWORD' => $request->smtp_password,
+                ]);
+            }
+
+            return redirect()->route('admin.settings')
+                ->with('success', 'Settings updated successfully! Please restart the application for changes to take full effect.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error updating settings: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update .env file with new values
+     */
+    private function updateEnvFile(array $data)
+    {
+        $envFile = base_path('.env');
+        
+        if (!file_exists($envFile)) {
+            throw new \Exception('.env file not found');
+        }
+
+        $envContent = file_get_contents($envFile);
+
+        foreach ($data as $key => $value) {
+            $pattern = "/^{$key}=.*$/m";
+            $replacement = "{$key}={$value}";
+            
+            if (preg_match($pattern, $envContent)) {
+                $envContent = preg_replace($pattern, $replacement, $envContent);
+            } else {
+                $envContent .= "\n{$replacement}";
+            }
+        }
+
+        file_put_contents($envFile, $envContent);
+    }
+
+    /**
+     * Test SMTP connection
+     */
+    public function testSmtp(Request $request)
+    {
+        $request->validate([
+            'test_email' => 'required|email'
+        ]);
+
+        try {
+            // Test email sending
+            \Mail::raw('This is a test email from Kuantan188 admin panel.', function($message) use ($request) {
+                $message->to($request->test_email)
+                        ->subject('SMTP Test - Kuantan188');
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test email sent successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SMTP test failed: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
