@@ -173,6 +173,133 @@ if ($billplzConfigured) {
     echo "<p style='color: red;'>❌ Billplz environment variables not configured</p>";
 }
 
+// Test FTP Connection (GitHub Secrets Simulation)
+echo "<h3>📡 FTP Connection Test (GitHub Secrets):</h3>";
+echo "<p><strong>Note:</strong> Testing FTP connectivity using simulated GitHub secrets</p>";
+
+// These would be the same values from GitHub secrets
+$ftpTestCredentials = [
+    'host' => $_ENV['FTP_HOST_TICKETSADMIN'] ?? getenv('FTP_HOST_TICKETSADMIN') ?? 'your-ftp-host.com',
+    'username' => $_ENV['FTP_USERNAME_TICKETSADMIN'] ?? getenv('FTP_USERNAME_TICKETSADMIN') ?? 'your-username',
+    'password' => $_ENV['FTP_PASSWORD_TICKETSADMIN'] ?? getenv('FTP_PASSWORD_TICKETSADMIN') ?? 'your-password'
+];
+
+echo "<table border='1' cellpadding='5' cellspacing='0'>";
+echo "<tr><th>FTP Credential</th><th>Status</th><th>Value</th></tr>";
+
+foreach ($ftpTestCredentials as $key => $value) {
+    $isSet = $value !== '' && !in_array($value, ['your-ftp-host.com', 'your-username', 'your-password']);
+    echo "<tr>";
+    echo "<td><strong>" . strtoupper($key) . "</strong></td>";
+    
+    if ($isSet) {
+        echo "<td style='color: green;'>✅ SET</td>";
+        if ($key === 'password') {
+            echo "<td>" . str_repeat('*', strlen($value)) . "</td>";
+        } else {
+            echo "<td>$value</td>";
+        }
+    } else {
+        echo "<td style='color: red;'>❌ MISSING</td>";
+        echo "<td>NOT SET OR DEFAULT</td>";
+    }
+    echo "</tr>";
+}
+echo "</table>";
+
+// Test FTP connectivity
+if ($ftpTestCredentials['host'] !== 'your-ftp-host.com') {
+    echo "<h4>🔗 Testing FTP Connection:</h4>";
+    
+    // Test standard FTP (port 21)
+    echo "<p><strong>Testing FTP (port 21):</strong></p>";
+    try {
+        $ftpConn = @ftp_connect($ftpTestCredentials['host'], 21, 10);
+        if ($ftpConn) {
+            $loginResult = @ftp_login($ftpConn, $ftpTestCredentials['username'], $ftpTestCredentials['password']);
+            if ($loginResult) {
+                echo "<p style='color: green;'>✅ FTP connection successful on port 21</p>";
+                $pwd = @ftp_pwd($ftpConn);
+                echo "<p>Current directory: <code>$pwd</code></p>";
+                @ftp_close($ftpConn);
+            } else {
+                echo "<p style='color: red;'>❌ FTP login failed (wrong credentials?)</p>";
+                @ftp_close($ftpConn);
+            }
+        } else {
+            echo "<p style='color: red;'>❌ FTP connection failed on port 21</p>";
+        }
+    } catch (Exception $e) {
+        echo "<p style='color: red;'>❌ FTP test error: " . $e->getMessage() . "</p>";
+    }
+    
+    // Test FTPS (port 21 with SSL)
+    echo "<p><strong>Testing FTPS (port 21 with SSL):</strong></p>";
+    try {
+        $ftpsConn = @ftp_ssl_connect($ftpTestCredentials['host'], 21, 10);
+        if ($ftpsConn) {
+            $loginResult = @ftp_login($ftpsConn, $ftpTestCredentials['username'], $ftpTestCredentials['password']);
+            if ($loginResult) {
+                echo "<p style='color: green;'>✅ FTPS connection successful on port 21</p>";
+                $pwd = @ftp_pwd($ftpsConn);
+                echo "<p>Current directory: <code>$pwd</code></p>";
+                @ftp_close($ftpsConn);
+            } else {
+                echo "<p style='color: red;'>❌ FTPS login failed</p>";
+                @ftp_close($ftpsConn);
+            }
+        } else {
+            echo "<p style='color: red;'>❌ FTPS connection failed on port 21</p>";
+        }
+    } catch (Exception $e) {
+        echo "<p style='color: red;'>❌ FTPS test error: " . $e->getMessage() . "</p>";
+    }
+    
+    // Test SFTP (port 22) - requires SSH2 extension
+    echo "<p><strong>Testing SFTP (port 22):</strong></p>";
+    if (function_exists('ssh2_connect')) {
+        try {
+            $sftpConn = @ssh2_connect($ftpTestCredentials['host'], 22);
+            if ($sftpConn) {
+                $authResult = @ssh2_auth_password($sftpConn, $ftpTestCredentials['username'], $ftpTestCredentials['password']);
+                if ($authResult) {
+                    echo "<p style='color: green;'>✅ SFTP connection successful on port 22</p>";
+                    $sftp = @ssh2_sftp($sftpConn);
+                    if ($sftp) {
+                        echo "<p>SFTP subsystem initialized successfully</p>";
+                    }
+                } else {
+                    echo "<p style='color: red;'>❌ SFTP authentication failed</p>";
+                }
+            } else {
+                echo "<p style='color: red;'>❌ SFTP connection failed on port 22</p>";
+            }
+        } catch (Exception $e) {
+            echo "<p style='color: red;'>❌ SFTP test error: " . $e->getMessage() . "</p>";
+        }
+    } else {
+        echo "<p style='color: orange;'>⚠️ SSH2 extension not available - cannot test SFTP</p>";
+        echo "<p><small>Install php-ssh2 to test SFTP connections</small></p>";
+    }
+    
+    echo "<h4>📋 GitHub Actions Recommendations:</h4>";
+    echo "<ul>";
+    echo "<li>✅ <strong>FTP working:</strong> Use standard FTP deployment</li>";
+    echo "<li>✅ <strong>FTPS working:</strong> Use FTPS deployment (more secure)</li>";
+    echo "<li>✅ <strong>SFTP working:</strong> Use SFTP deployment (most reliable)</li>";
+    echo "<li>❌ <strong>All failed:</strong> Check firewall/IP restrictions</li>";
+    echo "</ul>";
+    
+} else {
+    echo "<p style='color: orange;'>⚠️ FTP credentials not configured - add them to environment variables to test</p>";
+    echo "<pre>";
+    echo "Add these to server .env file to test:\n";
+    echo "FTP_HOST_TICKETSADMIN=your-ftp-host.com\n";
+    echo "FTP_USERNAME_TICKETSADMIN=your-username\n"; 
+    echo "FTP_PASSWORD_TICKETSADMIN=your-password\n";
+    echo "</pre>";
+}
+
 echo "<h3>📊 Summary:</h3>";
 echo "<ul>";
 if ($dbConfigured) {
