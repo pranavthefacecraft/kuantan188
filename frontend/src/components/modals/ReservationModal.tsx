@@ -52,26 +52,27 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
   };
 
   const handlePaymentFlow = async () => {
+    setIsProcessingPayment(true);
+    
+    const bookingData: BookingData = {
+      event_id: event?.id,
+      event_title: event?.title || 'Event Booking',
+      customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
+      email: contactForm.email,
+      mobile_phone: contactForm.mobilePhone,
+      country: contactForm.country,
+      postal_code: contactForm.postalCode,
+      quantity: getTotalQuantity(),
+      adult_tickets: adultQuantity,
+      child_tickets: childQuantity,
+      event_date: selectedDate.toISOString().split('T')[0],
+      total_amount: calculateTotal(),
+      payment_method: paymentMethod,
+      booking_status: paymentMethod === 'billplz' ? 'pending' : 'confirmed',
+      receive_updates: contactForm.receiveUpdates
+    };
+
     try {
-      setIsProcessingPayment(true);
-      
-      const bookingData: BookingData = {
-        event_id: event?.id,
-        event_title: event?.title || 'Event Booking',
-        customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
-        email: contactForm.email,
-        mobile_phone: contactForm.mobilePhone,
-        country: contactForm.country,
-        postal_code: contactForm.postalCode,
-        quantity: getTotalQuantity(),
-        adult_tickets: adultQuantity,
-        child_tickets: childQuantity,
-        event_date: selectedDate.toISOString().split('T')[0],
-        total_amount: calculateTotal(),
-        payment_method: paymentMethod,
-        booking_status: paymentMethod === 'billplz' ? 'pending' : 'confirmed',
-        receive_updates: contactForm.receiveUpdates
-      };
 
       if (paymentMethod === 'billplz') {
         // Process online payment

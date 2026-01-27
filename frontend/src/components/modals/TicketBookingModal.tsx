@@ -120,30 +120,31 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   };
 
   const handlePaymentFlow = async () => {
+    setIsProcessingPayment(true);
+    
+    const bookingData: BookingData = {
+      ticket_id: ticket?.id || 1,
+      event_id: ticket?.event_id || undefined,
+      event_title: `${ticketName} - ${format(selectedDate, 'MMMM d, yyyy')}`,
+      customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
+      email: contactForm.email,
+      mobile_phone: contactForm.mobilePhone,
+      country: contactForm.country || selectedCountry?.name || 'Malaysia',
+      postal_code: contactForm.postalCode,
+      adult_tickets: adultQuantity,
+      child_tickets: childQuantity,
+      quantity: getTotalQuantity(),
+      adult_price: parseFloat(selectedCountry?.adult_price || '0'),
+      child_price: parseFloat(selectedCountry?.child_price || '0'),
+      event_date: format(selectedDate, 'yyyy-MM-dd'),
+      selected_time: selectedTime,
+      total_amount: calculateTotal(),
+      payment_method: paymentMethod,
+      booking_status: paymentMethod === 'billplz' ? 'pending' : 'confirmed',
+      receive_updates: contactForm.receiveUpdates
+    };
+
     try {
-      setIsProcessingPayment(true);
-      
-      const bookingData: BookingData = {
-        ticket_id: ticket?.id || 1,
-        event_id: ticket?.event_id || undefined,
-        event_title: `${ticketName} - ${format(selectedDate, 'MMMM d, yyyy')}`,
-        customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
-        email: contactForm.email,
-        mobile_phone: contactForm.mobilePhone,
-        country: contactForm.country || selectedCountry?.name || 'Malaysia',
-        postal_code: contactForm.postalCode,
-        adult_tickets: adultQuantity,
-        child_tickets: childQuantity,
-        quantity: getTotalQuantity(),
-        adult_price: parseFloat(selectedCountry?.adult_price || '0'),
-        child_price: parseFloat(selectedCountry?.child_price || '0'),
-        event_date: format(selectedDate, 'yyyy-MM-dd'),
-        selected_time: selectedTime,
-        total_amount: calculateTotal(),
-        payment_method: paymentMethod,
-        booking_status: paymentMethod === 'billplz' ? 'pending' : 'confirmed',
-        receive_updates: contactForm.receiveUpdates
-      };
 
       if (paymentMethod === 'billplz') {
         // Process online payment
