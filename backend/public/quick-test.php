@@ -50,7 +50,7 @@ function runCommandWithTimeout($command, $timeout = 15) {
     $process = proc_open($command, $descriptors, $pipes);
     
     if (!is_resource($process)) {
-        return "Failed to start process";
+        return "Failed to start process.";
     }
     
     fclose($pipes[0]);
