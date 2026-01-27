@@ -174,14 +174,14 @@ if ($billplzConfigured) {
 }
 
 // Test FTP Connection (GitHub Secrets Simulation)
-echo "<h3>📡 FTP Connection Test (GitHub Secrets):</h3>";
-echo "<p><strong>Note:</strong> Testing FTP connectivity using simulated GitHub secrets</p>";
+echo "<h3>📡 FTP Connection Test (FileZilla Settings):</h3>";
+echo "<p><strong>Note:</strong> Testing FTP connectivity using FileZilla's exact settings</p>";
 
-// These would be the same values from GitHub secrets
+// Use exact FileZilla settings
 $ftpTestCredentials = [
-    'host' => $_ENV['FTP_HOST_TICKETSADMIN'] ?? getenv('FTP_HOST_TICKETSADMIN') ?? 'your-ftp-host.com',
-    'username' => $_ENV['FTP_USERNAME_TICKETSADMIN'] ?? getenv('FTP_USERNAME_TICKETSADMIN') ?? 'your-username',
-    'password' => $_ENV['FTP_PASSWORD_TICKETSADMIN'] ?? getenv('FTP_PASSWORD_TICKETSADMIN') ?? 'your-password'
+    'host' => '147.93.92.53', // IP address from FileZilla
+    'username' => 'u706445394.ticketsadmin', // Exact username from FileZilla  
+    'password' => '2O|+=18K$[hHfK=s'
 ];
 
 echo "<table border='1' cellpadding='5' cellspacing='0'>";
@@ -208,8 +208,9 @@ foreach ($ftpTestCredentials as $key => $value) {
 echo "</table>";
 
 // Test FTP connectivity
-if ($ftpTestCredentials['host'] !== 'your-ftp-host.com') {
-    echo "<h4>🔗 Testing FTP Connection:</h4>";
+if ($ftpTestCredentials['password'] !== 'your-password') {
+    echo "<h4>🔗 Testing FTP Connection (FileZilla Settings):</h4>";
+    echo "<p>Using: <strong>147.93.92.53</strong> (IP address) and <strong>u706445394.ticketsadmin</strong></p>";
     
     // Test standard FTP (port 21)
     echo "<p><strong>Testing FTP (port 21):</strong></p>";
@@ -233,14 +234,14 @@ if ($ftpTestCredentials['host'] !== 'your-ftp-host.com') {
         echo "<p style='color: red;'>❌ FTP test error: " . $e->getMessage() . "</p>";
     }
     
-    // Test FTPS (port 21 with SSL)
-    echo "<p><strong>Testing FTPS (port 21 with SSL):</strong></p>";
+    // Test FTPS (port 21 with SSL) - This matches FileZilla's "explicit FTP over TLS"
+    echo "<p><strong>Testing FTPS (port 21 with SSL) - FileZilla Mode:</strong></p>";
     try {
         $ftpsConn = @ftp_ssl_connect($ftpTestCredentials['host'], 21, 10);
         if ($ftpsConn) {
             $loginResult = @ftp_login($ftpsConn, $ftpTestCredentials['username'], $ftpTestCredentials['password']);
             if ($loginResult) {
-                echo "<p style='color: green;'>✅ FTPS connection successful on port 21</p>";
+                echo "<p style='color: green;'>✅ FTPS connection successful on port 21 (FileZilla mode)</p>";
                 $pwd = @ftp_pwd($ftpsConn);
                 echo "<p>Current directory: <code>$pwd</code></p>";
                 @ftp_close($ftpsConn);
