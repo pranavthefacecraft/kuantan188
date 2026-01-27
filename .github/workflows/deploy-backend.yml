@@ -89,7 +89,7 @@ jobs:
           rm -f deploy/storage/framework/views/* || true
           chmod -R 775 deploy/storage deploy/bootstrap/cache || true
 
-      - name: Deploy to server via FTP
+      - name: Deploy to server via SFTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
@@ -100,7 +100,7 @@ jobs:
           log-level: verbose
           timeout: 300000
           security: loose
-          protocol: ftp
+          protocol: ftps-legacy
           port: 21
           exclude: |
             **/.git*
