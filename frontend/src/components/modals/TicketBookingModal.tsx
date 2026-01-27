@@ -151,9 +151,12 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         const { bookingResponse, paymentUrl } = await paymentApi.processPayment(bookingData);
         setBookingResult(bookingResponse);
         
-        // Add callback URL with booking ID
+        // Add callback URL with booking ID - Fix URL construction
         const callbackUrl = `${window.location.origin}/payment/callback?booking_id=${bookingResponse.booking.id}`;
-        const fullPaymentUrl = `${paymentUrl}&redirect_url=${encodeURIComponent(callbackUrl)}`;
+        
+        // Smart URL construction to handle existing query parameters
+        const separator = paymentUrl.includes('?') ? '&' : '?';
+        const fullPaymentUrl = `${paymentUrl}${separator}redirect_url=${encodeURIComponent(callbackUrl)}`;
         
         // Redirect to Billplz payment page
         window.location.href = fullPaymentUrl;
