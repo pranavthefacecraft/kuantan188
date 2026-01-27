@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Modal, Button, Row, Col, Form } from 'react-bootstrap';
 import { format, addDays } from 'date-fns';
 import PaymentMethodSelector, { PaymentMethod } from './PaymentMethodSelector';
+import paymentApi, { BookingData } from '../../services/paymentApi';
+import PaymentLoading from '../loading/PaymentLoading';
 
 interface Ticket {
   id: number;
@@ -40,6 +42,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const [showCalendar, setShowCalendar] = useState(false);
   const [bookingResult, setBookingResult] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -72,6 +75,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         receiveUpdates: false
       });
       setPaymentMethod('cash_on_delivery');
+      setIsProcessingPayment(false);
     }
   }, [show, ticket]);
 
@@ -114,48 +118,55 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     setCurrentStep('details');
   };
 
-  const handleBillplzPayment = async (booking: any) => {
+  const handlePaymentFlow = async () => {
     try {
-      console.log('[BILLPLZ] Starting payment process for booking:', booking.id);
+      setIsProcessingPayment(true);
       
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://admin.tfcmockup.com/api/public/payment/billplz/create'
-        : 'http://localhost:8000/api/public/payment/billplz/create';
-
-      const paymentData = {
-        booking_id: booking.id,
-        amount: calculateTotal(),
+      const bookingData: BookingData = {
+        ticket_id: ticket?.id || 1,
+        event_id: ticket?.event_id || undefined,
+        event_title: `${ticketName} - ${format(selectedDate, 'MMMM d, yyyy')}`,
         customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
-        customer_email: contactForm.email,
-        description: `Event Ticket Payment - ${ticketName}`
+        email: contactForm.email,
+        mobile_phone: contactForm.mobilePhone,
+        country: contactForm.country || selectedCountry?.name || 'Malaysia',
+        postal_code: contactForm.postalCode,
+        adult_tickets: adultQuantity,
+        child_tickets: childQuantity,
+        quantity: getTotalQuantity(),
+        adult_price: parseFloat(selectedCountry?.adult_price || '0'),
+        child_price: parseFloat(selectedCountry?.child_price || '0'),
+        event_date: format(selectedDate, 'yyyy-MM-dd'),
+        selected_time: selectedTime,
+        total_amount: calculateTotal(),
+        payment_method: paymentMethod,
+        booking_status: paymentMethod === 'billplz' ? 'pending' : 'confirmed',
+        receive_updates: contactForm.receiveUpdates
       };
 
-      console.log('[BILLPLZ] Payment data:', paymentData);
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(paymentData),
-      });
-
-      const result = await response.json();
-      console.log('[BILLPLZ] Payment creation result:', result);
-
-      if (response.ok && result.success) {
-        console.log('[BILLPLZ] Redirecting to payment URL:', result.data.payment_url);
+      if (paymentMethod === 'billplz') {
+        // Process online payment
+        const { bookingResponse, paymentUrl } = await paymentApi.processPayment(bookingData);
+        setBookingResult(bookingResponse);
+        
+        // Add callback URL with booking ID
+        const callbackUrl = `${window.location.origin}/payment/callback?booking_id=${bookingResponse.booking.id}`;
+        const fullPaymentUrl = `${paymentUrl}&redirect_url=${encodeURIComponent(callbackUrl)}`;
+        
         // Redirect to Billplz payment page
-        window.open(result.data.payment_url, '_blank');
-        // Close the modal and show success message
-        setCurrentStep('thankyou');
+        window.location.href = fullPaymentUrl;
       } else {
-        console.error('[BILLPLZ] Payment creation failed:', result);
-        alert(`Payment creation failed: ${result.message || 'Unknown error'}`);
+        // Process cash on delivery
+        const result = await paymentApi.processCashOnDelivery(bookingData);
+        setBookingResult(result);
+        setCurrentStep('thankyou');
       }
     } catch (error) {
-      console.error('[BILLPLZ] Payment creation error:', error);
-      alert('Failed to create payment. Please try again or contact support.');
+      console.error('[PAYMENT FLOW] Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Payment failed: ${errorMessage}`);
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -169,95 +180,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   };
 
   const handlePayment = async () => {
-    try {
-      const bookingData = {
-        ticket_id: ticket?.id || 1,
-        event_id: ticket?.event_id || null, // Use ticket's event_id if available
-        event_title: `${ticketName} - ${format(selectedDate, 'MMMM d, yyyy')}`,
-        customer_name: `${contactForm.firstName} ${contactForm.lastName}`,
-        email: contactForm.email,
-        mobile_phone: contactForm.mobilePhone,
-        country: contactForm.country || selectedCountry?.name || 'Malaysia',
-        postal_code: contactForm.postalCode,
-        adult_tickets: adultQuantity,
-        child_tickets: childQuantity,
-        quantity: getTotalQuantity(),
-        adult_price: parseFloat(selectedCountry?.adult_price || '0'),
-        child_price: parseFloat(selectedCountry?.child_price || '0'),
-        event_date: format(selectedDate, 'yyyy-MM-dd'),
-        total_amount: calculateTotal(),
-        payment_method: paymentMethod,
-        booking_status: 'confirmed',
-        receive_updates: contactForm.receiveUpdates
-      };
-
-      console.log('[BOOKING] Starting booking process');
-      console.log('[BOOKING] Booking data:', bookingData);
-      console.log('[BOOKING] Environment:', process.env.NODE_ENV);
-      console.log('[BOOKING] Request headers:', { 'Content-Type': 'application/json' });
-
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://admin.tfcmockup.com/api/public/bookings'
-        : 'http://localhost:8000/api/public/bookings';
-      
-      console.log('[BOOKING] Using API URL:', apiUrl);
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(bookingData),
-      });
-
-      console.log('[BOOKING] Response status:', response.status);
-      console.log('[BOOKING] Response headers:', Object.fromEntries(response.headers.entries()));
-
-      let result;
-      let responseText;
-      try {
-        responseText = await response.text();
-        console.log('[BOOKING] Raw response text:', responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''));
-        result = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('[BOOKING] Failed to parse response as JSON:', parseError);
-        throw new Error(`Invalid JSON response. Status: ${response.status}. Content-Type: ${response.headers.get('content-type')}. Response preview: ${responseText?.substring(0, 200) || 'No response text'}...`);
-      }
-
-      console.log('[BOOKING] Parsed response:', result);
-
-      if (response.ok && result.success) {
-        console.log('[BOOKING] Booking successful:', result);
-        setBookingResult(result);
-        
-        // If Billplz payment is selected, create payment bill and redirect
-        if (paymentMethod === 'billplz') {
-          await handleBillplzPayment(result.booking);
-        } else {
-          setCurrentStep('thankyou');
-        }
-      } else {
-        console.error('[BOOKING] Booking failed. Response status:', response.status);
-        console.error('[BOOKING] Error details:', result);
-        alert(`Booking failed: ${result.message || result.error || 'Unknown error'}. Please check the logs for details.`);
-      }
-    } catch (error) {
-      console.error('[BOOKING] Catch block - Error submitting booking:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      const errorName = error instanceof Error ? error.name : 'Unknown';
-      const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
-      
-      console.error('[BOOKING] Error name:', errorName);
-      console.error('[BOOKING] Error message:', errorMessage);
-      console.error('[BOOKING] Error stack:', errorStack);
-      alert(`An error occurred: ${errorMessage}. Please check the browser console and logs for details.`);
-    }
+    await handlePaymentFlow();
   };
 
   const handleClose = () => {
     setCurrentStep('selection');
     setBookingResult(null);
+    setIsProcessingPayment(false);
     onHide();
   };
 
@@ -871,6 +800,15 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         )}
       </Modal.Footer>
       
+      {/* Payment Loading Modal */}
+      <PaymentLoading 
+        show={isProcessingPayment}
+        title={paymentMethod === 'billplz' ? "Creating Payment Link" : "Processing Booking"}
+        message={paymentMethod === 'billplz' 
+          ? "Please wait while we create your secure payment link..."
+          : "Please wait while we process your booking..."
+        }
+      />
 
     </Modal>
   );

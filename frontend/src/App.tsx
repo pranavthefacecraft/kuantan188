@@ -9,6 +9,7 @@ import Contact from './pages/Contact';
 import Tickets from './pages/Tickets';
 import TicketsTestPage from './pages/TicketsTestPage';
 import ApiTestPage from './components/ApiTestPage';
+import PaymentCallback from './pages/PaymentCallback';
 import Layout from './components/layout/Layout';
 import './App.css';
 
@@ -25,6 +26,7 @@ function App() {
             <Route path="tickets-test" element={<TicketsTestPage />} />
             <Route path="about" element={<About />} />
             <Route path="contact" element={<Contact />} />
+            <Route path="payment/callback" element={<PaymentCallback />} />
             <Route path="api-test" element={<ApiTestPage />} />
           </Route>
         </Routes>
