@@ -71,19 +71,27 @@ class BillplzController extends Controller
             }
 
             $billData = $billResult['data'];
+            
+            // Fix Billplz URL format issue
+            $paymentUrl = $billData['url'];
+            if (strpos($paymentUrl, '&redirect_url=') !== false) {
+                $paymentUrl = str_replace('&redirect_url=', '?redirect_url=', $paymentUrl);
+            }
 
             // Update booking with payment details
             $booking->update([
                 'payment_gateway' => 'billplz',
                 'payment_reference' => $billData['id'],
-                'payment_url' => $billData['url'],
+                'payment_url' => $paymentUrl, // Use fixed URL
                 'payment_status' => 'pending',
                 'payment_metadata' => $billData
             ]);
 
             Log::info('Payment bill created successfully', [
                 'booking_id' => $booking->id,
-                'bill_id' => $billData['id']
+                'bill_id' => $billData['id'],
+                'original_url' => $billData['url'],
+                'fixed_url' => $paymentUrl
             ]);
 
             return response()->json([
@@ -91,7 +99,7 @@ class BillplzController extends Controller
                 'message' => 'Payment bill created successfully',
                 'data' => [
                     'bill_id' => $billData['id'],
-                    'payment_url' => $billData['url'],
+                    'payment_url' => $paymentUrl, // Return fixed URL
                     'amount' => $billData['amount'],
                     'booking_reference' => $booking->booking_reference
                 ]
