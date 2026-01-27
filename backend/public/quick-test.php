@@ -1,12 +1,33 @@
 <?php
 /**
  * Quick Configuration & Connection Tests
+ * Enhanced version with comprehensive diagnostics and deployment checks
  * Non-blocking version that handles timeouts gracefully
  */
 
-set_time_limit(60); // Set maximum execution time
+set_time_limit(90); // Set maximum execution time
 
-echo "<h2>🔄 Quick Laravel Tests</h2>";
+// Enhanced styling
+echo "<style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f5f5f5; }
+    .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+    h3 { color: #34495e; margin-top: 25px; }
+    .success { color: #27ae60; font-weight: bold; }
+    .warning { color: #f39c12; font-weight: bold; }
+    .error { color: #e74c3c; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { padding: 8px 12px; text-align: left; border: 1px solid #bdc3c7; }
+    th { background: #ecf0f1; }
+    pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    .status-ok { background: #d5f4e6; }
+    .status-warning { background: #fef9e7; }
+    .status-error { background: #fadbd8; }
+</style>";
+
+echo "<div class='container'>";
+echo "<h2>🚀 Kuantan188 System Diagnostics</h2>";
+echo "<p><strong>Test Date:</strong> " . date('Y-m-d H:i:s') . "</p>";
 
 // Change to Laravel root directory
 $laravelRoot = dirname(__DIR__);
@@ -87,7 +108,7 @@ foreach ($envVars as $var) {
         echo "<td style='color: orange;'>⚠️ EMPTY</td>";
         echo "<td>SET BUT EMPTY</td>";
     } elseif ($isSet) {
-        echo "<td style='color: green;'>✅ SET</td>";
+        echo "<td class='status-ok success'>✅ SET</td>";
         // Mask sensitive values
         if (strpos($var, 'PASSWORD') !== false || strpos($var, 'KEY') !== false) {
             $maskedValue = strlen($value) > 8 ? substr($value, 0, 8) . '***' : '***';
@@ -96,7 +117,7 @@ foreach ($envVars as $var) {
         }
         echo "<td>$maskedValue</td>";
     } else {
-        echo "<td style='color: red;'>❌ MISSING</td>";
+        echo "<td class='status-error error'>❌ MISSING</td>";
         echo "<td>NOT SET</td>";
     }
     echo "</tr>";
@@ -148,6 +169,81 @@ if ($billplzConfigured) {
             'http' => [
                 'timeout' => 10,
                 'header' => 'Accept: application/json'
+            ]
+        ]);
+        
+        $response = @file_get_contents($billplzUrl, false, $context);
+        
+        if ($response !== false) {
+            echo "<p style='color: green;'>✅ <strong>Billplz API test endpoint reachable</strong></p>";
+            echo "<pre>" . htmlspecialchars(substr($response, 0, 500)) . "</pre>";
+        } else {
+            echo "<p style='color: red;'>❌ <strong>Billplz API test failed</strong> - Check API configuration</p>";
+        }
+    } catch (Exception $e) {
+        echo "<p style='color: red;'>❌ <strong>Billplz API error:</strong> " . $e->getMessage() . "</p>";
+    }
+} else {
+    echo "<p style='color: red;'>❌ Billplz environment variables not configured</p>";
+}
+
+// Deployment Status Check
+echo "<h3>🚀 Deployment Status Check:</h3>";
+$deploymentFiles = [
+    'composer.json' => 'Composer configuration',
+    '.env' => 'Environment configuration', 
+    'artisan' => 'Laravel Artisan CLI',
+    'public/index.php' => 'Laravel entry point',
+    'app/Http/Controllers/BillplzController.php' => 'Payment controller',
+    'routes/api.php' => 'API routes',
+    'config/cors.php' => 'CORS configuration'
+];
+
+echo "<table border='1' cellpadding='5' cellspacing='0'>";
+echo "<tr><th>File/Component</th><th>Status</th><th>Description</th></tr>";
+
+foreach ($deploymentFiles as $file => $description) {
+    $exists = file_exists($file);
+    $status = $exists ? "✅ Found" : "❌ Missing";
+    $rowClass = $exists ? "status-ok" : "status-error";
+    
+    echo "<tr class='$rowClass'>";
+    echo "<td><strong>$file</strong></td>";
+    echo "<td>$status</td>";
+    echo "<td>$description</td>";
+    echo "</tr>";
+}
+echo "</table>";
+
+// Laravel Optimization Status
+echo "<h3>⚡ Laravel Optimization Status:</h3>";
+$cacheFiles = [
+    'bootstrap/cache/config.php' => 'Config cache',
+    'bootstrap/cache/routes-v7.php' => 'Routes cache', 
+    'bootstrap/cache/services.php' => 'Services cache'
+];
+
+echo "<table border='1' cellpadding='5' cellspacing='0'>";
+echo "<tr><th>Cache Type</th><th>Status</th><th>File</th></tr>";
+
+foreach ($cacheFiles as $file => $type) {
+    $exists = file_exists($file);
+    $status = $exists ? "✅ Cached" : "⚠️ Not Cached";
+    $rowClass = $exists ? "status-ok" : "status-warning";
+    
+    echo "<tr class='$rowClass'>";
+    echo "<td><strong>$type</strong></td>";
+    echo "<td>$status</td>";
+    echo "<td><code>$file</code></td>";
+    echo "</tr>";
+}
+echo "</table>";
+
+if (!file_exists('bootstrap/cache/config.php')) {
+    echo "<p class='warning'>💡 <strong>Tip:</strong> Run <code>php artisan config:cache</code> to improve performance</p>";
+}
+
+// FTP Connection Test (If credentials available)
             ]
         ]);
         
@@ -301,13 +397,31 @@ if ($ftpTestCredentials['password'] !== 'your-password') {
     echo "</pre>";
 }
 
-echo "<h3>📊 Summary:</h3>";
+echo "<h3>📊 Test Summary:</h3>";
 echo "<ul>";
 if ($dbConfigured) {
     echo "<li style='color: green;'>✅ Database credentials configured</li>";
 } else {
     echo "<li style='color: red;'>❌ Database credentials missing</li>";
 }
+
+if ($billplzConfigured) {
+    echo "<li style='color: green;'>✅ Billplz credentials configured</li>";
+} else {
+    echo "<li style='color: red;'>❌ Billplz credentials missing</li>";
+}
+
+echo "<li>🕒 Test completed at: " . date('Y-m-d H:i:s') . "</li>";
+echo "<li>💾 PHP Memory Usage: " . round(memory_get_usage() / 1024 / 1024, 2) . " MB</li>";
+echo "<li>⚡ Execution Time: " . round(microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'], 2) . " seconds</li>";
+echo "</ul>";
+
+echo "<hr>";
+echo "<p><strong>🚀 Kuantan188 Event Ticketing Platform</strong> | Deployment Test Suite v2.1</p>";
+echo "<p><small>💡 For deployment issues, check GitHub Actions logs and ensure all secrets are properly configured</small></p>";
+echo "</div>"; // Close container
+
+?>
 
 if ($billplzConfigured) {
     echo "<li style='color: green;'>✅ Billplz credentials configured</li>";
