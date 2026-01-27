@@ -5,6 +5,7 @@
  */
 
 echo "<h2>🔍 Laravel's Current Database Configuration</h2>";
+echo "<p><small>Last updated: " . date('Y-m-d H:i:s') . " (Fix #133 - Billplz URL format)</small></p>";
 
 // Change to Laravel root directory
 $laravelRoot = dirname(__DIR__);
