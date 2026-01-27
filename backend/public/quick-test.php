@@ -75,18 +75,22 @@ $billplzConfigured = true;
 foreach ($envVars as $var) {
     $value = $_ENV[$var] ?? getenv($var) ?? '';
     $isSet = $value !== '';
+    $isEmpty = $value === '';
     
-    if (strpos($var, 'DB_') === 0 && !$isSet) $dbConfigured = false;
-    if (strpos($var, 'BILLPLZ_') === 0 && !$isSet) $billplzConfigured = false;
+    if (strpos($var, 'DB_') === 0 && (!$isSet || $isEmpty)) $dbConfigured = false;
+    if (strpos($var, 'BILLPLZ_') === 0 && (!$isSet || $isEmpty)) $billplzConfigured = false;
     
     echo "<tr>";
     echo "<td><strong>$var</strong></td>";
     
-    if ($isSet) {
+    if ($isEmpty) {
+        echo "<td style='color: orange;'>⚠️ EMPTY</td>";
+        echo "<td>SET BUT EMPTY</td>";
+    } elseif ($isSet) {
         echo "<td style='color: green;'>✅ SET</td>";
         // Mask sensitive values
         if (strpos($var, 'PASSWORD') !== false || strpos($var, 'KEY') !== false) {
-            $maskedValue = substr($value, 0, 8) . '***';
+            $maskedValue = strlen($value) > 8 ? substr($value, 0, 8) . '***' : '***';
         } else {
             $maskedValue = $value;
         }
