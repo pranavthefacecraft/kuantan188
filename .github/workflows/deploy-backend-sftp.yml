@@ -1,0 +1,98 @@
+name: Deploy Backend via SFTP
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring,xml,ctype,iconv,intl,pdo_mysql,dom,filter,gd,json,pdo
+          tools: composer:v2
+
+      - name: Create Laravel directories
+        run: |
+          mkdir -p backend/bootstrap/cache
+          mkdir -p backend/storage/app/public
+          mkdir -p backend/storage/framework/{cache,sessions,views}
+          mkdir -p backend/storage/logs
+          chmod 755 backend/bootstrap/cache backend/storage -R
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
+        env:
+          COMPOSER_PROCESS_TIMEOUT: 600
+
+      - name: Prepare deployment files
+        run: |
+          rm -rf deploy_temp || true
+          mkdir -p deploy_temp
+
+          # Copy backend files excluding development files
+          rsync -av --delete \
+            --exclude 'vendor' \
+            --exclude 'node_modules' \
+            --exclude 'tests' \
+            --exclude '.git' \
+            --exclude '.env' \
+            --exclude 'storage/framework/views/*' \
+            --exclude 'storage/framework/cache/*' \
+            --exclude 'bootstrap/cache/*.php' \
+            backend/ deploy_temp/
+
+          # Create necessary directories
+          mkdir -p deploy_temp/storage/{app/public,framework/{views,cache,sessions},logs}
+          mkdir -p deploy_temp/bootstrap/cache
+
+          # Create .htaccess for Laravel
+          cat > deploy_temp/public/.htaccess << 'EOF'
+          <IfModule mod_rewrite.c>
+              <IfModule mod_negotiation.c>
+                  Options -MultiViews -Indexes
+              </IfModule>
+              RewriteEngine On
+              RewriteCond %{HTTP:Authorization} .
+              RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_URI} (.+)/$
+              RewriteRule ^ %1 [L,R=301]
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_FILENAME} !-f
+              RewriteRule ^ index.php [L]
+          </IfModule>
+          EOF
+
+          # Set permissions
+          find deploy_temp -type d -exec chmod 755 {} \;
+          find deploy_temp -type f -exec chmod 644 {} \;
+
+      - name: Deploy via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
+          username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
+          password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
+          port: 22
+          local_path: './deploy_temp/*'
+          remote_path: '/'
+          sftpArgs: '-o ConnectTimeout=5'
+
+      - name: Clean up
+        run: |
+          rm -rf deploy_temp
+          echo "✅ Deployment completed successfully!"

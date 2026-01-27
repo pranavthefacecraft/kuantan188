@@ -1,0 +1,54 @@
+name: Deploy Backend via rsync
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_method:
+        description: 'Deployment method to test'
+        required: true
+        default: 'rsync'
+        type: choice
+        options:
+        - rsync
+        - manual
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.deploy_method == 'rsync'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring,xml,ctype,iconv,intl,pdo_mysql,dom,filter,gd,json,pdo
+          tools: composer:v2
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          composer install --no-dev --optimize-autoloader
+
+      - name: Prepare for deployment
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.FTP_HOST_TICKETSADMIN }} >> ~/.ssh/known_hosts
+
+      - name: Deploy with rsync
+        run: |
+          rsync -avz --delete \
+            --exclude='.git*' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            --exclude='.env' \
+            --exclude='storage/logs/*' \
+            --exclude='storage/framework/cache/*' \
+            --exclude='storage/framework/sessions/*' \
+            --exclude='storage/framework/views/*' \
+            backend/ ${{ secrets.FTP_USERNAME_TICKETSADMIN }}@${{ secrets.FTP_HOST_TICKETSADMIN }}:/
