@@ -4,6 +4,7 @@ import { format, addDays } from 'date-fns';
 import PaymentMethodSelector, { PaymentMethod } from './PaymentMethodSelector';
 import paymentApi, { BookingData } from '../../services/paymentApi';
 import PaymentLoading from '../loading/PaymentLoading';
+import frontendLogger from '../../utils/logger';
 
 interface Ticket {
   id: number;
@@ -164,7 +165,16 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     } catch (error) {
       console.error('[PAYMENT FLOW] Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Payment failed: ${errorMessage}`);
+      
+      frontendLogger.logPaymentError('Modal Payment Flow', errorMessage, {
+        paymentMethod,
+        ticketName,
+        totalAmount: calculateTotal(),
+        bookingData
+      });
+      
+      // Show detailed error message to user
+      alert(`Payment failed: ${errorMessage}\n\nPlease check the logs at /logs for more details or contact support.`);
     } finally {
       setIsProcessingPayment(false);
     }

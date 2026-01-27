@@ -1,4 +1,5 @@
 import apiClient from './api';
+import frontendLogger from '../utils/logger';
 
 export interface PaymentData {
   booking_id: number;
@@ -83,6 +84,7 @@ class PaymentApiService {
   async createBooking(bookingData: BookingData): Promise<BookingResponse> {
     try {
       console.log('[PAYMENT API] Creating booking with data:', bookingData);
+      frontendLogger.info('Creating booking', { bookingData });
       
       const response = await apiClient.post<BookingResponse>('/public/bookings', {
         ...bookingData,
@@ -90,10 +92,34 @@ class PaymentApiService {
       });
       
       console.log('[PAYMENT API] Booking created:', response.data);
+      frontendLogger.info('Booking created successfully', { response: response.data });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('[PAYMENT API] Error creating booking:', error);
-      throw new Error('Failed to create booking. Please try again.');
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create booking';
+      const errorDetails = {
+        status: error.response?.status,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      };
+      
+      frontendLogger.logApiError(
+        '/public/bookings',
+        'POST',
+        error.response?.status || 0,
+        errorMessage,
+        bookingData,
+        error.response?.data
+      );
+      
+      frontendLogger.logPaymentError('Booking Creation', errorMessage, errorDetails);
+      
+      throw new Error(`Booking failed: ${errorMessage}`);
     }
   }
 
@@ -103,14 +129,39 @@ class PaymentApiService {
   async createPayment(paymentData: PaymentData): Promise<PaymentResponse> {
     try {
       console.log('[PAYMENT API] Creating Billplz payment:', paymentData);
+      frontendLogger.info('Creating Billplz payment', { paymentData });
       
       const response = await apiClient.post<PaymentResponse>('/public/payment/billplz/create', paymentData);
       
       console.log('[PAYMENT API] Payment created:', response.data);
+      frontendLogger.info('Billplz payment created successfully', { response: response.data });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('[PAYMENT API] Error creating payment:', error);
-      throw new Error('Failed to create payment. Please try again.');
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create payment';
+      const errorDetails = {
+        status: error.response?.status,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      };
+      
+      frontendLogger.logApiError(
+        '/public/payment/billplz/create',
+        'POST',
+        error.response?.status || 0,
+        errorMessage,
+        paymentData,
+        error.response?.data
+      );
+      
+      frontendLogger.logPaymentError('Payment Creation', errorMessage, errorDetails);
+      
+      throw new Error(`Payment creation failed: ${errorMessage}`);
     }
   }
 
@@ -157,13 +208,17 @@ class PaymentApiService {
     try {
       // Step 1: Create booking with pending status
       console.log('[PAYMENT API] Starting payment flow...');
+      frontendLogger.logPaymentStart(bookingData.payment_method, bookingData.total_amount, { bookingData });
+      
       const bookingResponse = await this.createBooking({
         ...bookingData,
         booking_status: 'pending'
       });
 
       if (!bookingResponse.success) {
-        throw new Error(bookingResponse.message || 'Booking creation failed');
+        const error = bookingResponse.message || 'Booking creation failed';
+        frontendLogger.logPaymentError('Payment Flow - Booking', error, { bookingResponse });
+        throw new Error(error);
       }
 
       // Step 2: Create Billplz payment
@@ -178,8 +233,15 @@ class PaymentApiService {
       const paymentResponse = await this.createPayment(paymentData);
 
       if (!paymentResponse.success) {
-        throw new Error(paymentResponse.message || 'Payment creation failed');
+        const error = paymentResponse.message || 'Payment creation failed';
+        frontendLogger.logPaymentError('Payment Flow - Payment Creation', error, { paymentResponse });
+        throw new Error(error);
       }
+
+      frontendLogger.info('Payment flow completed successfully', {
+        bookingId: bookingResponse.booking.id,
+        paymentUrl: paymentResponse.data.payment_url
+      });
 
       return {
         bookingResponse,
@@ -187,6 +249,7 @@ class PaymentApiService {
       };
     } catch (error) {
       console.error('[PAYMENT API] Payment flow error:', error);
+      frontendLogger.logPaymentError('Payment Flow', error instanceof Error ? error.message : 'Unknown error', { bookingData });
       throw error;
     }
   }

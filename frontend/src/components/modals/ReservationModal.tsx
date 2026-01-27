@@ -6,6 +6,7 @@ import Calendar from '../Calendar/Calendar';
 import PaymentMethodSelector, { PaymentMethod } from './PaymentMethodSelector';
 import paymentApi, { BookingData } from '../../services/paymentApi';
 import PaymentLoading from '../loading/PaymentLoading';
+import frontendLogger from '../../utils/logger';
 
 interface ReservationModalProps {
   show: boolean;
@@ -90,7 +91,16 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
     } catch (error) {
       console.error('[PAYMENT FLOW] Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Payment failed: ${errorMessage}`);
+      
+      frontendLogger.logPaymentError('Reservation Payment Flow', errorMessage, {
+        paymentMethod,
+        eventTitle: event?.title,
+        totalAmount: calculateTotal(),
+        bookingData
+      });
+      
+      // Show detailed error message to user
+      alert(`Payment failed: ${errorMessage}\n\nPlease check the logs at /logs for more details or contact support.`);
     } finally {
       setIsProcessingPayment(false);
     }
