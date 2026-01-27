@@ -46,6 +46,7 @@ Route::post('/public/payment/billplz/create', [BillplzController::class, 'create
 Route::post('/public/payment/billplz/callback', [BillplzController::class, 'handleCallback']);
 Route::get('/public/payment/billplz/status/{billId}', [BillplzController::class, 'checkPaymentStatus']);
 Route::get('/public/payment/billplz/test', [BillplzController::class, 'testConnection']);
+Route::get('/public/payment/billplz/debug-url', [BillplzController::class, 'debugPaymentUrl']);
 Route::get('/public/payment/billplz/booking/{bookingId}', [BillplzController::class, 'getPaymentDetails']);
 Route::post('/public/payment/billplz/cancel/{billId}', [BillplzController::class, 'cancelPayment']);
 

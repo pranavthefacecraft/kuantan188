@@ -72,8 +72,37 @@ class BillplzController extends Controller
 
             $billData = $billResult['data'];
             
-            // Fix Billplz URL format issue
+            // Fix Billplz URL format issue - comprehensive solution
             $paymentUrl = $billData['url'];
+            
+            // Handle various URL format issues that Billplz might return
+            if (strpos($paymentUrl, '/bills/') !== false) {
+                // Split URL at bill ID to reconstruct properly
+                $urlParts = explode('/bills/', $paymentUrl);
+                if (count($urlParts) === 2) {
+                    $baseUrl = $urlParts[0] . '/bills/';
+                    $pathAndQuery = $urlParts[1];
+                    
+                    // Check if there are query parameters improperly attached
+                    if (strpos($pathAndQuery, '&') !== false) {
+                        // Split bill ID from query parameters
+                        $parts = explode('&', $pathAndQuery, 2);
+                        $billId = $parts[0];
+                        $queryString = $parts[1];
+                        
+                        // Reconstruct URL with proper format
+                        $paymentUrl = $baseUrl . $billId . '?' . $queryString;
+                        
+                        Log::info('Fixed malformed Billplz URL', [
+                            'original_url' => $billData['url'],
+                            'fixed_url' => $paymentUrl,
+                            'bill_id' => $billId
+                        ]);
+                    }
+                }
+            }
+            
+            // Legacy fix for specific redirect_url issue
             if (strpos($paymentUrl, '&redirect_url=') !== false) {
                 $paymentUrl = str_replace('&redirect_url=', '?redirect_url=', $paymentUrl);
             }
@@ -284,6 +313,91 @@ class BillplzController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Connection test failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Debug endpoint to test URL generation for payment issues
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function debugPaymentUrl(Request $request): JsonResponse
+    {
+        try {
+            $bookingId = $request->input('booking_id', 1);
+            
+            // Find or create a test booking
+            $booking = Booking::find($bookingId);
+            if (!$booking) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking not found for testing'
+                ], 404);
+            }
+
+            // Test bill creation
+            $billResult = $this->billplzService->createBill($booking);
+            
+            if (!$billResult['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create test bill',
+                    'error' => $billResult['error'] ?? 'Unknown error'
+                ], 500);
+            }
+
+            $billData = $billResult['data'];
+            $originalUrl = $billData['url'];
+            
+            // Apply the same URL fixing logic
+            $fixedUrl = $originalUrl;
+            $fixApplied = false;
+            
+            if (strpos($fixedUrl, '/bills/') !== false) {
+                $urlParts = explode('/bills/', $fixedUrl);
+                if (count($urlParts) === 2) {
+                    $baseUrl = $urlParts[0] . '/bills/';
+                    $pathAndQuery = $urlParts[1];
+                    
+                    if (strpos($pathAndQuery, '&') !== false) {
+                        $parts = explode('&', $pathAndQuery, 2);
+                        $billId = $parts[0];
+                        $queryString = $parts[1];
+                        
+                        $fixedUrl = $baseUrl . $billId . '?' . $queryString;
+                        $fixApplied = true;
+                    }
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'debug_info' => [
+                    'booking_id' => $booking->id,
+                    'booking_reference' => $booking->booking_reference,
+                    'bill_id' => $billData['id'],
+                    'original_url' => $originalUrl,
+                    'fixed_url' => $fixedUrl,
+                    'fix_applied' => $fixApplied,
+                    'url_analysis' => [
+                        'contains_bills_path' => strpos($originalUrl, '/bills/') !== false,
+                        'contains_ampersand' => strpos($originalUrl, '&') !== false,
+                        'contains_redirect_param' => strpos($originalUrl, 'redirect_url') !== false,
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in payment URL debug', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Debug test failed',
                 'error' => $e->getMessage()
             ], 500);
         }
