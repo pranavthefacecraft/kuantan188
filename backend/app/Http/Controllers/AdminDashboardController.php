@@ -733,7 +733,7 @@ class AdminDashboardController extends Controller
     {
         $tickets = Ticket::with(['event', 'countries', 'bookings'])->orderBy('created_at', 'desc')->paginate(15);
         $events = Event::where('is_active', true)->orderBy('event_date')->get();
-        $countries = Country::orderBy('name')->get();
+        $countries = Country::where('is_active', true)->orderBy('name')->get();
         
         return view('admin.tickets', compact('tickets', 'events', 'countries'));
     }
@@ -952,6 +952,127 @@ class AdminDashboardController extends Controller
     {
         $countries = Country::with('tickets')->paginate(15);
         return view('admin.countries', compact('countries'));
+    }
+
+    /**
+     * Store a new country/currency
+     */
+    public function storeCountry(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:countries,name',
+            'country_code' => 'required|string|max:3|unique:countries,code',
+            'currency_code' => 'required|string|max:3',
+            'currency_symbol' => 'required|string|max:5',
+            'exchange_rate' => 'nullable|numeric|min:0',
+            'is_active' => 'boolean'
+        ]);
+
+        try {
+            $country = Country::create([
+                'name' => $request->name,
+                'code' => strtoupper($request->country_code),
+                'currency_code' => strtoupper($request->currency_code),
+                'currency_symbol' => $request->currency_symbol,
+                'price_multiplier' => $request->exchange_rate ?: 1.0000,
+                'is_active' => $request->has('is_active')
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Currency added successfully!',
+                'country' => $country
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error adding currency: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get country data for editing
+     */
+    public function editCountry(Country $country)
+    {
+        try {
+            return response()->json([
+                'success' => true,
+                'country' => $country
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading country: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update a country/currency
+     */
+    public function updateCountry(Request $request, Country $country)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:countries,name,' . $country->id,
+            'country_code' => 'required|string|max:3|unique:countries,code,' . $country->id,
+            'currency_code' => 'required|string|max:3',
+            'currency_symbol' => 'required|string|max:5',
+            'exchange_rate' => 'nullable|numeric|min:0',
+            'is_active' => 'boolean'
+        ]);
+
+        try {
+            $country->update([
+                'name' => $request->name,
+                'code' => strtoupper($request->country_code),
+                'currency_code' => strtoupper($request->currency_code),
+                'currency_symbol' => $request->currency_symbol,
+                'price_multiplier' => $request->exchange_rate ?: 1.0000,
+                'is_active' => $request->has('is_active')
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Currency updated successfully!',
+                'country' => $country
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating currency: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Toggle country/currency active status
+     */
+    public function toggleCountryStatus(Request $request, Country $country)
+    {
+        $request->validate([
+            'is_active' => 'required|boolean'
+        ]);
+
+        try {
+            $country->update([
+                'is_active' => $request->is_active
+            ]);
+
+            $statusText = $request->is_active ? 'activated' : 'deactivated';
+
+            return response()->json([
+                'success' => true,
+                'message' => "Currency {$statusText} successfully!",
+                'country' => $country
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating currency status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

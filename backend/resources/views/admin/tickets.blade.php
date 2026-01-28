@@ -80,9 +80,11 @@
                                         <div>
                                             @if($ticket->countries->count() > 0)
                                                 @foreach($ticket->countries as $country)
+                                                    @if($country->is_active)
                                                     <div style="margin-bottom: 0.25rem;">
                                                         <div>{{ $country->name }}</div>
                                                     </div>
+                                                    @endif
                                                 @endforeach
                                             @else
                                                 <span style="color: var(--on-surface-variant);">No countries assigned</span>
@@ -93,11 +95,13 @@
                                 <td>
                                     @if($ticket->countries->count() > 0)
                                         @foreach($ticket->countries as $country)
+                                            @if($country->is_active)
                                             <div style="margin-bottom: 0.5rem;">
                                                 <div style="font-weight: 600; color: var(--primary); font-size: 0.875rem;">
                                                     {{ $country->name }}: RM {{ number_format($country->pivot->adult_price, 2) }}
                                                 </div>
                                             </div>
+                                            @endif
                                         @endforeach
                                     @else
                                         <span style="color: var(--on-surface-variant);">No pricing set</span>
@@ -106,11 +110,13 @@
                                 <td>
                                     @if($ticket->countries->count() > 0)
                                         @foreach($ticket->countries as $country)
+                                            @if($country->is_active)
                                             <div style="margin-bottom: 0.5rem;">
                                                 <div style="font-weight: 600; color: var(--secondary); font-size: 0.875rem;">
                                                     {{ $country->name }}: RM {{ number_format($country->pivot->child_price, 2) }}
                                                 </div>
                                             </div>
+                                            @endif
                                         @endforeach
                                     @else
                                         <span style="color: var(--on-surface-variant);">No pricing set</span>
@@ -160,11 +166,11 @@
                                         <button onclick="openEditTicketModal({{ $ticket->id }})" class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
                                             <span class="material-icons" style="font-size: 16px;">edit</span>
                                         </button>
-                                        <a href="#" class="btn btn-outline" style="padding: 0.25rem 0.5rem; {{ $ticket->is_active ? '' : 'color: var(--error);' }}">
+                                        <button onclick="openViewTicketModal({{ $ticket->id }})" class="btn btn-outline" style="padding: 0.25rem 0.5rem; {{ $ticket->is_active ? '' : 'color: var(--error);' }}">
                                             <span class="material-icons" style="font-size: 16px; {{ $ticket->is_active ? 'color: var(--success);' : 'color: var(--error);' }}">
                                                 {{ $ticket->is_active ? 'visibility' : 'visibility_off' }}
                                             </span>
-                                        </a>
+                                        </button>
                                         @if($totalBookings == 0)
                                             <button class="btn btn-outline" 
                                                     style="padding: 0.25rem 0.5rem; color: var(--error);"
@@ -245,16 +251,18 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="edit_countries" class="form-label">Countries *</label>
+                        <label for="edit_countries" class="form-label">Currency *</label>
                         <select id="edit_countries" name="countries[]" class="form-input" multiple required style="height: auto; min-height: 120px;">
                             @foreach($countries as $country)
+                                @if($country->is_active)
                                 <option value="{{ $country->id }}">
                                     {{ $country->name }}
                                 </option>
+                                @endif
                             @endforeach
                         </select>
                         <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
-                            Hold Ctrl/Cmd to select multiple countries
+                            Hold Ctrl/Cmd to select multiple currencies
                         </small>
                     </div>
 
@@ -389,16 +397,18 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="countries" class="form-label">Countries *</label>
+                        <label for="countries" class="form-label">Currency *</label>
                         <select id="countries" name="countries[]" class="form-input" multiple required style="height: auto; min-height: 120px;">
                             @foreach($countries as $country)
+                                @if($country->is_active)
                                 <option value="{{ $country->id }}">
                                     {{ $country->name }}
                                 </option>
+                                @endif
                             @endforeach
                         </select>
                         <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
-                            Hold Ctrl/Cmd to select multiple countries
+                            Hold Ctrl/Cmd to select multiple currencies
                         </small>
                     </div>
 
@@ -825,8 +835,111 @@
             padding: 0.25rem 0.5rem;
             font-size: 0.75rem;
         }
+
+        /* View Modal Styles */
+        .form-input[readonly], 
+        .form-textarea[readonly] {
+            background: var(--surface-variant) !important;
+            color: var(--on-surface) !important;
+            cursor: default !important;
+        }
+
+        .form-input[readonly]:focus,
+        .form-textarea[readonly]:focus {
+            border-color: var(--border) !important;
+            box-shadow: none !important;
+        }
+
+        /* Loading spinner animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
     }
 </style>
+
+<!-- View Ticket Modal -->
+<div id="viewTicketModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeViewTicketModal()"></div>
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3 class="modal-title">View Ticket Details</h3>
+            <button type="button" class="modal-close" onclick="closeViewTicketModal()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Ticket Name</label>
+                    <input type="text" id="view_ticket_name" class="form-input" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Event</label>
+                    <input type="text" id="view_event_name" class="form-input" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <div id="view_status_container" style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface-variant);">
+                        <span id="view_status"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Total Quantity</label>
+                    <input type="text" id="view_total_quantity" class="form-input" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Available Quantity</label>
+                    <input type="text" id="view_available_quantity" class="form-input" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Created Date</label>
+                    <input type="text" id="view_created_at" class="form-input" readonly>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">Currency Pricing</label>
+                    <div id="view_pricing_container" style="border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface-variant); padding: 1rem;">
+                        <!-- Dynamic pricing content will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">Description</label>
+                    <textarea id="view_description" class="form-input" readonly style="min-height: 100px; resize: vertical;"></textarea>
+                </div>
+
+                <div class="form-group full-width" id="view_image_section" style="display: none;">
+                    <label class="form-label">Ticket Image</label>
+                    <div style="border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem; text-align: center; background: var(--surface-variant);">
+                        <img id="view_ticket_image" src="" alt="Ticket Image" style="max-width: 100%; max-height: 300px; border-radius: 0.5rem;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeViewTicketModal()">
+                <span class="material-icons" style="font-size: 18px;">close</span>
+                Close
+            </button>
+            <button type="button" class="btn btn-primary" onclick="openEditTicketFromView()" id="editFromViewBtn">
+                <span class="material-icons" style="font-size: 18px;">edit</span>
+                Edit Ticket
+            </button>
+        </div>
+    </div>
+</div>
 
 @endsection
 
@@ -837,7 +950,21 @@ console.log('Tickets script loaded successfully');
 function openEditTicketModal(ticketId) {
     console.log('Opening edit modal for ticket ID:', ticketId);
     
+    // Find the edit button and show loading state (could be from table or view modal)
+    const editButton = document.querySelector(`button[onclick="openEditTicketModal(${ticketId})"]`) || 
+                      document.getElementById('editFromViewBtn');
+    let originalEditContent = '';
+    
+    if (editButton) {
+        originalEditContent = editButton.innerHTML;
+        editButton.disabled = true;
+        editButton.innerHTML = '<span class="material-icons loading-spinner" style="font-size: 16px;">hourglass_empty</span>';
+    }
+    
     // Fetch ticket data
+    console.log('Fetching ticket data from URL:', `/admin/tickets/${ticketId}/edit`);
+    console.log('CSRF token:', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'));
+    
     fetch(`/admin/tickets/${ticketId}/edit`, {
         method: 'GET',
         headers: {
@@ -848,7 +975,17 @@ function openEditTicketModal(ticketId) {
     })
     .then(response => {
         console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        console.log('Response URL:', response.url);
+        console.log('Full response object:', response);
+        
         if (!response.ok) {
+            // Log more details for debugging
+            if (response.status === 404) {
+                console.error('404 Error - Route not found or authentication issue');
+                console.error('Request URL was:', `/admin/tickets/${ticketId}/edit`);
+                console.error('Current location:', window.location.href);
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
@@ -858,57 +995,78 @@ function openEditTicketModal(ticketId) {
         if (data.success) {
             const ticket = data.ticket;
             
+            // Check if modal elements exist
+            const editModal = document.getElementById('editTicketModal');
+            const editForm = document.getElementById('editTicketForm');
+            if (!editModal || !editForm) {
+                throw new Error('Edit modal elements not found in DOM');
+            }
+            
             // Populate form fields
-            document.getElementById('edit_ticket_id').value = ticket.id;
-            document.getElementById('edit_ticket_name').value = ticket.ticket_name;
-            document.getElementById('edit_event_id').value = ticket.event_id || '';
-            document.getElementById('edit_total_quantity').value = ticket.total_quantity || '';
-            document.getElementById('edit_description').value = ticket.description || '';
-            document.getElementById('edit_is_active').checked = ticket.is_active;
+            const ticketIdField = document.getElementById('edit_ticket_id');
+            const ticketNameField = document.getElementById('edit_ticket_name');
+            const eventIdField = document.getElementById('edit_event_id');
+            const totalQuantityField = document.getElementById('edit_total_quantity');
+            const descriptionField = document.getElementById('edit_description');
+            const isActiveField = document.getElementById('edit_is_active');
+            
+            if (!ticketIdField || !ticketNameField) {
+                throw new Error('Required form fields not found');
+            }
+            
+            ticketIdField.value = ticket.id;
+            ticketNameField.value = ticket.ticket_name;
+            if (eventIdField) eventIdField.value = ticket.event_id || '';
+            if (totalQuantityField) totalQuantityField.value = ticket.total_quantity || '';
+            if (descriptionField) descriptionField.value = ticket.description || '';
+            if (isActiveField) isActiveField.checked = ticket.is_active;
             
             // Set selected countries
             const countriesSelect = document.getElementById('edit_countries');
-            Array.from(countriesSelect.options).forEach(option => {
-                option.selected = false;
-            });
-            
-            // Create array to maintain order for proper indexing
-            const selectedCountries = [];
-            ticket.countries.forEach(country => {
-                const option = countriesSelect.querySelector(`option[value="${country.id}"]`);
-                if (option) {
-                    option.selected = true;
-                    selectedCountries.push(country);
+            if (countriesSelect) {
+                Array.from(countriesSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+                
+                // Create array to maintain order for proper indexing
+                const selectedCountries = [];
+                ticket.countries.forEach(country => {
+                    const option = countriesSelect.querySelector(`option[value="${country.id}"]`);
+                    if (option) {
+                        option.selected = true;
+                        selectedCountries.push(country);
+                    }
+                });
+                
+                // Update country pricing section using the reliable method
+                const countriesForForm = selectedCountries.map((country) => ({
+                    value: country.id,
+                    name: country.name,
+                    adultPrice: country.pivot.adult_price,
+                    childPrice: country.pivot.child_price
+                }));
+                
+                const section = document.getElementById('editCountryPricingSection');
+                if (section) {
+                    section.style.display = 'block';
+                    rebuildCountryPricingFields(countriesForForm);
                 }
-            });
-            
-            // Update country pricing section using the reliable method
-            const countriesForForm = selectedCountries.map((country) => ({
-                value: country.id,
-                name: country.name,
-                adultPrice: country.pivot.adult_price,
-                childPrice: country.pivot.child_price
-            }));
-            
-            const section = document.getElementById('editCountryPricingSection');
-            section.style.display = 'block';
-            rebuildCountryPricingFields(countriesForForm);
+            }
             
             // Show current image
             showCurrentImage(ticket);
             
             // Set form action
-            document.getElementById('editTicketForm').action = `/admin/tickets/${ticketId}`;
+            editForm.action = `/admin/tickets/${ticketId}`;
             
             // Show modal
-            document.getElementById('editTicketModal').style.display = 'flex';
+            editModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             console.log('Edit modal should be visible now');
             
             // Add event listener for active status checkbox
-            const activeCheckbox = document.getElementById('edit_is_active');
-            if (activeCheckbox) {
-                activeCheckbox.addEventListener('change', function() {
+            if (isActiveField) {
+                isActiveField.addEventListener('change', function() {
                     updateTicketStatusIcon(ticketId, this.checked);
                 });
             }
@@ -919,7 +1077,20 @@ function openEditTicketModal(ticketId) {
     })
     .catch(error => {
         console.error('Fetch error:', error);
-        alert('Error loading ticket data: ' + error.message);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            url: `/admin/tickets/${ticketId}/edit`,
+            ticketId: ticketId
+        });
+        alert('Error loading ticket data: ' + error.message + '. Check console for details.');
+    })
+    .finally(() => {
+        // Restore button state
+        if (editButton && originalEditContent) {
+            editButton.disabled = false;
+            editButton.innerHTML = originalEditContent;
+        }
     });
 }
 
@@ -1844,6 +2015,179 @@ function openTicketModal() {
         
         // Hide new image preview initially
         document.getElementById('editNewImagePreview').style.display = 'none';
+    }
+
+    // View Ticket Modal Functions
+    let currentViewTicketId = null;
+
+    function openViewTicketModal(ticketId) {
+        currentViewTicketId = ticketId;
+        
+        // Find the view button and show loading state
+        const viewButton = document.querySelector(`button[onclick="openViewTicketModal(${ticketId})"]`);
+        const originalViewContent = viewButton.innerHTML;
+        
+        viewButton.disabled = true;
+        viewButton.innerHTML = '<span class="material-icons loading-spinner" style="font-size: 16px;">hourglass_empty</span>';
+        
+        // Fetch ticket data
+        fetch(`/admin/tickets/${ticketId}/edit`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                populateViewModal(data.ticket);
+                document.getElementById('viewTicketModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                alert('Error loading ticket data: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading ticket data. Please try again.');
+        })
+        .finally(() => {
+            // Restore button state
+            if (viewButton) {
+                viewButton.disabled = false;
+                viewButton.innerHTML = originalViewContent;
+            }
+        });
+    }
+
+    function closeViewTicketModal() {
+        document.getElementById('viewTicketModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        currentViewTicketId = null;
+    }
+
+    function populateViewModal(ticket) {
+        // Basic ticket information
+        document.getElementById('view_ticket_name').value = ticket.ticket_name || '';
+        document.getElementById('view_event_name').value = ticket.event ? ticket.event.title : 'No specific event';
+        
+        // Status badge
+        const statusContainer = document.getElementById('view_status');
+        statusContainer.innerHTML = ticket.is_active 
+            ? '<span class="badge badge-success"><span class="material-icons" style="font-size: 12px;">check_circle</span> Active</span>'
+            : '<span class="badge badge-error"><span class="material-icons" style="font-size: 12px;">block</span> Inactive</span>';
+        
+        document.getElementById('view_total_quantity').value = ticket.total_quantity || 'Unlimited';
+        document.getElementById('view_available_quantity').value = ticket.available_quantity || '0';
+        
+        // Format creation date
+        if (ticket.created_at) {
+            const date = new Date(ticket.created_at);
+            document.getElementById('view_created_at').value = date.toLocaleString();
+        } else {
+            document.getElementById('view_created_at').value = '-';
+        }
+
+        // Description
+        document.getElementById('view_description').value = ticket.description || '';
+
+        // Pricing container
+        const pricingContainer = document.getElementById('view_pricing_container');
+        if (ticket.countries && ticket.countries.length > 0) {
+            let pricingHTML = '';
+            
+            // Filter only active countries
+            const activeCountries = ticket.countries.filter(country => country.is_active);
+            
+            if (activeCountries.length > 0) {
+                activeCountries.forEach((country, index) => {
+                    pricingHTML += `
+                        <div style="border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; background: var(--surface);">
+                            <h4 style="margin: 0 0 1rem 0; color: var(--on-surface); font-size: 1rem;">${country.name}</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label class="form-label">Adult Price (RM)</label>
+                                    <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.adult_price).toFixed(2)}" readonly>
+                                </div>
+                                <div>
+                                    <label class="form-label">Child Price (RM)</label>
+                                    <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.child_price).toFixed(2)}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                pricingHTML = '<div style="text-align: center; color: var(--on-surface-variant); padding: 1rem;">No active currencies assigned</div>';
+            }
+            
+            pricingContainer.innerHTML = pricingHTML;
+        } else {
+            pricingContainer.innerHTML = '<div style="text-align: center; color: var(--on-surface-variant); padding: 1rem;">No pricing information available</div>';
+        }
+
+        // Ticket image
+        const imageSection = document.getElementById('view_image_section');
+        const imageElement = document.getElementById('view_ticket_image');
+        
+        if (ticket.ticket_image) {
+            imageElement.src = `/${ticket.ticket_image}`;
+            imageSection.style.display = 'block';
+        } else {
+            imageSection.style.display = 'none';
+        }
+    }
+
+    function openEditTicketFromView() {
+        console.log('Opening edit modal from view, current ticket ID:', currentViewTicketId);
+        
+        const editFromViewBtn = document.getElementById('editFromViewBtn');
+        const originalContent = editFromViewBtn ? editFromViewBtn.innerHTML : null;
+        
+        if (!currentViewTicketId) {
+            console.error('No ticket ID available for editing');
+            alert('Error: No ticket ID found. Please close this modal and try editing directly from the table.');
+            return;
+        }
+        
+        // Store the ticket ID before closing the modal (since closeViewTicketModal sets it to null)
+        const ticketIdToEdit = currentViewTicketId;
+        
+        // Show loading on edit button
+        if (editFromViewBtn) {
+            editFromViewBtn.disabled = true;
+            editFromViewBtn.innerHTML = '<span class="material-icons loading-spinner" style="font-size: 18px;">hourglass_empty</span> Opening Edit...';
+        }
+        
+        // Close view modal first
+        closeViewTicketModal();
+        
+        // Small delay to ensure view modal closes before opening edit modal
+        setTimeout(() => {
+            try {
+                console.log('About to call openEditTicketModal with ID:', ticketIdToEdit);
+                openEditTicketModal(ticketIdToEdit);
+                console.log('openEditTicketModal call completed');
+            } catch (error) {
+                console.error('Error opening edit modal:', error);
+                alert('Error opening edit modal: ' + error.message + '. Please try editing directly from the table.');
+            } finally {
+                // Restore button state if still available (might not be if modal was closed)
+                setTimeout(() => {
+                    if (editFromViewBtn && originalContent) {
+                        editFromViewBtn.disabled = false;
+                        editFromViewBtn.innerHTML = originalContent;
+                    }
+                }, 500);
+            }
+        }, 100);
     }
 </script>
 @endsection

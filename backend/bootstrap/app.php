@@ -1,5 +1,8 @@
 <?php
 
+// Load PHP configuration for local development
+require_once __DIR__ . '/php-config.php';
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;

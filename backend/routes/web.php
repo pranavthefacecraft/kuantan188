@@ -171,6 +171,10 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::delete('/tickets/{ticket}', [AdminDashboardController::class, 'destroyTicket'])->name('tickets.destroy');
     Route::post('/tickets/bulk-delete', [AdminDashboardController::class, 'bulkDeleteTickets'])->name('tickets.bulk-delete');
     Route::get('/countries', [AdminDashboardController::class, 'countries'])->name('countries');
+    Route::post('/countries', [AdminDashboardController::class, 'storeCountry'])->name('countries.store');
+    Route::get('/countries/{country}/edit', [AdminDashboardController::class, 'editCountry'])->name('countries.edit');
+    Route::put('/countries/{country}', [AdminDashboardController::class, 'updateCountry'])->name('countries.update');
+    Route::patch('/countries/{country}/toggle-status', [AdminDashboardController::class, 'toggleCountryStatus'])->name('countries.toggle-status');
     
     // Google Reviews Management
     Route::get('/reviews', [AdminDashboardController::class, 'reviews'])->name('reviews');
