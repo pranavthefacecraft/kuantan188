@@ -12,14 +12,14 @@
     
     <!-- Header Actions -->
     <div class="card">
-        <div class="card-body" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-body header-card-body">
             <div>
-                <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Bookings Management</h2>
-                <p style="margin: 0.5rem 0 0 0; color: var(--on-surface-variant);">View and manage customer bookings</p>
+                <h2 class="page-title">Bookings Management</h2>
+                <p class="page-subtitle">View and manage customer bookings</p>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <div class="header-actions">
                 <!-- View Toggle -->
-                <div class="view-toggle" style="display: flex; background: var(--surface-variant); border-radius: 0.5rem; padding: 0.25rem;">
+                <div class="view-toggle">
                     <button id="tableViewBtn" class="view-btn active" onclick="switchView('table')">
                         <span class="material-icons view-btn-icon">table_view</span>
                         Table View
@@ -31,26 +31,25 @@
                 </div>
 
                 <!-- Filters -->
-                <form method="GET" id="filtersForm" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <form method="GET" id="filtersForm" class="filters-form">
                     <!-- Search Box -->
-                    <div style="position: relative;">
+                    <div class="search-container">
                         <input type="text" 
                                name="search" 
                                id="search_input" 
                                placeholder="Search bookings..." 
                                value="{{ request('search') }}" 
-                               class="form-input"
-                               style="padding: 0.5rem 2.5rem 0.5rem 1rem; width: 250px; border: 1px solid var(--outline); border-radius: 0.5rem;"
+                               class="form-input search-input"
                                onkeyup="handleSearchKeyup(event)">
-                        <span class="material-icons" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 18px; pointer-events: none;">search</span>
+                        <span class="material-icons search-icon">search</span>
                     </div>
 
-                    <select name="booking_type" id="booking_type_filter" class="btn btn-outline" style="padding: 0.5rem 1rem;" onchange="updateFilters()">
+                    <select name="booking_type" id="booking_type_filter" class="btn btn-outline filter-select" onchange="updateFilters()">
                         <option value="">All Booking Types</option>
                         <option value="event" {{ request('booking_type') === 'event' ? 'selected' : '' }}>Event Bookings</option>
                         <option value="ticket" {{ request('booking_type') === 'ticket' ? 'selected' : '' }}>Ticket Bookings</option>
                     </select>
-                    <select name="country_filter" id="country_filter" class="btn btn-outline" style="padding: 0.5rem 1rem;" onchange="updateFilters()">
+                    <select name="country_filter" id="country_filter" class="btn btn-outline filter-select" onchange="updateFilters()">
                         <option value="">All Countries</option>
                         @foreach($countries as $country)
                             <option value="{{ $country->id }}" {{ request('country_filter') == $country->id ? 'selected' : '' }}>
@@ -58,21 +57,21 @@
                             </option>
                         @endforeach
                     </select>
-                    <select name="status_filter" id="status_filter" class="btn btn-outline" style="padding: 0.5rem 1rem;" onchange="updateFilters()">
+                    <select name="status_filter" id="status_filter" class="btn btn-outline filter-select" onchange="updateFilters()">
                         <option value="">All Statuses</option>
                         <option value="confirmed" {{ request('status_filter') === 'confirmed' ? 'selected' : '' }}>Confirmed</option>
                         <option value="pending" {{ request('status_filter') === 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="cancelled" {{ request('status_filter') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                     </select>
                     @if(request()->hasAny(['search', 'booking_type', 'country_filter', 'status_filter']))
-                        <a href="{{ route('admin.bookings') }}" class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="clearFilters()">
-                            <span class="material-icons" style="font-size: 18px;">clear</span>
+                        <a href="{{ route('admin.bookings') }}" class="btn btn-outline filter-select" onclick="clearFilters()">
+                            <span class="material-icons btn-icon">clear</span>
                             Clear
                         </a>
                     @endif
                 </form>
                 <button class="btn btn-outline">
-                    <span class="material-icons" style="font-size: 18px;">download</span>
+                    <span class="material-icons btn-icon">download</span>
                     Export
                 </button>
             </div>
@@ -102,31 +101,31 @@
                         @forelse($bookings as $booking)
                             <tr>
                                 <td>
-                                    <div style="font-weight: 600; color: var(--primary);">
+                                    <div class="booking-reference">
                                         {{ $booking->booking_reference }}
                                     </div>
                                 </td>
                                 <td>
                                     @if(!empty($booking->ticket_id) && $booking->ticket_id !== null && $booking->ticket_id > 0)
                                         <span class="badge badge-info">
-                                            <span class="material-icons" style="font-size: 12px;">confirmation_number</span>
+                                            <span class="material-icons badge-icon">confirmation_number</span>
                                             Ticket
                                         </span>
                                     @else
                                         <span class="badge badge-primary">
-                                            <span class="material-icons" style="font-size: 12px;">event</span>
+                                            <span class="material-icons badge-icon">event</span>
                                             Event
                                         </span>
                                     @endif
                                 </td>
                                 <td>
                                     <div>
-                                        <div style="font-weight: 500;">{{ $booking->customer_name }}</div>
-                                        <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                                        <div class="customer-name">{{ $booking->customer_name }}</div>
+                                        <div class="customer-detail">
                                             {{ $booking->customer_email }}
                                         </div>
                                         @if($booking->customer_phone)
-                                            <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                                            <div class="customer-detail">
                                                 {{ $booking->customer_phone }}
                                             </div>
                                         @endif
@@ -134,15 +133,15 @@
                                 </td>
                                 <td>
                                     <div>
-                                        <div style="font-weight: 500;">{{ optional($booking->event)->title ?? $booking->event_title ?? 'N/A' }}</div>
-                                        <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                                        <div class="event-title">{{ optional($booking->event)->title ?? $booking->event_title ?? 'N/A' }}</div>
+                                        <div class="event-detail">
                                             {{ optional($booking->event)->event_date ? optional($booking->event)->event_date->format('M j, Y') : ($booking->event_date ?? 'N/A') }}
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span class="material-icons" style="font-size: 16px; color: var(--accent);">public</span>
+                                    <div class="country-info">
+                                        <span class="material-icons country-icon">public</span>
                                         {{ optional($booking->country)->name ?? ($booking->country ?? 'N/A') }}
                                     </div>
                                 </td>
@@ -150,18 +149,18 @@
                                     <div>
                                         <div>{{ $booking->adult_quantity }} Adults</div>
                                         @if($booking->child_quantity > 0)
-                                            <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                                            <div class="quantity-detail">
                                                 {{ $booking->child_quantity }} Children
                                             </div>
                                         @endif
                                     </div>
                                 </td>
                                 <td>
-                                    <div style="font-weight: 600; color: var(--success);">
+                                    <div class="amount-main">
                                         RM {{ number_format($booking->total_amount, 2) }}
                                     </div>
                                     @if($booking->adult_quantity > 0 && $booking->child_quantity > 0)
-                                        <div style="font-size: 0.75rem; color: var(--on-surface-variant);">
+                                        <div class="price-breakdown">
                                             A: RM{{ number_format(optional($booking->ticket)->adult_price ?? $booking->adult_price ?? 0, 2) }} × {{ $booking->adult_quantity }}<br>
                                             C: RM{{ number_format(optional($booking->ticket)->child_price ?? $booking->child_price ?? 0, 2) }} × {{ $booking->child_quantity }}
                                         </div>
@@ -170,63 +169,60 @@
                                 <td>
                                     @if($booking->status === 'confirmed')
                                         <span class="badge badge-success">
-                                            <span class="material-icons" style="font-size: 12px;">check_circle</span>
+                                            <span class="material-icons badge-icon">check_circle</span>
                                             Confirmed
                                         </span>
                                     @elseif($booking->status === 'pending')
                                         <span class="badge badge-warning">
-                                            <span class="material-icons" style="font-size: 12px;">schedule</span>
+                                            <span class="material-icons badge-icon">schedule</span>
                                             Pending
                                         </span>
                                     @else
                                         <span class="badge badge-error">
-                                            <span class="material-icons" style="font-size: 12px;">cancel</span>
+                                            <span class="material-icons badge-icon">cancel</span>
                                             Cancelled
                                         </span>
                                     @endif
                                 </td>
                                 <td>
                                     <div>{{ $booking->created_at->format('M j, Y') }}</div>
-                                    <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                                    <div class="date-detail">
                                         {{ $booking->created_at->format('H:i') }}
                                     </div>
                                 </td>
                                 <td>
-                                    <div style="display: flex; gap: 0.5rem;">
+                                    <div class="actions-container">
                                         @if($booking->status === 'pending')
-                                            <button class="btn btn-outline" 
-                                                    style="padding: 0.25rem 0.5rem; background: var(--success); color: white;"
+                                            <button class="btn btn-outline action-btn-success" 
                                                     onclick="updateBookingStatus('{{ $booking->id }}', 'confirmed')"
                                                     title="Confirm booking">
-                                                <span class="material-icons" style="font-size: 16px;">check</span>
+                                                <span class="material-icons action-icon">check</span>
                                             </button>
                                         @elseif($booking->status === 'confirmed')
-                                            <button class="btn btn-outline" 
-                                                    style="padding: 0.25rem 0.5rem; background: var(--warning); color: white;"
+                                            <button class="btn btn-outline action-btn-warning" 
                                                     onclick="updateBookingStatus('{{ $booking->id }}', 'pending')"
                                                     title="Set to pending">
-                                                <span class="material-icons" style="font-size: 16px;">schedule</span>
+                                                <span class="material-icons action-icon">schedule</span>
                                             </button>
                                         @endif
-                                        <button class="btn btn-outline" 
-                                                style="padding: 0.25rem 0.5rem;" 
+                                        <button class="btn btn-outline action-btn" 
                                                 onclick="showBookingDetails('{{ $booking->id }}')"
                                                 title="View details">
-                                            <span class="material-icons" style="font-size: 16px;">visibility</span>
+                                            <span class="material-icons action-icon">visibility</span>
                                         </button>
-                                        <a href="#" class="btn btn-outline" style="padding: 0.25rem 0.5rem;" title="Send email">
-                                            <span class="material-icons" style="font-size: 16px;">email</span>
+                                        <a href="#" class="btn btn-outline action-btn" title="Send email">
+                                            <span class="material-icons action-icon">email</span>
                                         </a>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" style="text-align: center; padding: 3rem; color: var(--on-surface-variant);">
-                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                                        <span class="material-icons" style="font-size: 48px; opacity: 0.3;">book_online</span>
+                                <td colspan="10" class="empty-state">
+                                    <div class="empty-state-content">
+                                        <span class="material-icons empty-state-icon">book_online</span>
                                         <div>
-                                            <div style="font-size: 1.125rem; font-weight: 500; margin-bottom: 0.5rem;">No bookings found</div>
+                                            <div class="empty-state-title">No bookings found</div>
                                             <div>Bookings will appear here when customers make purchases</div>
                                         </div>
                                     </div>
@@ -238,7 +234,7 @@
             </div>
 
             @if($bookings->hasPages())
-                <div style="margin-top: 1.5rem;">
+                <div class="pagination-container">
                     {{ $bookings->appends(request()->query())->links() }}
                 </div>
             @endif
@@ -246,55 +242,55 @@
     </div>
 
     <!-- Calendar View -->
-    <div id="calendarView" class="card" style="display: none;">
+    <div id="calendarView" class="card calendar-view">
         <div class="card-body">
-            <div id="calendar" style="height: 600px;"></div>
+            <div id="calendar" class="calendar-container"></div>
             
             <!-- Calendar Stats -->
-            <div class="calendar-stats" style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                <div class="stat-card" style="background: var(--surface-variant); padding: 1rem; border-radius: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <span class="material-icons" style="color: var(--primary); font-size: 20px;">event</span>
-                        <span style="font-size: 0.875rem; color: var(--on-surface-variant);">This Month</span>
+            <div class="calendar-stats">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="material-icons stat-icon stat-icon-primary">event</span>
+                        <span class="stat-label">This Month</span>
                     </div>
-                    <div id="monthlyBookings" style="font-size: 1.5rem; font-weight: 600; color: var(--on-surface);">-</div>
-                    <div style="font-size: 0.75rem; color: var(--on-surface-variant);">Total Bookings</div>
+                    <div id="monthlyBookings" class="stat-value">-</div>
+                    <div class="stat-description">Total Bookings</div>
                 </div>
                 
-                <div class="stat-card" style="background: var(--surface-variant); padding: 1rem; border-radius: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <span class="material-icons" style="color: var(--success); font-size: 20px;">payments</span>
-                        <span style="font-size: 0.875rem; color: var(--on-surface-variant);">This Month</span>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="material-icons stat-icon stat-icon-success">payments</span>
+                        <span class="stat-label">This Month</span>
                     </div>
-                    <div id="monthlyRevenue" style="font-size: 1.5rem; font-weight: 600; color: var(--on-surface);">-</div>
-                    <div style="font-size: 0.75rem; color: var(--on-surface-variant);">Total Revenue</div>
+                    <div id="monthlyRevenue" class="stat-value">-</div>
+                    <div class="stat-description">Total Revenue</div>
                 </div>
                 
-                <div class="stat-card" style="background: var(--surface-variant); padding: 1rem; border-radius: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <span class="material-icons" style="color: var(--warning); font-size: 20px;">schedule</span>
-                        <span style="font-size: 0.875rem; color: var(--on-surface-variant);">Pending</span>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="material-icons stat-icon stat-icon-warning">schedule</span>
+                        <span class="stat-label">Pending</span>
                     </div>
-                    <div id="pendingBookings" style="font-size: 1.5rem; font-weight: 600; color: var(--on-surface);">-</div>
-                    <div style="font-size: 0.75rem; color: var(--on-surface-variant);">Need Review</div>
+                    <div id="pendingBookings" class="stat-value">-</div>
+                    <div class="stat-description">Need Review</div>
                 </div>
                 
-                <div class="stat-card" style="background: var(--surface-variant); padding: 1rem; border-radius: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <span class="material-icons" style="color: var(--accent); font-size: 20px;">today</span>
-                        <span style="font-size: 0.875rem; color: var(--on-surface-variant);">Today</span>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="material-icons stat-icon stat-icon-accent">today</span>
+                        <span class="stat-label">Today</span>
                     </div>
-                    <div id="todayBookings" style="font-size: 1.5rem; font-weight: 600; color: var(--on-surface);">-</div>
-                    <div style="font-size: 0.75rem; color: var(--on-surface-variant);">New Bookings</div>
+                    <div id="todayBookings" class="stat-value">-</div>
+                    <div class="stat-description">New Bookings</div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Booking Details Modal -->
-    <div id="bookingDetailsModal" class="modal" style="display: none;">
+    <div id="bookingDetailsModal" class="modal modal-hidden">
         <div class="modal-overlay" onclick="closeBookingDetailsModal()"></div>
-        <div class="modal-container" style="max-width: 800px;">
+        <div class="modal-container modal-container-large">
             <div class="modal-header">
                 <h3 class="modal-title">Bookings for <span id="modalDate"></span></h3>
                 <button type="button" class="modal-close" onclick="closeBookingDetailsModal()">
@@ -303,7 +299,7 @@
             </div>
             
             <div class="modal-body">
-                <div id="modalBookingsList" style="max-height: 400px; overflow-y: auto;">
+                <div id="modalBookingsList" class="modal-bookings-list">
                     <!-- Bookings will be loaded here -->
                 </div>
             </div>
@@ -317,12 +313,12 @@
     </div>
 
     <!-- Individual Booking Details Modal -->
-    <div id="individualBookingModal" class="modal" style="display: none;">
+    <div id="individualBookingModal" class="modal modal-hidden">
         <div class="modal-overlay" onclick="closeIndividualBookingModal()"></div>
-        <div class="modal-container" style="max-width: 700px;">
+        <div class="modal-container modal-container-medium">
             <div class="modal-header">
                 <h3 class="modal-title">
-                    <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">receipt</span>
+                    <span class="material-icons modal-title-icon">receipt</span>
                     Booking Details
                 </h3>
                 <button type="button" class="modal-close" onclick="closeIndividualBookingModal()">
@@ -337,16 +333,16 @@
             </div>
             
             <div class="modal-footer">
-                <div style="display: flex; gap: 1rem;">
+                <div class="modal-footer-actions">
                     <button type="button" class="btn btn-outline" onclick="closeIndividualBookingModal()">
                         Close
                     </button>
-                    <button type="button" class="btn btn-primary" id="updateStatusBtn" style="display: none;" onclick="updateBookingStatusFromModal()">
-                        <span class="material-icons" style="font-size: 16px; margin-right: 0.5rem;">check_circle</span>
+                    <button type="button" class="btn btn-primary hidden" id="updateStatusBtn" onclick="updateBookingStatusFromModal()">
+                        <span class="material-icons modal-btn-icon">check_circle</span>
                         Confirm Booking
                     </button>
                     <button type="button" class="btn btn-outline" onclick="sendBookingEmail()">
-                        <span class="material-icons" style="font-size: 16px; margin-right: 0.5rem;">email</span>
+                        <span class="material-icons modal-btn-icon">email</span>
                         Send Email
                     </button>
                 </div>
@@ -399,36 +395,39 @@
         color: white;
     }
 
-    /* Form Input Styles */
-    .form-input {
-        display: block;
-        width: 100%;
-        padding: 0.5rem 1rem;
-        border: 1px solid var(--border);
-        border-radius: 0.375rem;
-        background: var(--surface);
-        color: var(--on-surface);
-        font-size: 0.875rem;
-        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    /* Header Styles */
+    .header-card-body {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    .form-input:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+    .page-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
     }
 
-    .badge-info {
-        background-color: #17a2b8;
-        color: white;
+    .page-subtitle {
+        margin: 0.5rem 0 0 0;
+        color: var(--on-surface-variant);
     }
-    
-    .badge-primary {
-        background-color: #007bff;
-        color: white;
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
     }
 
     /* View Toggle Styles */
+    .view-toggle {
+        display: flex;
+        background: var(--surface-variant);
+        border-radius: 0.5rem;
+        padding: 0.25rem;
+    }
+
     .view-btn {
         padding: 0.5rem 1rem;
         border: none;
@@ -455,6 +454,288 @@
 
     .view-toggle .view-btn:hover {
         background: rgba(var(--primary-rgb), 0.1) !important;
+    }
+
+    /* Filters Styles */
+    .filters-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-container {
+        position: relative;
+    }
+
+    .search-input {
+        padding: 0.5rem 2.5rem 0.5rem 1rem;
+        width: 250px;
+        border: 1px solid var(--outline);
+        border-radius: 0.5rem;
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--on-surface-variant);
+        font-size: 18px;
+        pointer-events: none;
+    }
+
+    .filter-select {
+        padding: 0.5rem 1rem;
+    }
+
+    .btn-icon {
+        font-size: 18px;
+    }
+
+    /* Form Input Styles */
+    .form-input {
+        display: block;
+        width: 100%;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 0.375rem;
+        background: var(--surface);
+        color: var(--on-surface);
+        font-size: 0.875rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+    }
+
+    /* Table Styles */
+    .booking-reference {
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .badge-icon {
+        font-size: 12px;
+    }
+
+    .customer-name {
+        font-weight: 500;
+    }
+
+    .customer-detail {
+        font-size: 0.875rem;
+        color: var(--on-surface-variant);
+    }
+
+    .event-title {
+        font-weight: 500;
+    }
+
+    .event-detail {
+        font-size: 0.875rem;
+        color: var(--on-surface-variant);
+    }
+
+    .country-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .country-icon {
+        font-size: 16px;
+        color: var(--accent);
+    }
+
+    .quantity-detail {
+        font-size: 0.875rem;
+        color: var(--on-surface-variant);
+    }
+
+    .amount-main {
+        font-weight: 600;
+        color: var(--success);
+    }
+
+    .price-breakdown {
+        font-size: 0.75rem;
+        color: var(--on-surface-variant);
+    }
+
+    .date-detail {
+        font-size: 0.875rem;
+        color: var(--on-surface-variant);
+    }
+
+    /* Actions Styles */
+    .actions-container {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        padding: 0.25rem 0.5rem;
+    }
+
+    .action-btn-success {
+        padding: 0.25rem 0.5rem;
+        background: var(--success);
+        color: white;
+    }
+
+    .action-btn-warning {
+        padding: 0.25rem 0.5rem;
+        background: var(--warning);
+        color: white;
+    }
+
+    .action-icon {
+        font-size: 16px;
+    }
+
+    /* Empty State Styles */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--on-surface-variant);
+    }
+
+    .empty-state-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .empty-state-icon {
+        font-size: 48px;
+        opacity: 0.3;
+    }
+
+    .empty-state-title {
+        font-size: 1.125rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .pagination-container {
+        margin-top: 1.5rem;
+    }
+
+    /* Calendar Styles */
+    .calendar-view {
+        display: none;
+    }
+
+    .calendar-container {
+        height: 600px;
+    }
+
+    .calendar-stats {
+        margin-top: 1.5rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-card {
+        background: var(--surface-variant);
+        padding: 1rem;
+        border-radius: 0.75rem;
+    }
+
+    .stat-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-icon {
+        font-size: 20px;
+    }
+
+    .stat-icon-primary {
+        color: var(--primary);
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--on-surface-variant);
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--on-surface);
+    }
+
+    .stat-description {
+        font-size: 0.75rem;
+        color: var(--on-surface-variant);
+    }
+
+    /* Modal Styles */
+    .modal-hidden {
+        display: none;
+    }
+
+    .modal-bookings-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .stat-icon-success {
+        color: var(--success);
+    }
+
+    .stat-icon-warning {
+        color: var(--warning);
+    }
+
+    .stat-icon-accent {
+        color: var(--accent);
+    }
+
+    .modal-container-large {
+        max-width: 800px;
+    }
+
+    .modal-container-medium {
+        max-width: 700px;
+    }
+
+    .modal-title-icon {
+        vertical-align: middle;
+        margin-right: 0.5rem;
+    }
+
+    .modal-footer-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .modal-btn-icon {
+        font-size: 16px;
+        margin-right: 0.5rem;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .badge-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+    
+    .badge-primary {
+        background-color: #007bff;
+        color: white;
     }
 
     /* Calendar Styles */
@@ -842,6 +1123,196 @@
     .modal-container {
         z-index: 1052 !important;
     }
+
+    /* Modal State Classes */
+    .modal-hidden {
+        display: none;
+    }
+
+    .modal-bookings-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    /* JavaScript Generated Content Classes */
+    .text-center-loading {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .no-bookings-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--on-surface-variant);
+    }
+
+    .error-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--error);
+    }
+
+    .booking-header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 0.5rem;
+    }
+
+    .booking-customer-name {
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .booking-customer-detail {
+        font-size: 0.875rem;
+        color: var(--on-surface-variant);
+    }
+
+    .booking-actions-container {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .booking-reference {
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .booking-footer-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .booking-quantity {
+        font-size: 0.875rem;
+        color: var(--on-surface-variant);
+    }
+
+    .booking-amount {
+        font-weight: 600;
+        color: var(--success);
+    }
+
+    /* View Visibility Classes */
+    .hidden {
+        display: none !important;
+    }
+
+    .visible {
+        display: block !important;
+    }
+
+    /* Individual Booking Modal Classes */
+    .spinner-centered {
+        margin: 0 auto 1rem;
+    }
+
+    .error-icon-large {
+        font-size: 48px;
+        margin-bottom: 1rem;
+    }
+
+    .badge-icon {
+        font-size: 12px;
+    }
+
+    .booking-details-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .booking-card-container {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 1rem;
+        align-items: start;
+        padding: 1rem;
+        background: var(--surface-variant);
+        border-radius: 0.75rem;
+    }
+
+    .booking-card-title {
+        margin: 0 0 0.5rem 0;
+        color: var(--primary);
+        font-size: 1.25rem;
+    }
+
+    .booking-badges-container {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .booking-amount-section {
+        text-align: right;
+    }
+
+    .booking-large-amount {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--success);
+    }
+
+    .booking-payment-method {
+        font-size: 0.875rem;
+        color: var(--on-surface-variant);
+    }
+
+    .customer-details-title {
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .customer-icon {
+        color: var(--primary);
+    }
+
+    /* Customer Details Classes */
+    .customer-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .customer-label {
+        font-size: 0.875rem;
+        color: var(--on-surface-variant);
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    .customer-value {
+        font-weight: 500;
+    }
+
+    .country-value-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .country-icon {
+        font-size: 16px;
+        color: var(--accent);
+    }
+
+    /* Ticket Details Classes */
+    .ticket-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .ticket-quantity-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
 </style>
 @endsection
 
@@ -941,13 +1412,23 @@
         });
         
         if (view === 'table') {
-            if (tableView) tableView.style.display = 'block';
-            if (calendarView) calendarView.style.display = 'none';
+            if (tableView) {
+                tableView.classList.remove('hidden');
+                tableView.style.display = 'block';
+            }
+            if (calendarView) {
+                calendarView.classList.add('hidden');
+                calendarView.style.display = 'none';
+            }
             if (tableBtn) tableBtn.classList.add('active');
             if (calendarBtn) calendarBtn.classList.remove('active');
         } else {
-            if (tableView) tableView.style.display = 'none';
+            if (tableView) {
+                tableView.classList.add('hidden');
+                tableView.style.display = 'none';
+            }
             if (calendarView) {
+                calendarView.classList.remove('hidden');
                 calendarView.style.display = 'block';
             }
             if (tableBtn) tableBtn.classList.remove('active');
@@ -1158,7 +1639,7 @@
             day: 'numeric'
         });
 
-        bookingsList.innerHTML = '<div style="text-align: center; padding: 2rem;"><div class="loading"></div><p>Loading bookings...</p></div>';
+        bookingsList.innerHTML = '<div class="text-center-loading"><div class="loading"></div><p>Loading bookings...</p></div>';
 
         const params = new URLSearchParams({
             date: date,
@@ -1170,20 +1651,20 @@
             .then(data => {
                 if (data.success) {
                     if (data.bookings.length === 0) {
-                        bookingsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--on-surface-variant);">No bookings found for this date.</div>';
+                        bookingsList.innerHTML = '<div class="no-bookings-message">No bookings found for this date.</div>';
                     } else {
                         bookingsList.innerHTML = data.bookings.map(booking => `
                             <div class="booking-item">
-                                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 0.5rem;">
+                                <div class="booking-header-container">
                                     <div>
-                                        <div style="font-weight: 600; color: var(--primary); margin-bottom: 0.25rem;">
+                                        <div class="booking-customer-name">
                                             ${booking.booking_reference}
                                         </div>
-                                        <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                                        <div class="booking-customer-detail">
                                             ${booking.customer_name} • ${booking.customer_email}
                                         </div>
                                     </div>
-                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <div class="booking-actions-container">
                                         <span class="badge ${booking.type === 'ticket' ? 'badge-info' : 'badge-primary'}">
                                             ${booking.type === 'ticket' ? 'Ticket' : 'Event'}
                                         </span>
@@ -1192,14 +1673,14 @@
                                         </span>
                                     </div>
                                 </div>
-                                <div style="font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                <div class="booking-reference">
                                     <strong>${booking.event_title}</strong>
                                 </div>
-                                <div style="display: flex; justify-content: between; align-items: center;">
-                                    <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                                <div class="booking-footer-container">
+                                    <div class="booking-customer-detail">
                                         ${booking.adult_quantity} Adults${booking.child_quantity > 0 ? `, ${booking.child_quantity} Children` : ''}
                                     </div>
-                                    <div style="font-weight: 600; color: var(--success);">
+                                    <div class="booking-amount">
                                         RM ${parseFloat(booking.total_amount).toFixed(2)}
                                     </div>
                                 </div>
@@ -1207,20 +1688,23 @@
                         `).join('');
                     }
                 } else {
-                    bookingsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--error);">Error loading bookings for this date.</div>';
+                    bookingsList.innerHTML = '<div class="error-message">Error loading bookings for this date.</div>';
                 }
             })
             .catch(error => {
                 console.error('Error loading bookings for date:', error);
-                bookingsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--error);">Error loading bookings for this date.</div>';
+                bookingsList.innerHTML = '<div class="error-message">Error loading bookings for this date.</div>';
             });
 
+        modal.classList.remove('modal-hidden');
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 
     function closeBookingDetailsModal() {
-        document.getElementById('bookingDetailsModal').style.display = 'none';
+        const modal = document.getElementById('bookingDetailsModal');
+        modal.classList.add('modal-hidden');
+        modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }
 
@@ -1357,8 +1841,8 @@
         
         // Show loading state
         content.innerHTML = `
-            <div style="text-align: center; padding: 2rem;">
-                <div class="spinner" style="margin: 0 auto 1rem;"></div>
+            <div class="text-center-loading">
+                <div class="spinner spinner-centered"></div>
                 <p>Loading booking details...</p>
             </div>
         `;
@@ -1374,8 +1858,8 @@
                     renderBookingDetails(data.booking);
                 } else {
                     content.innerHTML = `
-                        <div style="text-align: center; padding: 2rem; color: var(--error);">
-                            <span class="material-icons" style="font-size: 48px; margin-bottom: 1rem;">error</span>
+                        <div class="error-message">
+                            <span class="material-icons error-icon-large">error</span>
                             <p>Error loading booking details: ${data.message}</p>
                         </div>
                     `;
@@ -1384,8 +1868,8 @@
             .catch(error => {
                 console.error('Error loading booking details:', error);
                 content.innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: var(--error);">
-                        <span class="material-icons" style="font-size: 48px; margin-bottom: 1rem;">error</span>
+                    <div class="error-message">
+                        <span class="material-icons error-icon-large">error</span>
                         <p>Error loading booking details</p>
                     </div>
                 `;
@@ -1421,36 +1905,36 @@
         // Get status badge
         let statusBadge = '';
         if (booking.status === 'confirmed') {
-            statusBadge = '<span class="badge badge-success"><span class="material-icons" style="font-size: 12px;">check_circle</span> Confirmed</span>';
+            statusBadge = '<span class="badge badge-success"><span class="material-icons badge-icon">check_circle</span> Confirmed</span>';
         } else if (booking.status === 'pending') {
-            statusBadge = '<span class="badge badge-warning"><span class="material-icons" style="font-size: 12px;">schedule</span> Pending</span>';
+            statusBadge = '<span class="badge badge-warning"><span class="material-icons badge-icon">schedule</span> Pending</span>';
         } else {
-            statusBadge = '<span class="badge badge-error"><span class="material-icons" style="font-size: 12px;">cancel</span> Cancelled</span>';
+            statusBadge = '<span class="badge badge-error"><span class="material-icons badge-icon">cancel</span> Cancelled</span>';
         }
 
         // Get booking type
         const bookingType = booking.ticket_id && booking.ticket_id > 0 ? 
-            '<span class="badge badge-info"><span class="material-icons" style="font-size: 12px;">confirmation_number</span> Ticket</span>' :
-            '<span class="badge badge-primary"><span class="material-icons" style="font-size: 12px;">event</span> Event</span>';
+            '<span class="badge badge-info"><span class="material-icons badge-icon">confirmation_number</span> Ticket</span>' :
+            '<span class="badge badge-primary"><span class="material-icons badge-icon">event</span> Event</span>';
 
         content.innerHTML = `
-            <div style="display: grid; gap: 1.5rem;">
+            <div class="booking-details-grid">
                 <!-- Header Info -->
-                <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start; padding: 1rem; background: var(--surface-variant); border-radius: 0.75rem;">
+                <div class="booking-card-container">
                     <div>
-                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 1.25rem;">
+                        <h4 class="booking-card-title">
                             ${booking.booking_reference}
                         </h4>
-                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <div class="booking-badges-container">
                             ${bookingType}
                             ${statusBadge}
                         </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--success);">
+                    <div class="booking-amount-section">
+                        <div class="booking-large-amount">
                             RM ${parseFloat(booking.total_amount).toFixed(2)}
                         </div>
-                        <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                        <div class="booking-payment-method">
                             Total Amount
                         </div>
                     </div>
@@ -1458,27 +1942,27 @@
 
                 <!-- Customer Information -->
                 <div>
-                    <h5 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                        <span class="material-icons" style="color: var(--primary);">person</span>
+                    <h5 class="customer-details-title">
+                        <span class="material-icons customer-icon">person</span>
                         Customer Information
                     </h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="customer-details-grid">
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Name</label>
-                            <div style="font-weight: 500;">${booking.customer_name}</div>
+                            <label class="customer-label">Name</label>
+                            <div class="customer-value">${booking.customer_name}</div>
                         </div>
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Email</label>
+                            <label class="customer-label">Email</label>
                             <div>${booking.customer_email}</div>
                         </div>
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Phone</label>
+                            <label class="customer-label">Phone</label>
                             <div>${booking.customer_phone || 'N/A'}</div>
                         </div>
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Country</label>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span class="material-icons" style="font-size: 16px; color: var(--accent);">public</span>
+                            <label class="customer-label">Country</label>
+                            <div class="country-value-container">
+                                <span class="material-icons country-icon">public</span>
                                 ${booking.country_name || booking.country || 'N/A'}
                             </div>
                         </div>
@@ -1487,21 +1971,21 @@
 
                 <!-- Event Information -->
                 <div>
-                    <h5 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                        <span class="material-icons" style="color: var(--primary);">event</span>
+                    <h5 class="customer-details-title">
+                        <span class="material-icons customer-icon">event</span>
                         Event Information
                     </h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="customer-details-grid">
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Event/Ticket Name</label>
-                            <div style="font-weight: 500;">${booking.event_title || booking.ticket_name || 'N/A'}</div>
+                            <label class="customer-label">Event/Ticket Name</label>
+                            <div class="customer-value">${booking.event_title || booking.ticket_name || 'N/A'}</div>
                         </div>
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Event Date</label>
+                            <label class="customer-label">Event Date</label>
                             <div>${eventDate}</div>
                         </div>
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Booking Date</label>
+                            <label class="customer-label">Booking Date</label>
                             <div>${createdDate}</div>
                         </div>
                     </div>
@@ -1509,25 +1993,25 @@
 
                 <!-- Ticket Information -->
                 <div>
-                    <h5 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                        <span class="material-icons" style="color: var(--primary);">confirmation_number</span>
+                    <h5 class="customer-details-title">
+                        <span class="material-icons customer-icon">confirmation_number</span>
                         Ticket Information
                     </h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                    <div class="ticket-details-grid">
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Adults</label>
-                            <div style="font-size: 1.25rem; font-weight: 600;">${booking.adult_quantity || 0}</div>
+                            <label class="customer-label">Adults</label>
+                            <div class="ticket-quantity-value">${booking.adult_quantity || 0}</div>
                         </div>
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Children</label>
-                            <div style="font-size: 1.25rem; font-weight: 600;">${booking.child_quantity || 0}</div>
+                            <label class="customer-label">Children</label>
+                            <div class="ticket-quantity-value">${booking.child_quantity || 0}</div>
                         </div>
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Adult Price</label>
+                            <label class="customer-label">Adult Price</label>
                             <div>RM ${parseFloat(booking.adult_price || 0).toFixed(2)}</div>
                         </div>
                         <div>
-                            <label style="font-size: 0.875rem; color: var(--on-surface-variant); margin-bottom: 0.25rem;">Child Price</label>
+                            <label class="customer-label">Child Price</label>
                             <div>RM ${parseFloat(booking.child_price || 0).toFixed(2)}</div>
                         </div>
                     </div>
