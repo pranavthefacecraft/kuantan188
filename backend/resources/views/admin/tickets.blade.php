@@ -36,9 +36,11 @@
                             </th>
                             <th>Ticket Name</th>
                             <th>Event</th>
-                            <th>Country</th>
+                            <th>Currency</th>
                             <th>Adult Price</th>
-                            <th>Child Price</th>
+                            <th>Teenagers From 13</th>
+                            <th>University Students</th>
+                            <th>Children Below 13</th>
                             <th>Availability</th>
                             <th>Bookings</th>
                             <th>Revenue</th>
@@ -82,7 +84,7 @@
                                                 @foreach($ticket->countries as $country)
                                                     @if($country->is_active)
                                                     <div style="margin-bottom: 0.25rem;">
-                                                        <div>{{ $country->name }}</div>
+                                                        <div><strong>{{ $country->currency_code }}/{{ $country->currency_symbol }}</strong> - {{ $country->name }}</div>
                                                     </div>
                                                     @endif
                                                 @endforeach
@@ -99,6 +101,36 @@
                                             <div style="margin-bottom: 0.5rem;">
                                                 <div style="font-weight: 600; color: var(--primary); font-size: 0.875rem;">
                                                     {{ $country->name }}: RM {{ number_format($country->pivot->adult_price, 2) }}
+                                                </div>
+                                            </div>
+                                            @endif
+                                        @endforeach
+                                    @else
+                                        <span style="color: var(--on-surface-variant);">No pricing set</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($ticket->countries->count() > 0)
+                                        @foreach($ticket->countries as $country)
+                                            @if($country->is_active)
+                                            <div style="margin-bottom: 0.5rem;">
+                                                <div style="font-weight: 600; color: var(--accent); font-size: 0.875rem;">
+                                                    {{ $country->name }}: RM {{ number_format($country->pivot->teen_price ?? $country->pivot->adult_price, 2) }}
+                                                </div>
+                                            </div>
+                                            @endif
+                                        @endforeach
+                                    @else
+                                        <span style="color: var(--on-surface-variant);">No pricing set</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($ticket->countries->count() > 0)
+                                        @foreach($ticket->countries as $country)
+                                            @if($country->is_active)
+                                            <div style="margin-bottom: 0.5rem;">
+                                                <div style="font-weight: 600; color: var(--accent); font-size: 0.875rem;">
+                                                    {{ $country->name }}: RM {{ number_format($country->pivot->university_price ?? $country->pivot->adult_price, 2) }}
                                                 </div>
                                             </div>
                                             @endif
@@ -256,7 +288,7 @@
                             @foreach($countries as $country)
                                 @if($country->is_active)
                                 <option value="{{ $country->id }}">
-                                    {{ $country->name }}
+                                    {{ $country->currency_code }}/{{ $country->currency_symbol }} - {{ $country->name }}
                                 </option>
                                 @endif
                             @endforeach
@@ -402,7 +434,7 @@
                             @foreach($countries as $country)
                                 @if($country->is_active)
                                 <option value="{{ $country->id }}">
-                                    {{ $country->name }}
+                                    {{ $country->currency_code }}/{{ $country->currency_symbol }} - {{ $country->name }}
                                 </option>
                                 @endif
                             @endforeach
@@ -529,7 +561,7 @@
         border-radius: 1rem;
         box-shadow: var(--shadow-lg);
         width: 100%;
-        max-width: 800px;
+        max-width: 1000px;
         max-height: 90vh;
         overflow-y: auto;
         border: 1px solid var(--border);
@@ -945,6 +977,19 @@
 
 @section('scripts')
 <script>
+// Currency data for JavaScript use
+const currencyData = {
+    @foreach($countries as $country)
+    {{ $country->id }}: {
+        name: "{{ $country->name }}",
+        currency_code: "{{ $country->currency_code }}",
+        currency_symbol: "{{ $country->currency_symbol }}",
+        currency_pair: "{{ $country->currency_code }}/{{ $country->currency_symbol }}"
+    },
+    @endforeach
+};
+
+console.log('Currency data loaded:', currencyData);
 console.log('Tickets script loaded successfully');
 
 function openEditTicketModal(ticketId) {
@@ -1043,6 +1088,8 @@ function openEditTicketModal(ticketId) {
                     value: country.id,
                     name: country.name,
                     adultPrice: country.pivot.adult_price,
+                    teenPrice: country.pivot.teen_price,
+                    universityPrice: country.pivot.university_price,
                     childPrice: country.pivot.child_price
                 }));
                 
@@ -1153,7 +1200,7 @@ function rebuildCountryPricingFields(countries) {
         
         countryDiv.innerHTML = `
             <h4 style="margin: 0 0 1rem 0; color: var(--on-surface);">${country.name.trim()}</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label>Adult Price (RM):</label>
                     <input type="number" 
@@ -1166,7 +1213,29 @@ function rebuildCountryPricingFields(countries) {
                            data-country-id="${country.value}">
                 </div>
                 <div class="form-group">
-                    <label>Child Price (RM):</label>
+                    <label>Teenagers From 13 (RM):</label>
+                    <input type="number" 
+                           name="countries_data[${index}][teen_price]" 
+                           value="${country.teenPrice || ''}" 
+                           step="0.01" 
+                           min="0" 
+                           required 
+                           class="form-control"
+                           data-country-id="${country.value}">
+                </div>
+                <div class="form-group">
+                    <label>University Students (RM):</label>
+                    <input type="number" 
+                           name="countries_data[${index}][university_price]" 
+                           value="${country.universityPrice || ''}" 
+                           step="0.01" 
+                           min="0" 
+                           required 
+                           class="form-control"
+                           data-country-id="${country.value}">
+                </div>
+                <div class="form-group">
+                    <label>Children Below 13 (RM):</label>
                     <input type="number" 
                            name="countries_data[${index}][child_price]" 
                            value="${country.childPrice || ''}" 
@@ -1211,8 +1280,9 @@ function testAddFormFields() {
     
     for (let i = 0; i < countriesData.length; i++) {
         const adult = formData.get(`countries_data[${i}][adult_price]`);
+        const teen = formData.get(`countries_data[${i}][teen_price]`);
         const child = formData.get(`countries_data[${i}][child_price]`);
-        console.log(`  Index ${i}: adult="${adult}" child="${child}"`);
+        console.log(`  Index ${i}: adult="${adult}" teen="${teen}" child="${child}"`);
     }
     
     alert(`Found ${allInputs.length} fields in add form. Check console for details.`);
@@ -1258,7 +1328,8 @@ function openTicketModal() {
         
         selectedOptions.forEach((option, index) => {
             const countryId = option.value;
-            const countryName = option.textContent.trim();
+            const countryData = currencyData[countryId];
+            const displayName = countryData ? `${countryData.currency_pair} - ${countryData.name}` : option.textContent.trim();
             
             const countryDiv = document.createElement('div');
             countryDiv.className = 'country-pricing-item';
@@ -1271,10 +1342,10 @@ function openTicketModal() {
             `;
             
             countryDiv.innerHTML = `
-                <h4 style="margin: 0 0 1rem 0; color: var(--on-surface); font-size: 1rem;">${countryName}</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <h4 style="margin: 0 0 1rem 0; color: var(--on-surface); font-size: 1rem;">${displayName}</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
                     <div>
-                        <label class="form-label">Adult Price (RM) *</label>
+                        <label class="form-label">Adult Price (${countryData?.currency_symbol || 'RM'}) *</label>
                         <input type="number" 
                                name="countries_data[${index}][adult_price]" 
                                class="form-input country-adult-price" 
@@ -1285,7 +1356,29 @@ function openTicketModal() {
                                required>
                     </div>
                     <div>
-                        <label class="form-label">Child Price (RM) *</label>
+                        <label class="form-label">Teenagers From 13 (${countryData?.currency_symbol || 'RM'}) *</label>
+                        <input type="number" 
+                               name="countries_data[${index}][teen_price]" 
+                               class="form-input country-teen-price" 
+                               step="0.01" 
+                               min="0" 
+                               placeholder="0.00"
+                               data-country-id="${countryId}"
+                               required>
+                    </div>
+                    <div>
+                        <label class="form-label">University Students (${countryData?.currency_symbol || 'RM'}) *</label>
+                        <input type="number" 
+                               name="countries_data[${index}][university_price]" 
+                               class="form-input country-university-price" 
+                               step="0.01" 
+                               min="0" 
+                               placeholder="0.00"
+                               data-country-id="${countryId}"
+                               required>
+                    </div>
+                    <div>
+                        <label class="form-label">Children Below 13 (${countryData?.currency_symbol || 'RM'}) *</label>
                         <input type="number" 
                                name="countries_data[${index}][child_price]" 
                                class="form-input country-child-price" 
@@ -1361,6 +1454,8 @@ function openTicketModal() {
                     value: country.id,
                     name: country.name,
                     adultPrice: country.pivot.adult_price,
+                    teenPrice: country.pivot.teen_price,
+                    universityPrice: country.pivot.university_price,
                     childPrice: country.pivot.child_price
                 }));
                 
@@ -1467,7 +1562,7 @@ function openTicketModal() {
             
             countryDiv.innerHTML = `
                 <h4 style="margin: 0 0 1rem 0; color: var(--on-surface); font-size: 1rem;">${countryName}</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
                     <div>
                         <label class="form-label">Adult Price (RM) *</label>
                         <input type="number" 
@@ -1482,7 +1577,33 @@ function openTicketModal() {
                                required>
                     </div>
                     <div>
-                        <label class="form-label">Child Price (RM) *</label>
+                        <label class="form-label">Teenagers From 13 (RM) *</label>
+                        <input type="number" 
+                               name="countries_data[${formIndex}][teen_price]" 
+                               class="form-input country-teen-price" 
+                               step="0.01" 
+                               min="0" 
+                               placeholder="0.00"
+                               data-country-id="${countryId}"
+                               data-form-index="${formIndex}"
+                               value="${existingData ? existingData.pivot.teen_price : ''}"
+                               required>
+                    </div>
+                    <div>
+                        <label class="form-label">University Students (RM) *</label>
+                        <input type="number" 
+                               name="countries_data[${formIndex}][university_price]" 
+                               class="form-input country-university-price" 
+                               step="0.01" 
+                               min="0" 
+                               placeholder="0.00"
+                               data-country-id="${countryId}"
+                               data-form-index="${formIndex}"
+                               value="${existingData ? existingData.pivot.university_price : ''}"
+                               required>
+                    </div>
+                    <div>
+                        <label class="form-label">Children Below 13 (RM) *</label>
                         <input type="number" 
                                name="countries_data[${formIndex}][child_price]" 
                                class="form-input country-child-price" 
@@ -1526,10 +1647,15 @@ function openTicketModal() {
             console.log(`  Adult Price: ${country.adultPrice}`);
             console.log(`  Child Price: ${country.childPrice}`);
             
+            const countryData = currencyData[country.value];
+            const displayName = countryData ? `${countryData.currency_pair} - ${countryData.name}` : country.name;
+            
             const adultFieldName = `countries_data[${index}][adult_price]`;
+            const teenFieldName = `countries_data[${index}][teen_price]`;
+            const universityFieldName = `countries_data[${index}][university_price]`;
             const childFieldName = `countries_data[${index}][child_price]`;
             
-            console.log(`  Generated field names: ${adultFieldName}, ${childFieldName}`);
+            console.log(`  Generated field names: ${adultFieldName}, ${teenFieldName}, ${universityFieldName}, ${childFieldName}`);
             
             const div = document.createElement('div');
             div.style.cssText = `
@@ -1541,10 +1667,10 @@ function openTicketModal() {
             `;
             
             div.innerHTML = `
-                <h4 style="margin: 0 0 1rem 0;">Country ${index + 1}: ${country.name}</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <h4 style="margin: 0 0 1rem 0;">${displayName}</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
                     <div>
-                        <label>Adult Price (RM) *</label>
+                        <label>Adult Price (${countryData?.currency_symbol || 'RM'}) *</label>
                         <input type="number" 
                                name="${adultFieldName}" 
                                class="form-input" 
@@ -1556,7 +1682,31 @@ function openTicketModal() {
                                required>
                     </div>
                     <div>
-                        <label>Child Price (RM) *</label>
+                        <label>Teenagers From 13 (${countryData?.currency_symbol || 'RM'}) *</label>
+                        <input type="number" 
+                               name="${teenFieldName}" 
+                               class="form-input" 
+                               step="0.01" 
+                               min="0" 
+                               value="${country.teenPrice || ''}"
+                               data-debug-index="${index}"
+                               data-debug-country="${country.value}"
+                               required>
+                    </div>
+                    <div>
+                        <label>University Students (${countryData?.currency_symbol || 'RM'}) *</label>
+                        <input type="number" 
+                               name="${universityFieldName}" 
+                               class="form-input" 
+                               step="0.01" 
+                               min="0" 
+                               value="${country.universityPrice || ''}"
+                               data-debug-index="${index}"
+                               data-debug-country="${country.value}"
+                               required>
+                    </div>
+                    <div>
+                        <label>Children Below 13 (${countryData?.currency_symbol || 'RM'}) *</label>
                         <input type="number" 
                                name="${childFieldName}" 
                                class="form-input" 
@@ -1675,12 +1825,36 @@ function openTicketModal() {
                 const selected = Array.from(this.selectedOptions);
                 console.log('Selected options:', selected.map(opt => `${opt.value}: ${opt.textContent}`));
                 
+                // Collect existing form values before rebuilding
+                const existingValues = {};
+                const existingInputs = document.querySelectorAll('#editCountryPricingContainer input[name*="countries_data"]');
+                existingInputs.forEach(input => {
+                    const match = input.name.match(/countries_data\[(\d+)\]\[(\w+)\]/);
+                    if (match) {
+                        const index = match[1];
+                        const field = match[2];
+                        const countryId = input.getAttribute('data-country-id') || input.getAttribute('data-debug-country');
+                        
+                        if (countryId && input.value) {
+                            if (!existingValues[countryId]) existingValues[countryId] = {};
+                            existingValues[countryId][field] = input.value;
+                        }
+                    }
+                });
+                
+                console.log('Existing values preserved:', existingValues);
+                
                 const countries = selected.map((option, mapIndex) => {
+                    const countryId = option.value;
+                    const existing = existingValues[countryId] || {};
+                    
                     const country = {
-                        value: option.value,
+                        value: countryId,
                         name: option.textContent.trim(),
-                        adultPrice: '',
-                        childPrice: ''
+                        adultPrice: existing.adult_price || '',
+                        teenPrice: existing.teen_price || '',
+                        universityPrice: existing.university_price || '',
+                        childPrice: existing.child_price || ''
                     };
                     console.log(`Mapped country ${mapIndex}:`, country);
                     return country;
@@ -2111,13 +2285,21 @@ function openTicketModal() {
                     pricingHTML += `
                         <div style="border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; background: var(--surface);">
                             <h4 style="margin: 0 0 1rem 0; color: var(--on-surface); font-size: 1rem;">${country.name}</h4>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
                                 <div>
                                     <label class="form-label">Adult Price (RM)</label>
                                     <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.adult_price).toFixed(2)}" readonly>
                                 </div>
                                 <div>
-                                    <label class="form-label">Child Price (RM)</label>
+                                    <label class="form-label">Teenagers From 13 (RM)</label>
+                                    <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.teen_price || country.pivot.adult_price).toFixed(2)}" readonly>
+                                </div>
+                                <div>
+                                    <label class="form-label">University Students (RM)</label>
+                                    <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.university_price || country.pivot.adult_price).toFixed(2)}" readonly>
+                                </div>
+                                <div>
+                                    <label class="form-label">Children Below 13 (RM)</label>
                                     <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.child_price).toFixed(2)}" readonly>
                                 </div>
                             </div>

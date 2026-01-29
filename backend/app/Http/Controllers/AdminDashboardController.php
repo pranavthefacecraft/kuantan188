@@ -750,6 +750,7 @@ class AdminDashboardController extends Controller
             'countries.*' => 'exists:countries,id',
             'countries_data' => 'required|array',
             'countries_data.*.adult_price' => 'required|numeric|min:0|max:999999.99',
+            'countries_data.*.teen_price' => 'required|numeric|min:0|max:999999.99',
             'countries_data.*.child_price' => 'required|numeric|min:0|max:999999.99',
             'total_quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string|max:1000',
@@ -782,6 +783,8 @@ class AdminDashboardController extends Controller
             foreach ($request->countries as $index => $countryId) {
                 $countriesData[$countryId] = [
                     'adult_price' => $request->countries_data[$index]['adult_price'],
+                    'teen_price' => $request->countries_data[$index]['teen_price'],
+                    'university_price' => $request->countries_data[$index]['university_price'],
                     'child_price' => $request->countries_data[$index]['child_price']
                 ];
             }
@@ -840,6 +843,8 @@ class AdminDashboardController extends Controller
             'countries.*' => 'exists:countries,id',
             'countries_data' => 'required|array',
             'countries_data.*.adult_price' => 'required|numeric|min:0|max:999999.99',
+            'countries_data.*.teen_price' => 'required|numeric|min:0|max:999999.99',
+            'countries_data.*.university_price' => 'required|numeric|min:0|max:999999.99',
             'countries_data.*.child_price' => 'required|numeric|min:0|max:999999.99',
             'total_quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string|max:1000',
@@ -910,10 +915,14 @@ class AdminDashboardController extends Controller
                 // Ensure the index exists in countries_data
                 if (isset($countriesDataArray[$index]) && 
                     isset($countriesDataArray[$index]['adult_price']) && 
+                    isset($countriesDataArray[$index]['teen_price']) &&
+                    isset($countriesDataArray[$index]['university_price']) &&
                     isset($countriesDataArray[$index]['child_price'])) {
                     
                     $countriesData[$countryId] = [
                         'adult_price' => $countriesDataArray[$index]['adult_price'],
+                        'teen_price' => $countriesDataArray[$index]['teen_price'],
+                        'university_price' => $countriesDataArray[$index]['university_price'],
                         'child_price' => $countriesDataArray[$index]['child_price']
                     ];
                 } else {

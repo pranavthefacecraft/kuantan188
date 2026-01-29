@@ -30,7 +30,7 @@ class Country extends Model
     public function ticketsMultiple(): BelongsToMany
     {
         return $this->belongsToMany(Ticket::class, 'ticket_country')
-                    ->withPivot('adult_price', 'child_price')
+                    ->withPivot('adult_price', 'child_price', 'teen_price', 'university_price')
                     ->withTimestamps();
     }
 

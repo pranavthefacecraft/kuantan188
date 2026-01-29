@@ -23,6 +23,8 @@ interface Ticket {
     name: string;
     currency_symbol: string;
     adult_price: string;
+    teen_price?: string;
+    university_price?: string;
     child_price: string;
   }>;
 }
@@ -37,6 +39,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const [currentStep, setCurrentStep] = useState<'selection' | 'details' | 'payment' | 'thankyou'>('selection');
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
   const [adultQuantity, setAdultQuantity] = useState(1);
+  const [teenQuantity, setTeenQuantity] = useState(0);
+  const [universityQuantity, setUniversityQuantity] = useState(0);
   const [childQuantity, setChildQuantity] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -62,6 +66,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       setCurrentStep('selection');
       setSelectedCountry(ticket.countries?.[0] || null);
       setAdultQuantity(1);
+      setTeenQuantity(0);
+      setUniversityQuantity(0);
       setChildQuantity(0);
       setSelectedDate(new Date());
       setSelectedTime('');
@@ -80,11 +86,21 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     }
   }, [show, ticket]);
 
-  const handleQuantityChange = (type: 'adult' | 'child', change: number) => {
+  const handleQuantityChange = (type: 'adult' | 'teen' | 'university' | 'child', change: number) => {
     if (type === 'adult') {
       const newQuantity = adultQuantity + change;
       if (newQuantity >= 0) {
         setAdultQuantity(newQuantity);
+      }
+    } else if (type === 'teen') {
+      const newQuantity = teenQuantity + change;
+      if (newQuantity >= 0) {
+        setTeenQuantity(newQuantity);
+      }
+    } else if (type === 'university') {
+      const newQuantity = universityQuantity + change;
+      if (newQuantity >= 0) {
+        setUniversityQuantity(newQuantity);
       }
     } else {
       const newQuantity = childQuantity + change;
@@ -97,14 +113,34 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const calculateTotal = () => {
     if (!selectedCountry) return 0;
     
-    const adultPrice = parseFloat(selectedCountry.adult_price || '0');
-    const childPrice = parseFloat(selectedCountry.child_price || '0');
+    const baseAdultPrice = parseFloat(selectedCountry.adult_price || '0');
+    const baseTeenPrice = parseFloat(selectedCountry.teen_price || selectedCountry.adult_price || '0');
+    const baseUniversityPrice = parseFloat(selectedCountry.university_price || selectedCountry.adult_price || '0');
+    const baseChildPrice = parseFloat(selectedCountry.child_price || '0');
     
-    return (adultPrice * adultQuantity) + (childPrice * childQuantity);
+    // Calculate time-based pricing adjustment
+    const timeMultiplier = getTimePriceMultiplier();
+    
+    const adultPrice = baseAdultPrice + timeMultiplier;
+    const teenPrice = baseTeenPrice + timeMultiplier;
+    const universityPrice = baseUniversityPrice + timeMultiplier;
+    const childPrice = baseChildPrice + timeMultiplier;
+    
+    return (adultPrice * adultQuantity) + (teenPrice * teenQuantity) + (universityPrice * universityQuantity) + (childPrice * childQuantity);
+  };
+
+  // Helper function to get price adjustment based on selected time
+  const getTimePriceMultiplier = () => {
+    if (!selectedTime) return 0;
+    
+    const bestPriceSlots = ['09:00', '09:30', '10:00', '10:30'];
+    const isBestPrice = bestPriceSlots.includes(selectedTime);
+    
+    return isBestPrice ? 0 : 5; // +$5 for non-best-price slots
   };
 
   const getTotalQuantity = () => {
-    return adultQuantity + childQuantity;
+    return adultQuantity + teenQuantity + universityQuantity + childQuantity;
   };
 
   const handleContinueToDetails = () => {
@@ -255,6 +291,27 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                     )}
                   </div>
                   
+                  {/* Country Selection */}
+                  {ticket.countries && ticket.countries.length > 1 && (
+                    <div className="mb-4">
+                      <h6 className="mb-3">Select Country/Region</h6>
+                      <Form.Select
+                        value={selectedCountry?.id || ''}
+                        onChange={(e) => {
+                          const country = ticket.countries?.find(c => c.id === parseInt(e.target.value));
+                          setSelectedCountry(country);
+                        }}
+                        className="country-select"
+                      >
+                        {ticket.countries.map((country) => (
+                          <option key={country.id} value={country.id}>
+                            {country.name} ({country.currency_symbol})
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </div>
+                  )}
+                  
                   {/* Adult Quantity */}
                   <div className="quantity-section mb-3">
                     <div className="d-flex align-items-center justify-content-between">
@@ -283,11 +340,67 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                     </div>
                   </div>
 
-                  {/* Child Quantity */}
+                  {/* Teenagers From 13 Quantity */}
+                  <div className="quantity-section mb-3">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div>
+                        <span className="fw-bold">Teenagers From 13</span>
+                        <div className="small text-muted">
+                          from {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.teen_price || selectedCountry.adult_price).toFixed(0) : '49'}
+                        </div>
+                      </div>
+                      <div className="quantity-controls d-flex align-items-center">
+                        <Button 
+                          className="quantity-btn"
+                          onClick={() => handleQuantityChange('teen', -1)}
+                          disabled={teenQuantity === 0}
+                        >
+                          −
+                        </Button>
+                        <span className="quantity-display mx-3">{teenQuantity}</span>
+                        <Button 
+                          className="quantity-btn"
+                          onClick={() => handleQuantityChange('teen', 1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* University Students Quantity */}
+                  <div className="quantity-section mb-3">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div>
+                        <span className="fw-bold">University Students</span>
+                        <div className="small text-muted">
+                          from {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.university_price || selectedCountry.adult_price).toFixed(0) : '49'}
+                        </div>
+                      </div>
+                      <div className="quantity-controls d-flex align-items-center">
+                        <Button 
+                          className="quantity-btn"
+                          onClick={() => handleQuantityChange('university', -1)}
+                          disabled={universityQuantity === 0}
+                        >
+                          −
+                        </Button>
+                        <span className="quantity-display mx-3">{universityQuantity}</span>
+                        <Button 
+                          className="quantity-btn"
+                          onClick={() => handleQuantityChange('university', 1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Children Below 13 Quantity */}
                   <div className="quantity-section mb-4">
                     <div className="d-flex align-items-center justify-content-between">
                       <div>
-                        <span className="fw-bold">Child</span>
+                        <span className="fw-bold">Children Below 13</span>
                         <div className="small text-muted">
                           from {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.child_price).toFixed(0) : '35'}
                         </div>
@@ -316,27 +429,6 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
               {/* Right Side - Date and Time Selection */}
               <Col md={7}>
                 <div className="booking-options">
-                  {/* Country Selection */}
-                  {ticket.countries && ticket.countries.length > 1 && (
-                    <div className="mb-4">
-                      <h6 className="mb-3">Select Country/Region</h6>
-                      <Form.Select
-                        value={selectedCountry?.id || ''}
-                        onChange={(e) => {
-                          const country = ticket.countries?.find(c => c.id === parseInt(e.target.value));
-                          setSelectedCountry(country);
-                        }}
-                        className="country-select"
-                      >
-                        {ticket.countries.map((country) => (
-                          <option key={country.id} value={country.id}>
-                            {country.name} ({country.currency_symbol})
-                          </option>
-                        ))}
-                      </Form.Select>
-                    </div>
-                  )}
-
                   {/* Date Selection */}
                   <div className="mb-4">
                     <h6 className="mb-3">Select Date</h6>
@@ -485,8 +577,11 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                     <h6 className="mb-3">Select time</h6>
                     <div className="time-slots">
                       {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30'].map((time, index) => {
-                        const isBestPrice = index < 4; // First 4 slots are "best price"
-                        const price = selectedCountry ? parseFloat(selectedCountry.adult_price) + (isBestPrice ? 0 : 5) : (44 + (isBestPrice ? 0 : 5));
+                        const bestPriceSlots = ['09:00', '09:30', '10:00', '10:30'];
+                        const isBestPrice = bestPriceSlots.includes(time);
+                        const priceAdjustment = isBestPrice ? 0 : 5;
+                        const basePrice = selectedCountry ? parseFloat(selectedCountry.adult_price) : 44;
+                        const price = basePrice + priceAdjustment;
                         
                         return (
                           <button
