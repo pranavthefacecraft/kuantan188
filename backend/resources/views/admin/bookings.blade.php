@@ -20,18 +20,31 @@
             <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                 <!-- View Toggle -->
                 <div class="view-toggle" style="display: flex; background: var(--surface-variant); border-radius: 0.5rem; padding: 0.25rem;">
-                    <button id="tableViewBtn" class="view-btn active" onclick="switchView('table')" style="padding: 0.5rem 1rem; border: none; background: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s ease;">
-                        <span class="material-icons" style="font-size: 18px; margin-right: 0.5rem;">table_view</span>
+                    <button id="tableViewBtn" class="view-btn active" onclick="switchView('table')">
+                        <span class="material-icons view-btn-icon">table_view</span>
                         Table View
                     </button>
-                    <button id="calendarViewBtn" class="view-btn" onclick="switchView('calendar')" style="padding: 0.5rem 1rem; border: none; background: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s ease;">
-                        <span class="material-icons" style="font-size: 18px; margin-right: 0.5rem;">calendar_view_month</span>
+                    <button id="calendarViewBtn" class="view-btn" onclick="switchView('calendar')">
+                        <span class="material-icons view-btn-icon">calendar_view_month</span>
                         Calendar View
                     </button>
                 </div>
 
                 <!-- Filters -->
                 <form method="GET" id="filtersForm" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <!-- Search Box -->
+                    <div style="position: relative;">
+                        <input type="text" 
+                               name="search" 
+                               id="search_input" 
+                               placeholder="Search bookings..." 
+                               value="{{ request('search') }}" 
+                               class="form-input"
+                               style="padding: 0.5rem 2.5rem 0.5rem 1rem; width: 250px; border: 1px solid var(--outline); border-radius: 0.5rem;"
+                               onkeyup="handleSearchKeyup(event)">
+                        <span class="material-icons" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 18px; pointer-events: none;">search</span>
+                    </div>
+
                     <select name="booking_type" id="booking_type_filter" class="btn btn-outline" style="padding: 0.5rem 1rem;" onchange="updateFilters()">
                         <option value="">All Booking Types</option>
                         <option value="event" {{ request('booking_type') === 'event' ? 'selected' : '' }}>Event Bookings</option>
@@ -51,7 +64,7 @@
                         <option value="pending" {{ request('status_filter') === 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="cancelled" {{ request('status_filter') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                     </select>
-                    @if(request()->hasAny(['booking_type', 'country_filter', 'status_filter']))
+                    @if(request()->hasAny(['search', 'booking_type', 'country_filter', 'status_filter']))
                         <a href="{{ route('admin.bookings') }}" class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="clearFilters()">
                             <span class="material-icons" style="font-size: 18px;">clear</span>
                             Clear
@@ -183,16 +196,25 @@
                                         @if($booking->status === 'pending')
                                             <button class="btn btn-outline" 
                                                     style="padding: 0.25rem 0.5rem; background: var(--success); color: white;"
-                                                    onclick="updateBookingStatus('{{ $booking->id }}', 'confirmed')">
+                                                    onclick="updateBookingStatus('{{ $booking->id }}', 'confirmed')"
+                                                    title="Confirm booking">
                                                 <span class="material-icons" style="font-size: 16px;">check</span>
+                                            </button>
+                                        @elseif($booking->status === 'confirmed')
+                                            <button class="btn btn-outline" 
+                                                    style="padding: 0.25rem 0.5rem; background: var(--warning); color: white;"
+                                                    onclick="updateBookingStatus('{{ $booking->id }}', 'pending')"
+                                                    title="Set to pending">
+                                                <span class="material-icons" style="font-size: 16px;">schedule</span>
                                             </button>
                                         @endif
                                         <button class="btn btn-outline" 
                                                 style="padding: 0.25rem 0.5rem;" 
-                                                onclick="showBookingDetails('{{ $booking->id }}')">
+                                                onclick="showBookingDetails('{{ $booking->id }}')"
+                                                title="View details">
                                             <span class="material-icons" style="font-size: 16px;">visibility</span>
                                         </button>
-                                        <a href="#" class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                        <a href="#" class="btn btn-outline" style="padding: 0.25rem 0.5rem;" title="Send email">
                                             <span class="material-icons" style="font-size: 16px;">email</span>
                                         </a>
                                     </div>
@@ -338,6 +360,64 @@
 <!-- FullCalendar CSS -->
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css' rel='stylesheet' />
 <style>
+    /* Button Styles */
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s ease-in-out;
+        background: transparent;
+        color: var(--on-surface);
+    }
+
+    .btn-outline {
+        border-color: var(--border);
+        background: var(--surface);
+        color: var(--on-surface);
+    }
+
+    .btn-outline:hover {
+        background: var(--surface-variant);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        border-color: var(--primary-dark);
+        color: white;
+    }
+
+    /* Form Input Styles */
+    .form-input {
+        display: block;
+        width: 100%;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 0.375rem;
+        background: var(--surface);
+        color: var(--on-surface);
+        font-size: 0.875rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+    }
+
     .badge-info {
         background-color: #17a2b8;
         color: white;
@@ -349,6 +429,25 @@
     }
 
     /* View Toggle Styles */
+    .view-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        background: none;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--on-surface);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .view-btn-icon {
+        font-size: 18px;
+        margin-right: 0.5rem;
+    }
+
     .view-toggle .view-btn.active {
         background: var(--primary) !important;
         color: white !important;
@@ -660,6 +759,89 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
+    /* Clean pagination styling to match the design */
+    .pagination {
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        margin: 20px 0 !important;
+        padding: 0 !important;
+        position: relative !important;
+        z-index: 100 !important;
+        background: transparent !important;
+    }
+
+    .pagination .page-item {
+        margin: 0 !important;
+    }
+
+    .pagination .page-link {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 8px 12px !important;
+        margin: 0 !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 4px !important;
+        background: #fff !important;
+        color: #007bff !important;
+        text-decoration: none !important;
+        min-width: auto !important;
+        height: auto !important;
+        font-weight: 400 !important;
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+
+    .pagination .page-link:hover {
+        background: #f8f9fa !important;
+        border-color: #dee2e6 !important;
+        color: #0056b3 !important;
+        text-decoration: none !important;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: #007bff !important;
+        border-color: #007bff !important;
+        color: #fff !important;
+        z-index: 3 !important;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        background: #fff !important;
+        border-color: #dee2e6 !important;
+        color: #6c757d !important;
+        cursor: not-allowed !important;
+        opacity: 0.65 !important;
+    }
+
+    .pagination .page-item:first-child .page-link,
+    .pagination .page-item:last-child .page-link {
+        border-radius: 4px !important;
+    }
+
+    /* Ensure proper spacing around pagination */
+    .table-view .card-body {
+        position: relative !important;
+        z-index: 10 !important;
+    }
+
+    /* Prevent modal overlay from covering pagination */
+    .modal {
+        z-index: 1050 !important;
+    }
+
+    .modal-overlay {
+        z-index: 1051 !important;
+    }
+
+    .modal-container {
+        z-index: 1052 !important;
+    }
 </style>
 @endsection
 
@@ -679,10 +861,49 @@
     let currentFilters = {
         booking_type: '{{ request('booking_type') ?? '' }}',
         country_filter: '{{ request('country_filter') ?? '' }}',
-        status_filter: '{{ request('status_filter') ?? '' }}'
+        status_filter: '{{ request('status_filter') ?? '' }}',
+        search: '{{ request('search') ?? '' }}'
     };
 
+    function initializePaginationLinks() {
+        // Find all pagination links and add click handlers
+        const paginationLinks = document.querySelectorAll('.pagination a');
+        paginationLinks.forEach(link => {
+            if (!link.href.includes('javascript:')) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Get the URL from the link
+                    let url = new URL(this.href);
+                    
+                    // Add current filter values to the URL
+                    const bookingType = document.getElementById('booking_type_filter').value;
+                    const country = document.getElementById('country_filter').value;
+                    const status = document.getElementById('status_filter').value;
+                    const search = document.getElementById('search_input').value;
+                    
+                    if (bookingType) url.searchParams.set('booking_type', bookingType);
+                    if (country) url.searchParams.set('country_filter', country);
+                    if (status) url.searchParams.set('status_filter', status);
+                    if (search) url.searchParams.set('search', search);
+                    
+                    // Navigate to the updated URL
+                    window.location.href = url.toString();
+                });
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize pagination links with filter preservation
+        initializePaginationLinks();
+        
+        // Initialize search input value from URL parameter
+        const searchInput = document.getElementById('search_input');
+        if (searchInput && currentFilters.search) {
+            searchInput.value = currentFilters.search;
+        }
+        
         // Wait for FullCalendar to load with multiple checks
         let checkCount = 0;
         const maxChecks = 10; // 5 seconds maximum
@@ -748,11 +969,13 @@
         const bookingType = document.getElementById('booking_type_filter').value;
         const country = document.getElementById('country_filter').value;
         const status = document.getElementById('status_filter').value;
+        const search = document.getElementById('search_input').value;
 
         currentFilters = {
             booking_type: bookingType,
             country_filter: country,
-            status_filter: status
+            status_filter: status,
+            search: search
         };
 
         if (currentView === 'table') {
@@ -765,6 +988,17 @@
             }
             updateCalendarStats();
         }
+    }
+
+    // Handle search input with debouncing
+    let searchTimeout;
+    function handleSearchKeyup(event) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() {
+            if (event.key === 'Enter' || event.target.value.length === 0 || event.target.value.length >= 3) {
+                updateFilters();
+            }
+        }, 500); // 500ms delay for debouncing
     }
 
     function clearFilters() {
@@ -824,7 +1058,9 @@
                     });
             },
             eventClick: function(info) {
-                showBookingDetails(info.event);
+                // Extract booking ID from the event
+                const bookingId = info.event.id || info.event.extendedProps.id;
+                showBookingDetails(bookingId);
             },
             eventDidMount: function(info) {
                 // Style event elements
@@ -1083,11 +1319,10 @@
 
     function updateBookingStatus(bookingId, status) {
         if (confirm('Are you sure you want to update this booking status?')) {
-            fetch(`/api/bookings/${bookingId}`, {
+            fetch(`/admin/api/bookings/${bookingId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('api_token'),
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({ status: status })

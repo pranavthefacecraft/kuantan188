@@ -215,6 +215,18 @@ class AdminDashboardController extends Controller
             // Use simpler query without problematic relationships initially
             $query = Booking::query();
             
+            // Search functionality
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('booking_reference', 'LIKE', "%{$search}%")
+                      ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%")
+                      ->orWhere('mobile_phone', 'LIKE', "%{$search}%")
+                      ->orWhere('event_title', 'LIKE', "%{$search}%");
+                });
+            }
+            
             // Filter by booking type
             if ($request->filled('booking_type')) {
                 if ($request->booking_type === 'event') {
@@ -299,6 +311,17 @@ class AdminDashboardController extends Controller
             });
             
             // Apply filters
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('booking_reference', 'LIKE', "%{$search}%")
+                      ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%")
+                      ->orWhere('mobile_phone', 'LIKE', "%{$search}%")
+                      ->orWhere('event_title', 'LIKE', "%{$search}%");
+                });
+            }
+            
             if ($request->filled('booking_type')) {
                 if ($request->booking_type === 'event') {
                     $query->where(function($q) {
@@ -1383,11 +1406,10 @@ class AdminDashboardController extends Controller
     /**
      * Get detailed information for a specific booking
      */
-    public function getBookingDetails($bookingId)
+    public function getBookingDetails(Booking $booking)
     {
         try {
-            $booking = Booking::with(['event', 'ticket', 'country'])
-                ->findOrFail($bookingId);
+            $booking->load(['event', 'ticket', 'country']);
 
             // Get country name safely
             $countryName = null;
@@ -1445,6 +1467,37 @@ class AdminDashboardController extends Controller
                 'success' => false,
                 'message' => 'Error loading booking details: ' . $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Update booking status
+     */
+    public function updateBookingStatus(Request $request, Booking $booking)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,confirmed,cancelled'
+        ]);
+
+        try {
+            $booking->status = $request->status;
+            $booking->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Booking status updated successfully',
+                'booking' => [
+                    'id' => $booking->id,
+                    'status' => $booking->status,
+                    'updated_at' => $booking->updated_at
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating booking status: ' . $e->getMessage()
+            ], 500);
         }
     }
 
