@@ -129,7 +129,7 @@ class AdminDashboardController extends Controller
      */
     public function events()
     {
-        $events = Event::with(['tickets.countries', 'tickets.bookings'])->paginate(15);
+        $events = Event::with(['tickets.bookings'])->paginate(15);
         return view('admin.events', compact('events'));
     }
 
@@ -754,11 +754,10 @@ class AdminDashboardController extends Controller
      */
     public function tickets()
     {
-        $tickets = Ticket::with(['event', 'countries', 'bookings'])->orderBy('created_at', 'desc')->paginate(15);
+        $tickets = Ticket::with(['event', 'bookings'])->orderBy('created_at', 'desc')->paginate(15);
         $events = Event::where('is_active', true)->orderBy('event_date')->get();
-        $countries = Country::where('is_active', true)->orderBy('name')->get();
         
-        return view('admin.tickets', compact('tickets', 'events', 'countries'));
+        return view('admin.tickets', compact('tickets', 'events'));
     }
 
     /**
@@ -769,16 +768,33 @@ class AdminDashboardController extends Controller
         $request->validate([
             'ticket_name' => 'required|string|max:255',
             'event_id' => 'nullable|exists:events,id',
-            'countries' => 'required|array|min:1',
-            'countries.*' => 'exists:countries,id',
-            'countries_data' => 'required|array',
-            'countries_data.*.adult_price' => 'required|numeric|min:0|max:999999.99',
-            'countries_data.*.teen_price' => 'required|numeric|min:0|max:999999.99',
-            'countries_data.*.child_price' => 'required|numeric|min:0|max:999999.99',
             'total_quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string|max:1000',
-            'is_active' => 'in:0,1'
+            'is_active' => 'in:0,1',
+            'available_for_malaysians' => 'in:0,1',
+            'available_for_non_malaysians' => 'in:0,1',
+            // Malaysian pricing validation
+            'malaysian_adult_price' => 'required_if:available_for_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'malaysian_teen_price' => 'required_if:available_for_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'malaysian_university_price' => 'required_if:available_for_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'malaysian_child_price' => 'required_if:available_for_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            // Non-Malaysian pricing validation
+            'non_malaysian_adult_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_teen_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_university_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_child_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99'
         ]);
+
+        // Validate that at least one target audience is selected
+        if ($request->available_for_malaysians !== '1' && $request->available_for_non_malaysians !== '1') {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please select at least one target audience (Malaysian or Non-Malaysian)'
+                ]);
+            }
+            return redirect()->back()->with('error', 'Please select at least one target audience (Malaysian or Non-Malaysian)')->withInput();
+        }
 
         try {
             // Handle image upload
@@ -790,7 +806,7 @@ class AdminDashboardController extends Controller
                 $imageUrl = 'storage/tickets/' . $imageName;
             }
 
-            // Create the base ticket
+            // Create the ticket with all pricing data
             $ticket = Ticket::create([
                 'ticket_name' => $request->ticket_name,
                 'event_id' => $request->event_id,
@@ -798,21 +814,20 @@ class AdminDashboardController extends Controller
                 'available_quantity' => $request->total_quantity, // Initially all tickets are available
                 'description' => $request->description,
                 'image_url' => $imageUrl,
-                'is_active' => $request->is_active === '1'
+                'is_active' => $request->is_active === '1',
+                'available_for_malaysians' => $request->available_for_malaysians === '1',
+                'available_for_non_malaysians' => $request->available_for_non_malaysians === '1',
+                // Malaysian pricing
+                'malaysian_adult_price' => $request->available_for_malaysians === '1' ? $request->malaysian_adult_price : null,
+                'malaysian_teen_price' => $request->available_for_malaysians === '1' ? $request->malaysian_teen_price : null,
+                'malaysian_university_price' => $request->available_for_malaysians === '1' ? $request->malaysian_university_price : null,
+                'malaysian_child_price' => $request->available_for_malaysians === '1' ? $request->malaysian_child_price : null,
+                // Non-Malaysian pricing
+                'non_malaysian_adult_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_adult_price : null,
+                'non_malaysian_teen_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_teen_price : null,
+                'non_malaysian_university_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_university_price : null,
+                'non_malaysian_child_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_child_price : null
             ]);
-
-            // Attach countries with their respective prices
-            $countriesData = [];
-            foreach ($request->countries as $index => $countryId) {
-                $countriesData[$countryId] = [
-                    'adult_price' => $request->countries_data[$index]['adult_price'],
-                    'teen_price' => $request->countries_data[$index]['teen_price'],
-                    'university_price' => $request->countries_data[$index]['university_price'],
-                    'child_price' => $request->countries_data[$index]['child_price']
-                ];
-            }
-            
-            $ticket->countries()->attach($countriesData);
 
             if ($request->ajax()) {
                 return response()->json([
@@ -841,7 +856,7 @@ class AdminDashboardController extends Controller
     public function editTicket(Ticket $ticket)
     {
         try {
-            $ticket->load(['countries', 'event']);
+            $ticket->load('event');
             return response()->json([
                 'success' => true,
                 'ticket' => $ticket
@@ -862,25 +877,32 @@ class AdminDashboardController extends Controller
         $request->validate([
             'ticket_name' => 'required|string|max:255',
             'event_id' => 'nullable|exists:events,id',
-            'countries' => 'required|array|min:1',
-            'countries.*' => 'exists:countries,id',
-            'countries_data' => 'required|array',
-            'countries_data.*.adult_price' => 'required|numeric|min:0|max:999999.99',
-            'countries_data.*.teen_price' => 'required|numeric|min:0|max:999999.99',
-            'countries_data.*.university_price' => 'required|numeric|min:0|max:999999.99',
-            'countries_data.*.child_price' => 'required|numeric|min:0|max:999999.99',
             'total_quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string|max:1000',
-            'is_active' => 'in:0,1'
+            'is_active' => 'in:0,1',
+            'available_for_malaysians' => 'in:0,1',
+            'available_for_non_malaysians' => 'in:0,1',
+            // Malaysian pricing validation
+            'malaysian_adult_price' => 'required_if:available_for_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'malaysian_teen_price' => 'required_if:available_for_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'malaysian_university_price' => 'required_if:available_for_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'malaysian_child_price' => 'required_if:available_for_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            // Non-Malaysian pricing validation
+            'non_malaysian_adult_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_teen_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_university_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_child_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99'
         ]);
 
-        try {
-            // Log the incoming data for debugging
-            \Log::info('Update ticket request data:', [
-                'countries' => $request->countries,
-                'countries_data' => $request->countries_data
+        // Validate that at least one target audience is selected
+        if ($request->available_for_malaysians !== '1' && $request->available_for_non_malaysians !== '1') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please select at least one target audience (Malaysian or Non-Malaysian)'
             ]);
+        }
 
+        try {
             // Handle image upload
             $updateData = [
                 'ticket_name' => $request->ticket_name,
@@ -888,7 +910,19 @@ class AdminDashboardController extends Controller
                 'total_quantity' => $request->total_quantity,
                 'available_quantity' => $request->total_quantity, // Update available quantity if total changed
                 'description' => $request->description,
-                'is_active' => $request->is_active === '1'
+                'is_active' => $request->is_active === '1',
+                'available_for_malaysians' => $request->available_for_malaysians === '1',
+                'available_for_non_malaysians' => $request->available_for_non_malaysians === '1',
+                // Malaysian pricing
+                'malaysian_adult_price' => $request->available_for_malaysians === '1' ? $request->malaysian_adult_price : null,
+                'malaysian_teen_price' => $request->available_for_malaysians === '1' ? $request->malaysian_teen_price : null,
+                'malaysian_university_price' => $request->available_for_malaysians === '1' ? $request->malaysian_university_price : null,
+                'malaysian_child_price' => $request->available_for_malaysians === '1' ? $request->malaysian_child_price : null,
+                // Non-Malaysian pricing
+                'non_malaysian_adult_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_adult_price : null,
+                'non_malaysian_teen_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_teen_price : null,
+                'non_malaysian_university_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_university_price : null,
+                'non_malaysian_child_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_child_price : null
             ];
 
             // Process image upload if provided
@@ -908,59 +942,14 @@ class AdminDashboardController extends Controller
                 $updateData['image_url'] = 'storage/tickets/' . $imageName;
             }
 
-            // Update the base ticket
+            // Update the ticket with all data
             $ticket->update($updateData);
-
-            // Sync countries with their respective prices
-            $countriesData = [];
-            $countriesArray = $request->countries ?? [];
-            $countriesDataArray = $request->countries_data ?? [];
-            
-            // Ensure both arrays exist and are arrays
-            if (!is_array($countriesArray)) {
-                throw new \Exception('Countries must be an array');
-            }
-            
-            if (!is_array($countriesDataArray)) {
-                throw new \Exception('Countries data must be an array');
-            }
-
-            // Reindex both arrays to ensure sequential indexing
-            $countriesArray = array_values($countriesArray);
-            $countriesDataArray = array_values($countriesDataArray);
-
-            // Validate that we have the same number of countries and pricing data
-            if (count($countriesArray) !== count($countriesDataArray)) {
-                throw new \Exception('Mismatch between number of countries and pricing data');
-            }
-
-            foreach ($countriesArray as $index => $countryId) {
-                // Ensure the index exists in countries_data
-                if (isset($countriesDataArray[$index]) && 
-                    isset($countriesDataArray[$index]['adult_price']) && 
-                    isset($countriesDataArray[$index]['teen_price']) &&
-                    isset($countriesDataArray[$index]['university_price']) &&
-                    isset($countriesDataArray[$index]['child_price'])) {
-                    
-                    $countriesData[$countryId] = [
-                        'adult_price' => $countriesDataArray[$index]['adult_price'],
-                        'teen_price' => $countriesDataArray[$index]['teen_price'],
-                        'university_price' => $countriesDataArray[$index]['university_price'],
-                        'child_price' => $countriesDataArray[$index]['child_price']
-                    ];
-                } else {
-                    throw new \Exception("Missing price data for country at index {$index}. Available keys: " . implode(', ', array_keys($countriesDataArray[$index] ?? [])));
-                }
-            }
-            
-            \Log::info('Processed countries data:', $countriesData);
-            $ticket->countries()->sync($countriesData);
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Ticket updated successfully!',
-                    'ticket' => $ticket->load(['countries', 'event'])
+                    'ticket' => $ticket->load('event')
                 ]);
             }
 

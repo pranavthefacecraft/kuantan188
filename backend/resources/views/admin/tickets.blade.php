@@ -12,13 +12,9 @@
                 <p style="margin: 0.5rem 0 0 0; color: var(--on-surface-variant);">Manage ticket prices and availability</p>
             </div>
             <div style="display: flex; gap: 1rem;">
-                <button onclick="openTicketModal()" class="btn btn-primary">
+                <button onclick="alert('EMERGENCY BUTTON TEST'); var modal = document.getElementById('ticketModal'); if(modal) { modal.style.display='flex'; alert('Modal opened directly!'); } else { alert('Modal element not found!'); }" class="btn btn-primary">
                     <span class="material-icons" style="font-size: 18px;">add</span>
                     Add New Ticket
-                </button>
-                <button id="bulkDeleteBtn" onclick="bulkDeleteTickets()" class="btn btn-outline" style="display: none; color: var(--error); border-color: var(--error);">
-                    <span class="material-icons" style="font-size: 18px;">delete_sweep</span>
-                    Delete Selected (<span id="selectedCount">0</span>)
                 </button>
             </div>
         </div>
@@ -31,12 +27,9 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th style="width: 50px;">
-                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="checkbox-input">
-                            </th>
                             <th>Ticket Name</th>
                             <th>Event</th>
-                            <th>Currency</th>
+                            <th>Target Audience</th>
                             <th>Adult Price</th>
                             <th>Teenagers From 13</th>
                             <th>University Students</th>
@@ -49,10 +42,7 @@
                     </thead>
                     <tbody>
                         @forelse($tickets as $ticket)
-                            <tr>
-                                <td style="text-align: center;">
-                                    <input type="checkbox" class="ticket-checkbox" value="{{ $ticket->id }}" onchange="updateBulkDeleteButton()">
-                                </td>
+                            <tr data-ticket-id="{{ $ticket->id }}">
                                 <td>
                                     <div>
                                         <div style="font-weight: 600;">{{ $ticket->ticket_name ?? 'Unnamed Ticket' }}</div>
@@ -77,79 +67,103 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span class="material-icons" style="font-size: 16px; color: var(--accent);">public</span>
-                                        <div>
-                                            @if($ticket->countries->count() > 0)
-                                                @foreach($ticket->countries as $country)
-                                                    @if($country->is_active)
-                                                    <div style="margin-bottom: 0.25rem;">
-                                                        <div><strong>{{ $country->currency_code }}/{{ $country->currency_symbol }}</strong> - {{ $country->name }}</div>
-                                                    </div>
-                                                    @endif
-                                                @endforeach
-                                            @else
-                                                <span style="color: var(--on-surface-variant);">No countries assigned</span>
-                                            @endif
-                                        </div>
+                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                        @if($ticket->available_for_malaysians)
+                                            <span class="badge badge-success" style="background: var(--primary); color: white; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">
+                                                <span class="material-icons" style="font-size: 12px;">flag</span>
+                                                Malaysian
+                                            </span>
+                                        @endif
+                                        @if($ticket->available_for_non_malaysians)
+                                            <span class="badge badge-info" style="background: var(--accent); color: white; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">
+                                                <span class="material-icons" style="font-size: 12px;">public</span>
+                                                Non-Malaysian
+                                            </span>
+                                        @endif
+                                        @if(!$ticket->available_for_malaysians && !$ticket->available_for_non_malaysians)
+                                            <span style="color: var(--error); font-style: italic; font-size: 0.875rem;">
+                                                <span class="material-icons" style="font-size: 14px;">block</span>
+                                                No target audience
+                                            </span>
+                                        @endif
                                     </div>
                                 </td>
                                 <td>
-                                    @if($ticket->countries->count() > 0)
-                                        @foreach($ticket->countries as $country)
-                                            @if($country->is_active)
+                                    @if($ticket->available_for_malaysians || $ticket->available_for_non_malaysians)
+                                        @if($ticket->available_for_malaysians)
                                             <div style="margin-bottom: 0.5rem;">
                                                 <div style="font-weight: 600; color: var(--primary); font-size: 0.875rem;">
-                                                    {{ $country->name }}: RM {{ number_format($country->pivot->adult_price, 2) }}
+                                                    Malaysian: RM {{ number_format($ticket->malaysian_adult_price ?? 0, 2) }}
                                                 </div>
                                             </div>
-                                            @endif
-                                        @endforeach
-                                    @else
-                                        <span style="color: var(--on-surface-variant);">No pricing set</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($ticket->countries->count() > 0)
-                                        @foreach($ticket->countries as $country)
-                                            @if($country->is_active)
+                                        @endif
+                                        @if($ticket->available_for_non_malaysians)
                                             <div style="margin-bottom: 0.5rem;">
                                                 <div style="font-weight: 600; color: var(--accent); font-size: 0.875rem;">
-                                                    {{ $country->name }}: RM {{ number_format($country->pivot->teen_price ?? $country->pivot->adult_price, 2) }}
+                                                    Non-Malaysian: ${{ number_format($ticket->non_malaysian_adult_price ?? 0, 2) }}
                                                 </div>
                                             </div>
-                                            @endif
-                                        @endforeach
+                                        @endif
                                     @else
                                         <span style="color: var(--on-surface-variant);">No pricing set</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($ticket->countries->count() > 0)
-                                        @foreach($ticket->countries as $country)
-                                            @if($country->is_active)
+                                    @if($ticket->available_for_malaysians || $ticket->available_for_non_malaysians)
+                                        @if($ticket->available_for_malaysians)
+                                            <div style="margin-bottom: 0.5rem;">
+                                                <div style="font-weight: 600; color: var(--primary); font-size: 0.875rem;">
+                                                    Malaysian: RM {{ number_format($ticket->malaysian_teen_price ?? 0, 2) }}
+                                                </div>
+                                            </div>
+                                        @endif
+                                        @if($ticket->available_for_non_malaysians)
                                             <div style="margin-bottom: 0.5rem;">
                                                 <div style="font-weight: 600; color: var(--accent); font-size: 0.875rem;">
-                                                    {{ $country->name }}: RM {{ number_format($country->pivot->university_price ?? $country->pivot->adult_price, 2) }}
+                                                    Non-Malaysian: ${{ number_format($ticket->non_malaysian_teen_price ?? 0, 2) }}
                                                 </div>
                                             </div>
-                                            @endif
-                                        @endforeach
+                                        @endif
                                     @else
                                         <span style="color: var(--on-surface-variant);">No pricing set</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($ticket->countries->count() > 0)
-                                        @foreach($ticket->countries as $country)
-                                            @if($country->is_active)
+                                    @if($ticket->available_for_malaysians || $ticket->available_for_non_malaysians)
+                                        @if($ticket->available_for_malaysians)
                                             <div style="margin-bottom: 0.5rem;">
-                                                <div style="font-weight: 600; color: var(--secondary); font-size: 0.875rem;">
-                                                    {{ $country->name }}: RM {{ number_format($country->pivot->child_price, 2) }}
+                                                <div style="font-weight: 600; color: var(--primary); font-size: 0.875rem;">
+                                                    Malaysian: RM {{ number_format($ticket->malaysian_university_price ?? 0, 2) }}
                                                 </div>
                                             </div>
-                                            @endif
-                                        @endforeach
+                                        @endif
+                                        @if($ticket->available_for_non_malaysians)
+                                            <div style="margin-bottom: 0.5rem;">
+                                                <div style="font-weight: 600; color: var(--accent); font-size: 0.875rem;">
+                                                    Non-Malaysian: ${{ number_format($ticket->non_malaysian_university_price ?? 0, 2) }}
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @else
+                                        <span style="color: var(--on-surface-variant);">No pricing set</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($ticket->available_for_malaysians || $ticket->available_for_non_malaysians)
+                                        @if($ticket->available_for_malaysians)
+                                            <div style="margin-bottom: 0.5rem;">
+                                                <div style="font-weight: 600; color: var(--primary); font-size: 0.875rem;">
+                                                    Malaysian: RM {{ number_format($ticket->malaysian_child_price ?? 0, 2) }}
+                                                </div>
+                                            </div>
+                                        @endif
+                                        @if($ticket->available_for_non_malaysians)
+                                            <div style="margin-bottom: 0.5rem;">
+                                                <div style="font-weight: 600; color: var(--accent); font-size: 0.875rem;">
+                                                    Non-Malaysian: ${{ number_format($ticket->non_malaysian_child_price ?? 0, 2) }}
+                                                </div>
+                                            </div>
+                                        @endif
                                     @else
                                         <span style="color: var(--on-surface-variant);">No pricing set</span>
                                     @endif
@@ -203,19 +217,17 @@
                                                 {{ $ticket->is_active ? 'visibility' : 'visibility_off' }}
                                             </span>
                                         </button>
-                                        @if($totalBookings == 0)
-                                            <button class="btn btn-outline" 
-                                                    style="padding: 0.25rem 0.5rem; color: var(--error);"
-                                                    onclick="deleteTicket('{{ $ticket->id }}')">
-                                                <span class="material-icons" style="font-size: 16px;">delete</span>
-                                            </button>
-                                        @endif
+                                        <button class="btn btn-outline" 
+                                                style="padding: 0.25rem 0.5rem; color: var(--error);"
+                                                onclick="deleteTicket('{{ $ticket->id }}', {{ $totalBookings }})">
+                                            <span class="material-icons" style="font-size: 16px;">delete</span>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" style="text-align: center; padding: 3rem; color: var(--on-surface-variant);">
+                                <td colspan="10" style="text-align: center; padding: 3rem; color: var(--on-surface-variant);">
                                     <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
                                         <span class="material-icons" style="font-size: 48px; opacity: 0.3;">confirmation_number</span>
                                         <div>
@@ -256,11 +268,17 @@
             </button>
         </div>
         
-        <form id="editTicketForm" method="POST" enctype="multipart/form-data">
+        <form id="editTicketForm" method="POST" enctype="multipart/form-data" onsubmit="event.preventDefault(); submitEditTicketForm();">
             @csrf
             @method('PUT')
             <input type="hidden" id="edit_ticket_id" name="ticket_id">
             <div class="modal-body">
+                <!-- Success Message Container -->
+                <div id="editSuccessMessage" class="success-message" style="display: none;">
+                    <span class="material-icons">check_circle</span>
+                    <span class="success-text"></span>
+                </div>
+                
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="edit_ticket_name" class="form-label">Ticket Name *</label>
@@ -282,28 +300,96 @@
                         </select>
                     </div>
 
+                    <!-- Malaysian Availability Options for Edit -->
                     <div class="form-group full-width">
-                        <label for="edit_countries" class="form-label">Currency *</label>
-                        <select id="edit_countries" name="countries[]" class="form-input" multiple required style="height: auto; min-height: 120px;">
-                            @foreach($countries as $country)
-                                @if($country->is_active)
-                                <option value="{{ $country->id }}">
-                                    {{ $country->currency_code }}/{{ $country->currency_symbol }} - {{ $country->name }}
-                                </option>
-                                @endif
-                            @endforeach
-                        </select>
-                        <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
-                            Hold Ctrl/Cmd to select multiple currencies
+                        <label class="form-label">Target Audience *</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="checkbox-group">
+                                <input type="hidden" name="available_for_malaysians" value="0">
+                                <input type="checkbox" 
+                                       id="edit_available_for_malaysians" 
+                                       name="available_for_malaysians" 
+                                       class="checkbox-input" 
+                                       value="1" 
+                                       onchange="handleEditTargetAudienceChange('malaysians')">
+                                <label for="edit_available_for_malaysians" class="checkbox-label">
+                                    <span class="material-icons" style="font-size: 18px; color: var(--primary); margin-right: 0.5rem;">flag</span>
+                                    Malaysian
+                                </label>
+                            </div>
+                            
+                            <div class="checkbox-group">
+                                <input type="hidden" name="available_for_non_malaysians" value="0">
+                                <input type="checkbox" 
+                                       id="edit_available_for_non_malaysians" 
+                                       name="available_for_non_malaysians" 
+                                       class="checkbox-input" 
+                                       value="1" 
+                                       onchange="handleEditTargetAudienceChange('non_malaysians')">
+                                <label for="edit_available_for_non_malaysians" class="checkbox-label">
+                                    <span class="material-icons" style="font-size: 18px; color: var(--accent); margin-right: 0.5rem;">public</span>
+                                    Non-Malaysian
+                                </label>
+                            </div>
+                        </div>
+                        <small style="color: var(--on-surface-variant); margin-top: 0.5rem; display: block;">
+                            Select which groups can purchase this ticket. You can select both options.
                         </small>
                     </div>
 
-                    <div class="form-group full-width" id="editCountryPricingSection" style="display: none;">
-                        <label class="form-label">Country-Specific Pricing *</label>
-                        <div id="editCountryPricingContainer">
-                            <!-- Dynamic country pricing inputs will be added here -->
+                    <!-- Malaysian Pricing Section for Edit -->
+                    <div class="form-group full-width" id="editMalaysianPricingSection" style="display: none;">
+                        <label class="form-label">
+                            <span class="material-icons" style="font-size: 18px; color: var(--primary); margin-right: 0.5rem; vertical-align: middle;">flag</span>
+                            Malaysian Pricing *
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <div>
+                                <label class="form-label">Adult Price (RM)</label>
+                                <input type="number" id="edit_malaysian_adult_price" name="malaysian_adult_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Teen Price (RM)</label>
+                                <input type="number" id="edit_malaysian_teen_price" name="malaysian_teen_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">University Price (RM)</label>
+                                <input type="number" id="edit_malaysian_university_price" name="malaysian_university_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Child Price (RM)</label>
+                                <input type="number" id="edit_malaysian_child_price" name="malaysian_child_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Non-Malaysian Pricing Section for Edit -->
+                    <div class="form-group full-width" id="editNonMalaysianPricingSection" style="display: none;">
+                        <label class="form-label">
+                            <span class="material-icons" style="font-size: 18px; color: var(--accent); margin-right: 0.5rem; vertical-align: middle;">public</span>
+                            Non-Malaysian Pricing *
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <div>
+                                <label class="form-label">Adult Price (USD)</label>
+                                <input type="number" id="edit_non_malaysian_adult_price" name="non_malaysian_adult_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Teen Price (USD)</label>
+                                <input type="number" id="edit_non_malaysian_teen_price" name="non_malaysian_teen_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">University Price (USD)</label>
+                                <input type="number" id="edit_non_malaysian_university_price" name="non_malaysian_university_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Child Price (USD)</label>
+                                <input type="number" id="edit_non_malaysian_child_price" name="non_malaysian_child_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+
 
                     <div class="form-group">
                         <label for="edit_total_quantity" class="form-label">Total Quantity</label>
@@ -384,9 +470,15 @@
                     <span class="material-icons" style="font-size: 18px;">search</span>
                     Test Fields
                 </button>
-                <button type="submit" class="btn btn-primary">
-                    <span class="material-icons" style="font-size: 18px;">save</span>
-                    Update Ticket
+                <button type="button" class="btn btn-primary" onclick="submitEditTicketForm()" id="updateTicketBtn">
+                    <span class="btn-text">
+                        <span class="material-icons" style="font-size: 18px;">save</span>
+                        Update Ticket
+                    </span>
+                    <span class="btn-loading" style="display: none;">
+                        <span class="spinner"></span>
+                        Updating...
+                    </span>
                 </button>
             </div>
         </form>
@@ -402,6 +494,12 @@
             <button type="button" class="modal-close" onclick="closeTicketModal()">
                 <span class="material-icons">close</span>
             </button>
+        </div>
+        
+        <!-- Success Message for Create Ticket -->
+        <div id="createSuccessMessage" style="display: none; background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 1rem; margin: 1rem; border-radius: 8px; align-items: center;">
+            <span class="material-icons" style="color: #28a745; margin-right: 0.5rem;">check_circle</span>
+            <span class="success-text">Ticket created successfully!</span>
         </div>
         
         <form id="ticketForm" method="POST" action="{{ route('admin.tickets.store') }}" enctype="multipart/form-data">
@@ -428,28 +526,96 @@
                         </select>
                     </div>
 
+                    <!-- Malaysian Availability Options -->
                     <div class="form-group full-width">
-                        <label for="countries" class="form-label">Currency *</label>
-                        <select id="countries" name="countries[]" class="form-input" multiple required style="height: auto; min-height: 120px;">
-                            @foreach($countries as $country)
-                                @if($country->is_active)
-                                <option value="{{ $country->id }}">
-                                    {{ $country->currency_code }}/{{ $country->currency_symbol }} - {{ $country->name }}
-                                </option>
-                                @endif
-                            @endforeach
-                        </select>
-                        <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
-                            Hold Ctrl/Cmd to select multiple currencies
+                        <label class="form-label">Target Audience *</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="checkbox-group">
+                                <input type="hidden" name="available_for_malaysians" value="0">
+                                <input type="checkbox" 
+                                       id="available_for_malaysians" 
+                                       name="available_for_malaysians" 
+                                       class="checkbox-input" 
+                                       value="1" 
+                                       onchange="handleTargetAudienceChange('malaysians')">
+                                <label for="available_for_malaysians" class="checkbox-label">
+                                    <span class="material-icons" style="font-size: 18px; color: var(--primary); margin-right: 0.5rem;">flag</span>
+                                    Malaysian
+                                </label>
+                            </div>
+                            
+                            <div class="checkbox-group">
+                                <input type="hidden" name="available_for_non_malaysians" value="0">
+                                <input type="checkbox" 
+                                       id="available_for_non_malaysians" 
+                                       name="available_for_non_malaysians" 
+                                       class="checkbox-input" 
+                                       value="1" 
+                                       onchange="handleTargetAudienceChange('non_malaysians')">
+                                <label for="available_for_non_malaysians" class="checkbox-label">
+                                    <span class="material-icons" style="font-size: 18px; color: var(--accent); margin-right: 0.5rem;">public</span>
+                                    Non-Malaysian
+                                </label>
+                            </div>
+                        </div>
+                        <small style="color: var(--on-surface-variant); margin-top: 0.5rem; display: block;">
+                            Select which groups can purchase this ticket. You can select both options.
                         </small>
                     </div>
 
-                    <div class="form-group full-width" id="countryPricingSection" style="display: none;">
-                        <label class="form-label">Country-Specific Pricing *</label>
-                        <div id="countryPricingContainer">
-                            <!-- Dynamic country pricing inputs will be added here -->
+                    <!-- Malaysian Pricing Section -->
+                    <div class="form-group full-width" id="malaysianPricingSection" style="display: none;">
+                        <label class="form-label">
+                            <span class="material-icons" style="font-size: 18px; color: var(--primary); margin-right: 0.5rem; vertical-align: middle;">flag</span>
+                            Malaysian Pricing *
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <div>
+                                <label class="form-label">Adult Price (RM)</label>
+                                <input type="number" name="malaysian_adult_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Teen Price (RM)</label>
+                                <input type="number" name="malaysian_teen_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">University Price (RM)</label>
+                                <input type="number" name="malaysian_university_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Child Price (RM)</label>
+                                <input type="number" name="malaysian_child_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Non-Malaysian Pricing Section -->
+                    <div class="form-group full-width" id="nonMalaysianPricingSection" style="display: none;">
+                        <label class="form-label">
+                            <span class="material-icons" style="font-size: 18px; color: var(--accent); margin-right: 0.5rem; vertical-align: middle;">public</span>
+                            Non-Malaysian Pricing *
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <div>
+                                <label class="form-label">Adult Price (USD)</label>
+                                <input type="number" name="non_malaysian_adult_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Teen Price (USD)</label>
+                                <input type="number" name="non_malaysian_teen_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">University Price (USD)</label>
+                                <input type="number" name="non_malaysian_university_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Child Price (USD)</label>
+                                <input type="number" name="non_malaysian_child_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+
 
                     <div class="form-group">
                         <label for="total_quantity" class="form-label">Total Quantity</label>
@@ -521,9 +687,10 @@
                 <button type="button" class="btn btn-outline" onclick="closeTicketModal()">
                     Cancel
                 </button>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="createTicketBtn">
                     <span class="material-icons" style="font-size: 18px;">confirmation_number</span>
-                    Create Ticket
+                    <span id="createBtnText">Create Ticket</span>
+                    <span id="createBtnLoader" class="spinner" style="display: none; margin-left: 0.5rem;"></span>
                 </button>
             </div>
         </form>
@@ -532,6 +699,64 @@
 
 <style>
     /* Modal Styles */
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 0.5rem;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .btn-loading {
+        display: flex;
+        align-items: center;
+    }
+    
+    .success-message {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .success-message .material-icons {
+        color: #28a745;
+        font-size: 20px;
+    }
+    
+    .loading-indicator {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        color: #6c757d;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .loading-indicator .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #6c757d;
+        border-top-color: transparent;
+    }
+    
     .modal {
         position: fixed;
         top: 0;
@@ -941,8 +1166,56 @@
 
                 <div class="form-group full-width">
                     <label class="form-label">Currency Pricing</label>
-                    <div id="view_pricing_container" style="border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface-variant); padding: 1rem;">
-                        <!-- Dynamic pricing content will be inserted here -->
+                    
+                    <!-- Malaysian Pricing Section -->
+                    <div id="view_malaysian_pricing" style="display: none; margin-bottom: 1rem;">
+                        <label class="form-label" style="font-size: 0.875rem; color: var(--primary); font-weight: 600;">🇲🇾 Malaysian Pricing (RM)</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+                            <div>
+                                <label class="form-label" style="font-size: 0.75rem;">Adult Price</label>
+                                <input type="text" id="view_malaysian_adult_price" class="form-input" readonly>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.75rem;">Teen Price</label>
+                                <input type="text" id="view_malaysian_teen_price" class="form-input" readonly>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.75rem;">University Price</label>
+                                <input type="text" id="view_malaysian_university_price" class="form-input" readonly>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.75rem;">Child Price</label>
+                                <input type="text" id="view_malaysian_child_price" class="form-input" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Non-Malaysian Pricing Section -->
+                    <div id="view_non_malaysian_pricing" style="display: none;">
+                        <label class="form-label" style="font-size: 0.875rem; color: var(--accent); font-weight: 600;">🌍 Non-Malaysian Pricing (RM)</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+                            <div>
+                                <label class="form-label" style="font-size: 0.75rem;">Adult Price</label>
+                                <input type="text" id="view_non_malaysian_adult_price" class="form-input" readonly>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.75rem;">Teen Price</label>
+                                <input type="text" id="view_non_malaysian_teen_price" class="form-input" readonly>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.75rem;">University Price</label>
+                                <input type="text" id="view_non_malaysian_university_price" class="form-input" readonly>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.75rem;">Child Price</label>
+                                <input type="text" id="view_non_malaysian_child_price" class="form-input" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- No Pricing Message -->
+                    <div id="view_no_pricing" style="display: none;">
+                        <input type="text" value="No pricing configured" class="form-input" readonly style="font-style: italic; color: var(--on-surface-variant);">
                     </div>
                 </div>
 
@@ -977,1399 +1250,824 @@
 
 @section('scripts')
 <script>
-// Currency data for JavaScript use
-const currencyData = {
-    @foreach($countries as $country)
-    {{ $country->id }}: {
-        name: "{{ $country->name }}",
-        currency_code: "{{ $country->currency_code }}",
-        currency_symbol: "{{ $country->currency_symbol }}",
-        currency_pair: "{{ $country->currency_code }}/{{ $country->currency_symbol }}"
-    },
-    @endforeach
-};
+// Simple function definition
+function openTicketModal() {
+    var modal = document.getElementById('ticketModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    } else {
+        alert('Modal not found!');
+    }
+}
 
-console.log('Currency data loaded:', currencyData);
-console.log('Tickets script loaded successfully');
+// Assign to window
+window.openTicketModal = openTicketModal;
 
-function openEditTicketModal(ticketId) {
-    console.log('Opening edit modal for ticket ID:', ticketId);
+// Close modal function
+function closeTicketModal() {
+    var modal = document.getElementById('ticketModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        // Reset form
+        var form = document.getElementById('ticketForm');
+        if (form) {
+            form.reset();
+            // Hide pricing sections
+            document.getElementById('malaysianPricingSection').style.display = 'none';
+            document.getElementById('nonMalaysianPricingSection').style.display = 'none';
+            // Reset button state
+            resetCreateButton();
+        }
+        
+        // Hide pricing sections
+        var malaysianSection = document.getElementById('malaysianPricingSection');
+        var nonMalaysianSection = document.getElementById('nonMalaysianPricingSection');
+        if (malaysianSection) malaysianSection.style.display = 'none';
+        if (nonMalaysianSection) nonMalaysianSection.style.display = 'none';
+    }
+}
+
+window.closeTicketModal = closeTicketModal;
+
+// Add new ticket to the table dynamically
+function addTicketToTable(ticket) {
+    const tbody = document.querySelector('table tbody');
+    if (!tbody) return;
     
-    // Find the edit button and show loading state (could be from table or view modal)
-    const editButton = document.querySelector(`button[onclick="openEditTicketModal(${ticketId})"]`) || 
-                      document.getElementById('editFromViewBtn');
-    let originalEditContent = '';
-    
-    if (editButton) {
-        originalEditContent = editButton.innerHTML;
-        editButton.disabled = true;
-        editButton.innerHTML = '<span class="material-icons loading-spinner" style="font-size: 16px;">hourglass_empty</span>';
+    // Remove "No tickets found" row if it exists
+    const emptyRow = tbody.querySelector('tr td[colspan="10"]');
+    if (emptyRow) {
+        emptyRow.closest('tr').remove();
     }
     
-    // Fetch ticket data
-    console.log('Fetching ticket data from URL:', `/admin/tickets/${ticketId}/edit`);
-    console.log('CSRF token:', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'));
+    // Create new row HTML
+    const newRow = document.createElement('tr');
+    newRow.setAttribute('data-ticket-id', ticket.id);
     
-    fetch(`/admin/tickets/${ticketId}/edit`, {
-        method: 'GET',
+    // Format pricing information
+    let pricingHtml = '';
+    let targetAudienceHtml = '';
+    
+    if (ticket.available_for_malaysians) {
+        targetAudienceHtml += `
+            <span class="badge badge-success" style="background: var(--primary); color: white; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">
+                <span class="material-icons" style="font-size: 12px;">flag</span>
+                Malaysian
+            </span>
+        `;
+        pricingHtml += `
+            <div style="margin-bottom: 0.5rem;">
+                <div style="font-weight: 600; color: var(--primary); font-size: 0.875rem;">
+                    Malaysian: RM ${parseFloat(ticket.malaysian_adult_price || 0).toFixed(2)}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (ticket.available_for_non_malaysians) {
+        targetAudienceHtml += `
+            <span class="badge badge-info" style="background: var(--accent); color: white; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">
+                <span class="material-icons" style="font-size: 12px;">public</span>
+                Non-Malaysian
+            </span>
+        `;
+        pricingHtml += `
+            <div>
+                <div style="font-weight: 600; color: var(--accent); font-size: 0.875rem;">
+                    Non-Malaysian: $${parseFloat(ticket.non_malaysian_adult_price || 0).toFixed(2)}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (!ticket.available_for_malaysians && !ticket.available_for_non_malaysians) {
+        targetAudienceHtml = `
+            <span style="color: var(--error); font-style: italic; font-size: 0.875rem;">
+                <span class="material-icons" style="font-size: 14px;">block</span>
+                No target audience
+            </span>
+        `;
+    }
+    
+    if (!pricingHtml) {
+        pricingHtml = '<span style="color: var(--on-surface-variant); font-style: italic;">No pricing set</span>';
+    }
+    
+    // Generate availability info
+    let availabilityHtml;
+    if (ticket.total_quantity) {
+        availabilityHtml = `
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div>
+                    <div style="font-size: 0.875rem; margin-bottom: 0.25rem;">
+                        ${ticket.total_quantity} of ${ticket.total_quantity}
+                    </div>
+                    <div style="width: 80px; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
+                        <div style="width: 100%; height: 100%; background: var(--success); transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        availabilityHtml = `
+            <span class="badge badge-success">
+                <span class="material-icons" style="font-size: 12px;">all_inclusive</span>
+                Unlimited
+            </span>
+        `;
+    }
+    
+    newRow.innerHTML = `
+        <td>
+            <div>
+                <div style="font-weight: 600;">${ticket.ticket_name || 'Unnamed Ticket'}</div>
+                <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
+                    ${ticket.description ? (ticket.description.length > 50 ? ticket.description.substring(0, 50) + '...' : ticket.description) : 'No description'}
+                </div>
+            </div>
+        </td>
+        <td>
+            <span style="color: var(--on-surface-variant); font-style: italic;">
+                <span class="material-icons" style="font-size: 14px;">event_busy</span>
+                No specific event
+            </span>
+        </td>
+        <td>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                ${targetAudienceHtml}
+            </div>
+        </td>
+        <td>
+            ${pricingHtml}
+        </td>
+        <td>
+            ${availabilityHtml}
+        </td>
+        <td>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-icons" style="font-size: 16px; color: var(--accent);">book_online</span>
+                0
+            </div>
+        </td>
+        <td>
+            <div style="font-weight: 600; color: var(--success);">
+                RM 0.00
+            </div>
+        </td>
+        <td>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="openEditTicketModal(${ticket.id})" class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                    <span class="material-icons" style="font-size: 16px;">edit</span>
+                </button>
+                <button onclick="openViewTicketModal(${ticket.id})" class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                    <span class="material-icons" style="font-size: 16px; color: var(--success);">visibility</span>
+                </button>
+                <button class="btn btn-outline" 
+                        style="padding: 0.25rem 0.5rem; color: var(--error);"
+                        onclick="deleteTicket('${ticket.id}', 0)">
+                    <span class="material-icons" style="font-size: 16px;">delete</span>
+                </button>
+            </div>
+        </td>
+    `;
+    
+    // Insert at the beginning of the table (most recent first)
+    tbody.insertBefore(newRow, tbody.firstChild);
+    
+    // Add a subtle animation to highlight the new row
+    newRow.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+    setTimeout(() => {
+        newRow.style.backgroundColor = '';
+        newRow.style.transition = 'background-color 0.5s ease';
+    }, 2000);
+}
+
+// Reset create button to normal state
+function resetCreateButton() {
+    const btn = document.getElementById('createTicketBtn');
+    const btnText = document.getElementById('createBtnText');
+    const btnLoader = document.getElementById('createBtnLoader');
+    
+    if (btn && btnText && btnLoader) {
+        btn.disabled = false;
+        btnText.textContent = 'Create Ticket';
+        btnLoader.style.display = 'none';
+    }
+}
+
+// Set create button to loading state
+function setCreateButtonLoading() {
+    const btn = document.getElementById('createTicketBtn');
+    const btnText = document.getElementById('createBtnText');
+    const btnLoader = document.getElementById('createBtnLoader');
+    
+    if (btn && btnText && btnLoader) {
+        btn.disabled = true;
+        btnText.textContent = 'Creating...';
+        btnLoader.style.display = 'inline-block';
+    }
+}
+
+// Submit create ticket form via AJAX
+function submitCreateTicketForm(event) {
+    // Event is already prevented in the event listener
+    
+    const form = document.getElementById('ticketForm');
+    const formData = new FormData(form);
+    
+    setCreateButtonLoading();
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
         headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
     .then(response => {
+        // Log response for debugging
         console.log('Response status:', response.status);
         console.log('Response headers:', response.headers);
-        console.log('Response URL:', response.url);
-        console.log('Full response object:', response);
         
-        if (!response.ok) {
-            // Log more details for debugging
-            if (response.status === 404) {
-                console.error('404 Error - Route not found or authentication issue');
-                console.error('Request URL was:', `/admin/tickets/${ticketId}/edit`);
-                console.error('Current location:', window.location.href);
-            }
-            throw new Error(`HTTP error! status: ${response.status}`);
+        // Check if the response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            // If it's not JSON, log the HTML response for debugging
+            return response.text().then(text => {
+                console.log('HTML Response:', text);
+                throw new Error('Server returned HTML instead of JSON. Check browser console for the full response.');
+            });
         }
         return response.json();
     })
     .then(data => {
-        console.log('Received data:', data);
+        resetCreateButton();
+        
         if (data.success) {
-            const ticket = data.ticket;
+            // Show success message in the create modal
+            showCreateSuccessMessage(data.message || 'Ticket created successfully!');
             
-            // Check if modal elements exist
-            const editModal = document.getElementById('editTicketModal');
-            const editForm = document.getElementById('editTicketForm');
-            if (!editModal || !editForm) {
-                throw new Error('Edit modal elements not found in DOM');
+            // Add the new ticket to the table
+            if (data.ticket) {
+                addTicketToTable(data.ticket);
             }
             
-            // Populate form fields
-            const ticketIdField = document.getElementById('edit_ticket_id');
-            const ticketNameField = document.getElementById('edit_ticket_name');
-            const eventIdField = document.getElementById('edit_event_id');
-            const totalQuantityField = document.getElementById('edit_total_quantity');
-            const descriptionField = document.getElementById('edit_description');
-            const isActiveField = document.getElementById('edit_is_active');
+            // Reset form
+            form.reset();
+            document.getElementById('malaysianPricingSection').style.display = 'none';
+            document.getElementById('nonMalaysianPricingSection').style.display = 'none';
             
-            if (!ticketIdField || !ticketNameField) {
-                throw new Error('Required form fields not found');
-            }
-            
-            ticketIdField.value = ticket.id;
-            ticketNameField.value = ticket.ticket_name;
-            if (eventIdField) eventIdField.value = ticket.event_id || '';
-            if (totalQuantityField) totalQuantityField.value = ticket.total_quantity || '';
-            if (descriptionField) descriptionField.value = ticket.description || '';
-            if (isActiveField) isActiveField.checked = ticket.is_active;
-            
-            // Set selected countries
-            const countriesSelect = document.getElementById('edit_countries');
-            if (countriesSelect) {
-                Array.from(countriesSelect.options).forEach(option => {
-                    option.selected = false;
-                });
-                
-                // Create array to maintain order for proper indexing
-                const selectedCountries = [];
-                ticket.countries.forEach(country => {
-                    const option = countriesSelect.querySelector(`option[value="${country.id}"]`);
-                    if (option) {
-                        option.selected = true;
-                        selectedCountries.push(country);
-                    }
-                });
-                
-                // Update country pricing section using the reliable method
-                const countriesForForm = selectedCountries.map((country) => ({
-                    value: country.id,
-                    name: country.name,
-                    adultPrice: country.pivot.adult_price,
-                    teenPrice: country.pivot.teen_price,
-                    universityPrice: country.pivot.university_price,
-                    childPrice: country.pivot.child_price
-                }));
-                
-                const section = document.getElementById('editCountryPricingSection');
-                if (section) {
-                    section.style.display = 'block';
-                    rebuildCountryPricingFields(countriesForForm);
-                }
-            }
-            
-            // Show current image
-            showCurrentImage(ticket);
-            
-            // Set form action
-            editForm.action = `/admin/tickets/${ticketId}`;
-            
-            // Show modal
-            editModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            console.log('Edit modal should be visible now');
-            
-            // Add event listener for active status checkbox
-            if (isActiveField) {
-                isActiveField.addEventListener('change', function() {
-                    updateTicketStatusIcon(ticketId, this.checked);
-                });
-            }
+            // Don't reload the page - keep popup open with success message
         } else {
-            console.error('Server error:', data.message);
-            alert('Error loading ticket data: ' + (data.message || 'Unknown error'));
+            alert('Error: ' + (data.message || 'Failed to create ticket'));
         }
     })
     .catch(error => {
-        console.error('Fetch error:', error);
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            url: `/admin/tickets/${ticketId}/edit`,
-            ticketId: ticketId
-        });
-        alert('Error loading ticket data: ' + error.message + '. Check console for details.');
-    })
-    .finally(() => {
-        // Restore button state
-        if (editButton && originalEditContent) {
-            editButton.disabled = false;
-            editButton.innerHTML = originalEditContent;
-        }
+        resetCreateButton();
+        console.error('Error:', error);
+        alert('An error occurred while creating the ticket: ' + error.message);
     });
 }
 
-window.openEditTicketModal = openEditTicketModal;
-
-function closeEditTicketModal() {
-    document.getElementById('editTicketModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-    document.getElementById('editTicketForm').reset();
-    
-    // Reset country pricing section
-    const pricingSection = document.getElementById('editCountryPricingSection');
-    const pricingContainer = document.getElementById('editCountryPricingContainer');
-    pricingSection.style.display = 'none';
-    pricingContainer.innerHTML = '';
-}
-
-function updateTicketStatusIcon(ticketId, isActive) {
-    // Find the eye icon for this specific ticket in the table
-    const editButton = document.querySelector(`button[onclick="openEditTicketModal(${ticketId})"]`);
-    if (editButton && editButton.parentElement) {
-        const eyeLink = editButton.parentElement.querySelector('a .material-icons');
-        if (eyeLink) {
-            if (isActive) {
-                eyeLink.textContent = 'visibility';
-                eyeLink.style.color = 'var(--success)';
-                eyeLink.parentElement.style.color = '';
-            } else {
-                eyeLink.textContent = 'visibility_off';
-                eyeLink.style.color = 'var(--error)';
-                eyeLink.parentElement.style.color = 'var(--error)';
-            }
+// Target audience change handler
+function handleTargetAudienceChange(audienceType) {
+    if (audienceType === 'malaysians') {
+        const checkbox = document.getElementById('available_for_malaysians');
+        const section = document.getElementById('malaysianPricingSection');
+        
+        if (checkbox && section) {
+            section.style.display = checkbox.checked ? 'block' : 'none';
+        }
+    } else if (audienceType === 'non_malaysians') {
+        const checkbox = document.getElementById('available_for_non_malaysians');
+        const section = document.getElementById('nonMalaysianPricingSection');
+        
+        if (checkbox && section) {
+            section.style.display = checkbox.checked ? 'block' : 'none';
         }
     }
 }
 
-function rebuildCountryPricingFields(countries) {
-    console.log('=== REBUILDING COUNTRY PRICING FIELDS ===');
-    console.log('Countries to build:', countries);
+// Assign to window for global access
+window.handleTargetAudienceChange = handleTargetAudienceChange;
+
+// Edit ticket modal function
+// Show success message in create modal
+function showCreateSuccessMessage(message) {
+    const successDiv = document.getElementById('createSuccessMessage');
+    const successText = successDiv.querySelector('.success-text');
     
-    const container = document.getElementById('editCountryPricingContainer');
-    container.innerHTML = '';
+    successText.textContent = message;
+    successDiv.style.display = 'flex';
     
-    // Remove any existing hidden countries[] fields from this container
-    const existingHiddenFields = container.querySelectorAll('input[name="countries[]"]');
-    existingHiddenFields.forEach(field => field.remove());
-    
-    countries.forEach((country, index) => {
-        console.log(`Building field for index ${index}:`, country);
-        
-        const countryDiv = document.createElement('div');
-        countryDiv.className = 'country-pricing-item';
-        countryDiv.style.cssText = `
-            border: 1px solid var(--outline);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            background: var(--surface-variant);
-        `;
-        
-        countryDiv.innerHTML = `
-            <h4 style="margin: 0 0 1rem 0; color: var(--on-surface);">${country.name.trim()}</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label>Adult Price (RM):</label>
-                    <input type="number" 
-                           name="countries_data[${index}][adult_price]" 
-                           value="${country.adultPrice || ''}" 
-                           step="0.01" 
-                           min="0" 
-                           required 
-                           class="form-control"
-                           data-country-id="${country.value}">
-                </div>
-                <div class="form-group">
-                    <label>Teenagers From 13 (RM):</label>
-                    <input type="number" 
-                           name="countries_data[${index}][teen_price]" 
-                           value="${country.teenPrice || ''}" 
-                           step="0.01" 
-                           min="0" 
-                           required 
-                           class="form-control"
-                           data-country-id="${country.value}">
-                </div>
-                <div class="form-group">
-                    <label>University Students (RM):</label>
-                    <input type="number" 
-                           name="countries_data[${index}][university_price]" 
-                           value="${country.universityPrice || ''}" 
-                           step="0.01" 
-                           min="0" 
-                           required 
-                           class="form-control"
-                           data-country-id="${country.value}">
-                </div>
-                <div class="form-group">
-                    <label>Children Below 13 (RM):</label>
-                    <input type="number" 
-                           name="countries_data[${index}][child_price]" 
-                           value="${country.childPrice || ''}" 
-                           step="0.01" 
-                           min="0" 
-                           required 
-                           class="form-control"
-                           data-country-id="${country.value}">
-                </div>
-            </div>
-        `;
-        
-        container.appendChild(countryDiv);
-    });
-    
-    console.log('Finished building country pricing fields');
+    // Hide after 5 seconds
+    setTimeout(() => {
+        successDiv.style.display = 'none';
+    }, 5000);
 }
 
-// Test function for add form fields
-function testAddFormFields() {
-    console.log('=== ADD FORM FIELDS TEST ===');
+// Show success message in edit modal
+function showSuccessMessage(message) {
+    const successDiv = document.getElementById('editSuccessMessage');
+    const successText = successDiv.querySelector('.success-text');
     
-    const form = document.getElementById('ticketForm');
-    const container = document.getElementById('countryPricingContainer');
+    successText.textContent = message;
+    successDiv.style.display = 'flex';
     
-    if (!container) {
-        console.log('Container not found');
+    // Hide after 5 seconds
+    setTimeout(() => {
+        successDiv.style.display = 'none';
+    }, 5000);
+}
+
+// Submit edit ticket form via AJAX
+function submitEditTicketForm() {
+    const form = document.getElementById('editTicketForm');
+    const updateBtn = document.getElementById('updateTicketBtn');
+    const btnText = updateBtn.querySelector('.btn-text');
+    const btnLoading = updateBtn.querySelector('.btn-loading');
+    
+    // Show loading state
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'flex';
+    updateBtn.disabled = true;
+    
+    // Get form data
+    const formData = new FormData(form);
+    
+    // Submit via AJAX
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (response.redirected) {
+            // If redirected, it's likely a success - reload the page
+            window.location.reload();
+            return;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.success) {
+            // Show success message in modal instead of alert
+            showSuccessMessage('Ticket updated successfully!');
+            
+            // Optionally refresh the table data without closing modal
+            // You can add code here to refresh just the table if needed
+        } else if (data && data.errors) {
+            // Show validation errors
+            let errorMessage = 'Please fix the following errors:\\n';
+            for (let field in data.errors) {
+                errorMessage += '- ' + data.errors[field].join(', ') + '\\n';
+            }
+            alert(errorMessage);
+        } else {
+            alert(data?.message || 'Error updating ticket. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating ticket. Please try again.');
+    })
+    .finally(() => {
+        // Reset button state
+        btnText.style.display = 'flex';
+        btnLoading.style.display = 'none';
+        updateBtn.disabled = false;
+    });
+}
+
+function openEditTicketModal(ticketId) {
+    console.log('Opening edit modal for ticket ID:', ticketId);
+    
+    var modal = document.getElementById('editTicketModal');
+    if (!modal) {
+        alert('Edit modal not found!');
         return;
     }
     
-    const allInputs = container.querySelectorAll('input');
-    console.log(`Found ${allInputs.length} input fields in add form container:`);
+    // Show modal immediately
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
     
-    allInputs.forEach((input, index) => {
-        console.log(`  ${index}: name="${input.name}" value="${input.value}" type="${input.type}"`);
-    });
-    
-    // Test FormData
-    const formData = new FormData(form);
-    const countriesData = formData.getAll('countries[]');
-    console.log(`\nAdd FormData countries: [${countriesData.join(', ')}]`);
-    
-    for (let i = 0; i < countriesData.length; i++) {
-        const adult = formData.get(`countries_data[${i}][adult_price]`);
-        const teen = formData.get(`countries_data[${i}][teen_price]`);
-        const child = formData.get(`countries_data[${i}][child_price]`);
-        console.log(`  Index ${i}: adult="${adult}" teen="${teen}" child="${child}"`);
+    // Reset form and hide any previous success messages
+    var form = document.getElementById('editTicketForm');
+    if (form) {
+        form.reset();
     }
     
-    alert(`Found ${allInputs.length} fields in add form. Check console for details.`);
-}
-
-function openTicketModal() {
-        document.getElementById('ticketModal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        updateFinalPrice();
+    // Hide success message
+    var successMsg = document.getElementById('editSuccessMessage');
+    if (successMsg) {
+        successMsg.style.display = 'none';
     }
-
-    function closeTicketModal() {
-        document.getElementById('ticketModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
-        document.getElementById('ticketForm').reset();
-        
-        // Reset country pricing section
-        const pricingSection = document.getElementById('countryPricingSection');
-        const pricingContainer = document.getElementById('countryPricingContainer');
-        pricingSection.style.display = 'none';
-        pricingContainer.innerHTML = '';
-    }
-
-    function updateCountryPricing() {
-        console.log('=== ADD FORM COUNTRY PRICING UPDATE ===');
-        const countriesSelect = document.getElementById('countries');
-        const pricingSection = document.getElementById('countryPricingSection');
-        const pricingContainer = document.getElementById('countryPricingContainer');
-        
-        const selectedOptions = Array.from(countriesSelect.selectedOptions);
-        console.log('Selected countries for add form:', selectedOptions.length);
-        
-        if (selectedOptions.length === 0) {
-            console.log('No countries selected, hiding section');
-            pricingSection.style.display = 'none';
-            pricingContainer.innerHTML = '';
-            return;
-        }
-        
-        console.log('Countries selected, showing section and building fields');
-        pricingSection.style.display = 'block';
-        pricingContainer.innerHTML = '';
-        
-        selectedOptions.forEach((option, index) => {
-            const countryId = option.value;
-            const countryData = currencyData[countryId];
-            const displayName = countryData ? `${countryData.currency_pair} - ${countryData.name}` : option.textContent.trim();
-            
-            const countryDiv = document.createElement('div');
-            countryDiv.className = 'country-pricing-item';
-            countryDiv.style.cssText = `
-                border: 1px solid var(--outline);
-                border-radius: 0.5rem;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                background: var(--surface-variant);
-            `;
-            
-            countryDiv.innerHTML = `
-                <h4 style="margin: 0 0 1rem 0; color: var(--on-surface); font-size: 1rem;">${displayName}</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
-                    <div>
-                        <label class="form-label">Adult Price (${countryData?.currency_symbol || 'RM'}) *</label>
-                        <input type="number" 
-                               name="countries_data[${index}][adult_price]" 
-                               class="form-input country-adult-price" 
-                               step="0.01" 
-                               min="0" 
-                               placeholder="0.00"
-                               data-country-id="${countryId}"
-                               required>
-                    </div>
-                    <div>
-                        <label class="form-label">Teenagers From 13 (${countryData?.currency_symbol || 'RM'}) *</label>
-                        <input type="number" 
-                               name="countries_data[${index}][teen_price]" 
-                               class="form-input country-teen-price" 
-                               step="0.01" 
-                               min="0" 
-                               placeholder="0.00"
-                               data-country-id="${countryId}"
-                               required>
-                    </div>
-                    <div>
-                        <label class="form-label">University Students (${countryData?.currency_symbol || 'RM'}) *</label>
-                        <input type="number" 
-                               name="countries_data[${index}][university_price]" 
-                               class="form-input country-university-price" 
-                               step="0.01" 
-                               min="0" 
-                               placeholder="0.00"
-                               data-country-id="${countryId}"
-                               required>
-                    </div>
-                    <div>
-                        <label class="form-label">Children Below 13 (${countryData?.currency_symbol || 'RM'}) *</label>
-                        <input type="number" 
-                               name="countries_data[${index}][child_price]" 
-                               class="form-input country-child-price" 
-                               step="0.01" 
-                               min="0" 
-                               placeholder="0.00"
-                               data-country-id="${countryId}"
-                               required>
-                    </div>
-                </div>
-            `;
-            
-            pricingContainer.appendChild(countryDiv);
-        });
-        
-        // Price calculation listeners removed - no multipliers needed
-    }
-
-
-    // Edit Ticket Modal Functions (COMMENTED OUT - USING WINDOW FUNCTION ABOVE)
-    console.log('About to define openEditTicketModal function...');
     
-    /*function openEditTicketModal(ticketId) {
-        console.log('Opening edit modal for ticket ID:', ticketId);
-        
-        // Fetch ticket data
-        fetch(`/admin/tickets/${ticketId}/edit`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-            }
-        })
+    // Hide pricing sections initially
+    document.getElementById('editMalaysianPricingSection').style.display = 'none';
+    document.getElementById('editNonMalaysianPricingSection').style.display = 'none';
+    
+    // Show loading indicator at top of modal instead of disabling inputs
+    var modalBody = document.querySelector('#editTicketModal .modal-body');
+    var loadingDiv = document.createElement('div');
+    loadingDiv.id = 'editLoadingIndicator';
+    loadingDiv.className = 'loading-indicator';
+    loadingDiv.innerHTML = '<span class="spinner"></span> Loading ticket data...';
+    modalBody.insertBefore(loadingDiv, modalBody.firstChild);
+    
+    // Fetch ticket data immediately
+    fetch('/admin/tickets/' + ticketId + '/edit')
         .then(response => {
-            console.log('Response status:', response.status);
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Failed to fetch ticket data');
             }
             return response.json();
         })
         .then(data => {
-            console.log('Received data:', data);
-            if (data.success) {
-                const ticket = data.ticket;
+            // Remove loading indicator
+            var loadingIndicator = document.getElementById('editLoadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
+            }
+            
+            console.log('Received ticket data:', data);
+            
+            if (data.success && data.ticket) {
+                var ticket = data.ticket;
                 
-                // Populate form fields
-                document.getElementById('edit_ticket_id').value = ticket.id;
-                document.getElementById('edit_ticket_name').value = ticket.ticket_name;
+                // Populate basic fields quickly
+                document.getElementById('edit_ticket_id').value = ticket.id || '';
+                document.getElementById('edit_ticket_name').value = ticket.ticket_name || '';
                 document.getElementById('edit_event_id').value = ticket.event_id || '';
-                document.getElementById('edit_total_quantity').value = ticket.total_quantity || '';
                 document.getElementById('edit_description').value = ticket.description || '';
-                document.getElementById('edit_is_active').checked = ticket.is_active;
+                document.getElementById('edit_total_quantity').value = ticket.total_quantity || '';
+                document.getElementById('edit_is_active').checked = ticket.is_active == 1;
                 
-                // Set selected countries
-                const countriesSelect = document.getElementById('edit_countries');
-                Array.from(countriesSelect.options).forEach(option => {
-                    option.selected = false;
-                });
+                // Handle target audience checkboxes and pricing
+                var malaysianCheckbox = document.getElementById('edit_available_for_malaysians');
+                var nonMalaysianCheckbox = document.getElementById('edit_available_for_non_malaysians');
                 
-                // Create array to maintain order for proper indexing
-                const selectedCountries = [];
-                ticket.countries.forEach(country => {
-                    const option = countriesSelect.querySelector(`option[value="${country.id}"]`);
-                    if (option) {
-                        option.selected = true;
-                        selectedCountries.push(country);
+                if (malaysianCheckbox) {
+                    malaysianCheckbox.checked = ticket.available_for_malaysians == 1;
+                    if (ticket.available_for_malaysians == 1) {
+                        document.getElementById('editMalaysianPricingSection').style.display = 'block';
+                        
+                        // Populate Malaysian pricing fields quickly
+                        document.getElementById('edit_malaysian_adult_price').value = ticket.malaysian_adult_price || '';
+                        document.getElementById('edit_malaysian_teen_price').value = ticket.malaysian_teen_price || '';
+                        document.getElementById('edit_malaysian_university_price').value = ticket.malaysian_university_price || '';
+                        document.getElementById('edit_malaysian_child_price').value = ticket.malaysian_child_price || '';
                     }
-                });
+                }
                 
-                // Update country pricing section using the reliable method
-                const countriesForForm = selectedCountries.map((country) => ({
-                    value: country.id,
-                    name: country.name,
-                    adultPrice: country.pivot.adult_price,
-                    teenPrice: country.pivot.teen_price,
-                    universityPrice: country.pivot.university_price,
-                    childPrice: country.pivot.child_price
-                }));
+                if (nonMalaysianCheckbox) {
+                    nonMalaysianCheckbox.checked = ticket.available_for_non_malaysians == 1;
+                    if (ticket.available_for_non_malaysians == 1) {
+                        document.getElementById('editNonMalaysianPricingSection').style.display = 'block';
+                        
+                        // Populate Non-Malaysian pricing fields quickly
+                        document.getElementById('edit_non_malaysian_adult_price').value = ticket.non_malaysian_adult_price || '';
+                        document.getElementById('edit_non_malaysian_teen_price').value = ticket.non_malaysian_teen_price || '';
+                        document.getElementById('edit_non_malaysian_university_price').value = ticket.non_malaysian_university_price || '';
+                        document.getElementById('edit_non_malaysian_child_price').value = ticket.non_malaysian_child_price || '';
+                    }
+                }
                 
-                const section = document.getElementById('editCountryPricingSection');
-                section.style.display = 'block';
-                rebuildCountryPricingFields(countriesForForm);
+                // Handle existing image display
+                const imagePreview = document.getElementById('editImagePreview');
+                const currentImageContainer = document.getElementById('editCurrentImageContainer');
                 
-                // Set form action
-                document.getElementById('editTicketForm').action = `/admin/tickets/${ticketId}`;
+                if (ticket.image_url) {
+                    imagePreview.style.display = 'block';
+                    // Remove 'storage/' prefix if it exists, then add the correct path
+                    let imagePath = ticket.image_url;
+                    if (imagePath.startsWith('storage/')) {
+                        imagePath = imagePath.substring(8); // Remove 'storage/' prefix
+                    }
+                    currentImageContainer.innerHTML = `<img src="/storage/${imagePath}" alt="Current Image" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid var(--outline);">`;
+                } else {
+                    imagePreview.style.display = 'none';
+                    currentImageContainer.innerHTML = '';
+                }
                 
-                // Show modal
-                document.getElementById('editTicketModal').style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-                console.log('Edit modal should be visible now');
+                console.log('Form populated successfully');
+                
+                // Set form action to proper update route using Laravel route helper
+                document.getElementById('editTicketForm').action = "{{ url('/admin/tickets') }}/" + ticketId;
+                
             } else {
-                console.error('Server error:', data.message);
-                alert('Error loading ticket data: ' + (data.message || 'Unknown error'));
+                alert('Error: ' + (data.message || 'Failed to load ticket data'));
             }
         })
         .catch(error => {
-            console.error('Fetch error:', error);
-            alert('Error loading ticket data: ' + error.message);
-        });
-    }*/
-
-    function closeEditTicketModal() {
-        document.getElementById('editTicketModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
-        document.getElementById('editTicketForm').reset();
-        
-        // Reset country pricing section
-        const pricingSection = document.getElementById('editCountryPricingSection');
-        const pricingContainer = document.getElementById('editCountryPricingContainer');
-        pricingSection.style.display = 'none';
-        pricingContainer.innerHTML = '';
-    }
-
-    function updateEditCountryPricing(existingCountries = null) {
-        const countriesSelect = document.getElementById('edit_countries');
-        const pricingSection = document.getElementById('editCountryPricingSection');
-        const pricingContainer = document.getElementById('editCountryPricingContainer');
-        
-        let selectedOptions = [];
-        
-        if (existingCountries) {
-            // When loading existing data
-            selectedOptions = existingCountries.map((country, index) => ({
-                value: country.id,
-                textContent: country.name,
-                existing: country
-            }));
-        } else {
-            // When user changes selection - get fresh selection and reset indices
-            if (!countriesSelect) {
-                console.error('Countries select element not found');
-                return;
+            // Remove loading indicator on error
+            var loadingIndicator = document.getElementById('editLoadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
             }
             
-            const selectedOptionsList = Array.from(countriesSelect.selectedOptions);
-            console.log('Fresh selection from dropdown:', selectedOptionsList.length, 'countries');
-            
-            selectedOptions = selectedOptionsList.map((option, index) => ({
-                value: option.value,
-                textContent: option.textContent,
-                existing: null
-            }));
-            
-            console.log('Mapped selected options:', selectedOptions.map((opt, i) => `${i}: ${opt.value}`));
-        }
-        
-        console.log('Selected options count:', selectedOptions.length);
-        console.log('Selected options:', selectedOptions.map((opt, idx) => `${idx}: ${opt.value}`));
-        
-        if (selectedOptions.length === 0) {
-            pricingSection.style.display = 'none';
-            pricingContainer.innerHTML = '';
-            return;
-        }
-        
-        pricingSection.style.display = 'block';
-        pricingContainer.innerHTML = ''; // Clear container before adding new fields
-        pricingContainer.innerHTML = '';
-        
-        selectedOptions.forEach((option, index) => {
-            const countryId = option.value;
-            const countryName = option.textContent.trim();
-            const existingData = option.existing;
-            
-            console.log(`Creating form fields for country at index ${index}: ID=${countryId}, Name=${countryName}`);
-            
-            const countryDiv = document.createElement('div');
-            countryDiv.className = 'country-pricing-item';
-            countryDiv.style.cssText = `
-                border: 1px solid var(--outline);
-                border-radius: 0.5rem;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                background: var(--surface-variant);
-            `;
-            
-            // IMPORTANT: Use the exact index from the forEach loop (0, 1, 2, etc.)
-            const formIndex = index;
-            console.log(`Generating form fields with index ${formIndex} for country ${countryId}`);
-            
-            countryDiv.innerHTML = `
-                <h4 style="margin: 0 0 1rem 0; color: var(--on-surface); font-size: 1rem;">${countryName}</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
-                    <div>
-                        <label class="form-label">Adult Price (RM) *</label>
-                        <input type="number" 
-                               name="countries_data[${formIndex}][adult_price]" 
-                               class="form-input country-adult-price" 
-                               step="0.01" 
-                               min="0" 
-                               placeholder="0.00"
-                               data-country-id="${countryId}"
-                               data-form-index="${formIndex}"
-                               value="${existingData ? existingData.pivot.adult_price : ''}"
-                               required>
-                    </div>
-                    <div>
-                        <label class="form-label">Teenagers From 13 (RM) *</label>
-                        <input type="number" 
-                               name="countries_data[${formIndex}][teen_price]" 
-                               class="form-input country-teen-price" 
-                               step="0.01" 
-                               min="0" 
-                               placeholder="0.00"
-                               data-country-id="${countryId}"
-                               data-form-index="${formIndex}"
-                               value="${existingData ? existingData.pivot.teen_price : ''}"
-                               required>
-                    </div>
-                    <div>
-                        <label class="form-label">University Students (RM) *</label>
-                        <input type="number" 
-                               name="countries_data[${formIndex}][university_price]" 
-                               class="form-input country-university-price" 
-                               step="0.01" 
-                               min="0" 
-                               placeholder="0.00"
-                               data-country-id="${countryId}"
-                               data-form-index="${formIndex}"
-                               value="${existingData ? existingData.pivot.university_price : ''}"
-                               required>
-                    </div>
-                    <div>
-                        <label class="form-label">Children Below 13 (RM) *</label>
-                        <input type="number" 
-                               name="countries_data[${formIndex}][child_price]" 
-                               class="form-input country-child-price" 
-                               step="0.01" 
-                               min="0" 
-                               placeholder="0.00"
-                               data-country-id="${countryId}"
-                               data-form-index="${formIndex}"
-                               value="${existingData ? existingData.pivot.child_price : ''}"
-                               required>
-                    </div>
-                </div>
-            `;
-            
-            pricingContainer.appendChild(countryDiv);
+            console.error('Error fetching ticket:', error);
+            alert('Error loading ticket: ' + error.message);
         });
+}
+
+// Close edit modal function
+function closeEditTicketModal() {
+    var modal = document.getElementById('editTicketModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
         
-        // Price calculation listeners removed - no multipliers needed
+        // Reset form
+        var form = document.getElementById('editTicketForm');
+        if (form) {
+            form.reset();
+        }
+        
+        // Hide pricing sections
+        var malaysianSection = document.getElementById('editMalaysianPricingSection');
+        var nonMalaysianSection = document.getElementById('editNonMalaysianPricingSection');
+        if (malaysianSection) malaysianSection.style.display = 'none';
+        if (nonMalaysianSection) nonMalaysianSection.style.display = 'none';
+        
+        // Reset checkboxes
+        var malaysianCheckbox = document.getElementById('edit_available_for_malaysians');
+        var nonMalaysianCheckbox = document.getElementById('edit_available_for_non_malaysians');
+        if (malaysianCheckbox) malaysianCheckbox.checked = false;
+        if (nonMalaysianCheckbox) nonMalaysianCheckbox.checked = false;
+    }
+}
+
+// Open view ticket modal
+function openViewTicketModal(ticketId) {
+    console.log('Opening view modal for ticket ID:', ticketId);
+    
+    const modal = document.getElementById('viewTicketModal');
+    if (!modal) {
+        alert('View modal not found!');
+        return;
     }
     
-
-
-    // Function to rebuild form fields with guaranteed sequential indexing
-    function rebuildCountryPricingFields(countries) {
-        console.log('=== REBUILD FUNCTION CALLED ===');
-        console.log('Countries passed to rebuild:', countries);
-        
-        const container = document.getElementById('editCountryPricingContainer');
-        if (!container) {
-            console.error('Container not found!');
-            return;
-        }
-        
-        container.innerHTML = ''; // Clear everything
-        console.log('Container cleared');
-        
-        countries.forEach((country, index) => {
-            console.log(`Creating form fields for index ${index}:`);
-            console.log(`  Country ID: ${country.value}`);
-            console.log(`  Country Name: ${country.name}`);
-            console.log(`  Adult Price: ${country.adultPrice}`);
-            console.log(`  Child Price: ${country.childPrice}`);
-            
-            const countryData = currencyData[country.value];
-            const displayName = countryData ? `${countryData.currency_pair} - ${countryData.name}` : country.name;
-            
-            const adultFieldName = `countries_data[${index}][adult_price]`;
-            const teenFieldName = `countries_data[${index}][teen_price]`;
-            const universityFieldName = `countries_data[${index}][university_price]`;
-            const childFieldName = `countries_data[${index}][child_price]`;
-            
-            console.log(`  Generated field names: ${adultFieldName}, ${teenFieldName}, ${universityFieldName}, ${childFieldName}`);
-            
-            const div = document.createElement('div');
-            div.style.cssText = `
-                border: 1px solid var(--outline);
-                border-radius: 0.5rem;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                background: var(--surface-variant);
-            `;
-            
-            div.innerHTML = `
-                <h4 style="margin: 0 0 1rem 0;">${displayName}</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
-                    <div>
-                        <label>Adult Price (${countryData?.currency_symbol || 'RM'}) *</label>
-                        <input type="number" 
-                               name="${adultFieldName}" 
-                               class="form-input" 
-                               step="0.01" 
-                               min="0" 
-                               value="${country.adultPrice || ''}"
-                               data-debug-index="${index}"
-                               data-debug-country="${country.value}"
-                               required>
-                    </div>
-                    <div>
-                        <label>Teenagers From 13 (${countryData?.currency_symbol || 'RM'}) *</label>
-                        <input type="number" 
-                               name="${teenFieldName}" 
-                               class="form-input" 
-                               step="0.01" 
-                               min="0" 
-                               value="${country.teenPrice || ''}"
-                               data-debug-index="${index}"
-                               data-debug-country="${country.value}"
-                               required>
-                    </div>
-                    <div>
-                        <label>University Students (${countryData?.currency_symbol || 'RM'}) *</label>
-                        <input type="number" 
-                               name="${universityFieldName}" 
-                               class="form-input" 
-                               step="0.01" 
-                               min="0" 
-                               value="${country.universityPrice || ''}"
-                               data-debug-index="${index}"
-                               data-debug-country="${country.value}"
-                               required>
-                    </div>
-                    <div>
-                        <label>Children Below 13 (${countryData?.currency_symbol || 'RM'}) *</label>
-                        <input type="number" 
-                               name="${childFieldName}" 
-                               class="form-input" 
-                               step="0.01" 
-                               min="0" 
-                               value="${country.childPrice || ''}"
-                               data-debug-index="${index}"
-                               data-debug-country="${country.value}"
-                               required>
-                    </div>
-                </div>
-            `;
-            
-            container.appendChild(div);
-            
-            // Verify the fields were created
-            const adultField = container.querySelector(`input[name="${adultFieldName}"]`);
-            const childField = container.querySelector(`input[name="${childFieldName}"]`);
-            console.log(`  Adult field created: ${adultField ? 'YES' : 'NO'}`);
-            console.log(`  Child field created: ${childField ? 'YES' : 'NO'}`);
-        });
-        
-        console.log(`=== REBUILD COMPLETE: ${countries.length} countries, indices 0-${countries.length-1} ===`);
-        
-        // Final verification - list all form fields in container
-        const allFields = container.querySelectorAll('input[name*="countries_data"]');
-        console.log('All pricing fields created:');
-        allFields.forEach(field => {
-            console.log(`  ${field.name} = "${field.value}"`);
-        });
-    }
-
-    // Debug function to check form data
-    function debugFormData(formId) {
-        const form = document.getElementById(formId);
-        const formData = new FormData(form);
-        
-        console.log('=== FORM DEBUG ===');
-        console.log('Form ID:', formId);
-        
-        const countries = formData.getAll('countries[]');
-        console.log('Selected countries:', countries);
-        console.log('Number of countries:', countries.length);
-        
-        console.log('\nAll form fields:');
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}: "${value}"`);
-        }
-        
-        console.log('\nCountry pricing validation:');
-        countries.forEach((countryId, index) => {
-            const adultPriceKey = `countries_data[${index}][adult_price]`;
-            const childPriceKey = `countries_data[${index}][child_price]`;
-            const adultPrice = formData.get(adultPriceKey);
-            const childPrice = formData.get(childPriceKey);
-            
-            console.log(`Country at index ${index} (ID: ${countryId}):`);
-            console.log(`  Looking for keys: "${adultPriceKey}", "${childPriceKey}"`);
-            console.log(`  Adult Price: "${adultPrice}" (exists: ${adultPrice !== null})`);
-            console.log(`  Child Price: "${childPrice}" (exists: ${childPrice !== null})`);
-            console.log(`  Valid: ${adultPrice && childPrice && adultPrice !== '' && childPrice !== ''}`);
-        });
-        
-        // Also show in alert for easier viewing
-        const summary = `Countries: ${countries.length}\nForm fields: ${Array.from(formData.entries()).length}`;
-        alert('Debug info logged to console.\n\n' + summary);
-    }
-
-    // Simple test to see what form fields exist right now
-    function testFormFields() {
-        console.log('=== CURRENT FORM FIELDS TEST ===');
-        
-        const form = document.getElementById('editTicketForm');
-        const container = document.getElementById('editCountryPricingContainer');
-        
-        if (!container) {
-            console.log('Container not found');
-            return;
-        }
-        
-        const allInputs = container.querySelectorAll('input');
-        console.log(`Found ${allInputs.length} input fields in container:`);
-        
-        allInputs.forEach((input, index) => {
-            console.log(`  ${index}: name="${input.name}" value="${input.value}" type="${input.type}"`);
-        });
-        
-        // Test FormData
-        const formData = new FormData(form);
-        const countriesData = formData.getAll('countries[]');
-        console.log(`\nFormData countries: [${countriesData.join(', ')}]`);
-        
-        for (let i = 0; i < countriesData.length; i++) {
-            const adult = formData.get(`countries_data[${i}][adult_price]`);
-            const child = formData.get(`countries_data[${i}][child_price]`);
-            console.log(`  Index ${i}: adult="${adult}" child="${child}"`);
-        }
-        
-        alert(`Found ${allInputs.length} fields. Check console for details.`);
-    }
-
-    // Add event listeners when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        const countriesSelect = document.getElementById('countries');
-        const editCountriesSelect = document.getElementById('edit_countries');
-        
-        if (countriesSelect) {
-            countriesSelect.addEventListener('change', updateCountryPricing);
-        }
-        
-        if (editCountriesSelect) {
-            editCountriesSelect.addEventListener('change', function() {
-                console.log('=== COUNTRY SELECTION CHANGED ===');
-                console.log('Selected options count:', this.selectedOptions.length);
-                
-                const selected = Array.from(this.selectedOptions);
-                console.log('Selected options:', selected.map(opt => `${opt.value}: ${opt.textContent}`));
-                
-                // Collect existing form values before rebuilding
-                const existingValues = {};
-                const existingInputs = document.querySelectorAll('#editCountryPricingContainer input[name*="countries_data"]');
-                existingInputs.forEach(input => {
-                    const match = input.name.match(/countries_data\[(\d+)\]\[(\w+)\]/);
-                    if (match) {
-                        const index = match[1];
-                        const field = match[2];
-                        const countryId = input.getAttribute('data-country-id') || input.getAttribute('data-debug-country');
-                        
-                        if (countryId && input.value) {
-                            if (!existingValues[countryId]) existingValues[countryId] = {};
-                            existingValues[countryId][field] = input.value;
-                        }
-                    }
-                });
-                
-                console.log('Existing values preserved:', existingValues);
-                
-                const countries = selected.map((option, mapIndex) => {
-                    const countryId = option.value;
-                    const existing = existingValues[countryId] || {};
-                    
-                    const country = {
-                        value: countryId,
-                        name: option.textContent.trim(),
-                        adultPrice: existing.adult_price || '',
-                        teenPrice: existing.teen_price || '',
-                        universityPrice: existing.university_price || '',
-                        childPrice: existing.child_price || ''
-                    };
-                    console.log(`Mapped country ${mapIndex}:`, country);
-                    return country;
-                });
-                
-                const section = document.getElementById('editCountryPricingSection');
-                if (countries.length === 0) {
-                    console.log('No countries selected, hiding section');
-                    section.style.display = 'none';
-                } else {
-                    console.log(`${countries.length} countries selected, showing section`);
-                    section.style.display = 'block';
-                    rebuildCountryPricingFields(countries);
-                }
-            });
-        }
-        
-        // Handle edit form submission
-        const editForm = document.getElementById('editTicketForm');
-        if (editForm) {
-            editForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const submitBtn = e.target.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="material-icons" style="font-size: 18px;">hourglass_empty</span> Updating...';
-                
-                console.log('=== FORM SUBMISSION DEBUG ===');
-                
-                const formData = new FormData(this);
-                
-                // Debug: Log form data
-                console.log('Form data being sent:');
-                const formEntries = [];
-                const countriesEntries = [];
-                const pricingEntries = [];
-                
-                for (let [key, value] of formData.entries()) {
-                    console.log(`${key}: "${value}"`);
-                    formEntries.push(`${key}: ${value}`);
-                    
-                    if (key === 'countries[]') {
-                        countriesEntries.push(value);
-                    } else if (key.includes('countries_data')) {
-                        pricingEntries.push([key, value]);
-                    }
-                }
-                
-                console.log('\n=== SUMMARY ===');
-                console.log('Countries array:', countriesEntries);
-                console.log('Pricing data:', pricingEntries);
-                console.log('Countries count:', countriesEntries.length);
-                console.log('Pricing entries count:', pricingEntries.length);
-                
-                // Check if indices match
-                for (let i = 0; i < countriesEntries.length; i++) {
-                    const adultExists = pricingEntries.find(([key]) => key === `countries_data[${i}][adult_price]`);
-                    const childExists = pricingEntries.find(([key]) => key === `countries_data[${i}][child_price]`);
-                    console.log(`Index ${i}: adult=${adultExists ? 'EXISTS' : 'MISSING'}, child=${childExists ? 'EXISTS' : 'MISSING'}`);
-                }
-                
-                // Validate that we have matching countries and pricing data
-                const countries = formData.getAll('countries[]');
-                console.log('Countries selected:', countries);
-                
-                // Get all form entries to see what's actually there
-                const allEntries = Array.from(formData.entries());
-                const allPricingEntries = allEntries.filter(([key]) => key.includes('countries_data'));
-                console.log('Pricing entries found:', allPricingEntries);
-                
-                let hasValidPricing = true;
-                let missingData = [];
-                
-                // Check each country against available pricing data
-                console.log('=== VALIDATION CHECK ===');
-                countries.forEach((countryId, expectedIndex) => {
-                    console.log(`\n--- Validating Country ${expectedIndex} ---`);
-                    console.log(`Country ID: ${countryId}`);
-                    
-                    // Try to find pricing data for this country at the expected index
-                    const adultPriceKey = `countries_data[${expectedIndex}][adult_price]`;
-                    const childPriceKey = `countries_data[${expectedIndex}][child_price]`;
-                    
-                    console.log(`Expected keys: ${adultPriceKey}, ${childPriceKey}`);
-                    
-                    const adultPrice = formData.get(adultPriceKey);
-                    const childPrice = formData.get(childPriceKey);
-                    
-                    console.log(`Found values: adult="${adultPrice}", child="${childPrice}"`);
-                    console.log(`Adult valid: ${adultPrice && adultPrice !== '' && parseFloat(adultPrice) >= 0}`);
-                    console.log(`Child valid: ${childPrice && childPrice !== '' && parseFloat(childPrice) >= 0}`);
-                    
-                    if (!adultPrice || !childPrice || adultPrice === '' || childPrice === '' || parseFloat(adultPrice) < 0 || parseFloat(childPrice) < 0) {
-                        hasValidPricing = false;
-                        missingData.push(`Country at position ${expectedIndex + 1} (ID: ${countryId})`);
-                        
-                        console.log(`❌ VALIDATION FAILED for country ${expectedIndex}`);
-                        
-                        // Try to find if the data exists under a different index
-                        const foundAdult = allPricingEntries.find(([key]) => key.includes('adult_price'));
-                        const foundChild = allPricingEntries.find(([key]) => key.includes('child_price'));
-                        console.log(`Available adult price fields:`, allPricingEntries.filter(([key]) => key.includes('adult_price')));
-                        console.log(`Available child price fields:`, allPricingEntries.filter(([key]) => key.includes('child_price')));
-                    } else {
-                        console.log(`✅ VALIDATION PASSED for country ${expectedIndex}`);
-                    }
-                });
-                
-                console.log('=== VALIDATION COMPLETE ===');
-                
-                if (!hasValidPricing) {
-                    alert(`Please ensure all countries have valid pricing data. Missing or invalid data for: ${missingData.join(', ')}`);
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                    return;
-                }
-                
-                fetch(this.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        closeEditTicketModal();
-                        location.reload();
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while updating the ticket');
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                });
-            });
-        }
-    });
-
-    function deleteTicket(ticketId) {
-        if (confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) {
-            fetch(`/admin/tickets/${ticketId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                }
-            })
-            .then(response => {
-                console.log('Delete response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Delete response data:', data);
-                if (data.success) {
-                    alert('Ticket deleted successfully');
-                    location.reload();
-                } else {
-                    alert('Error deleting ticket: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Delete error:', error);
-                alert('Error deleting ticket: ' + error.message);
-            });
-        }
-    }
-
-    // Bulk delete functionality
-    function toggleSelectAll() {
-        const selectAllCheckbox = document.getElementById('selectAll');
-        const ticketCheckboxes = document.querySelectorAll('.ticket-checkbox');
-        
-        ticketCheckboxes.forEach(checkbox => {
-            checkbox.checked = selectAllCheckbox.checked;
-        });
-        
-        updateBulkDeleteButton();
-    }
-
-    function updateBulkDeleteButton() {
-        const selectedCheckboxes = document.querySelectorAll('.ticket-checkbox:checked');
-        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-        const selectedCount = document.getElementById('selectedCount');
-        
-        if (selectedCheckboxes.length > 0) {
-            bulkDeleteBtn.style.display = 'flex';
-            selectedCount.textContent = selectedCheckboxes.length;
-        } else {
-            bulkDeleteBtn.style.display = 'none';
-        }
-        
-        // Update select all checkbox state
-        const allCheckboxes = document.querySelectorAll('.ticket-checkbox');
-        const selectAllCheckbox = document.getElementById('selectAll');
-        
-        if (selectedCheckboxes.length === 0) {
-            selectAllCheckbox.indeterminate = false;
-            selectAllCheckbox.checked = false;
-        } else if (selectedCheckboxes.length === allCheckboxes.length) {
-            selectAllCheckbox.indeterminate = false;
-            selectAllCheckbox.checked = true;
-        } else {
-            selectAllCheckbox.indeterminate = true;
-        }
-    }
-
-    function bulkDeleteTickets() {
-        const selectedCheckboxes = document.querySelectorAll('.ticket-checkbox:checked');
-        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
-        
-        if (selectedIds.length === 0) {
-            alert('Please select tickets to delete.');
-            return;
-        }
-        
-        const confirmMessage = `Are you sure you want to delete ${selectedIds.length} ticket(s)? This action cannot be undone.`;
-        
-        if (confirm(confirmMessage)) {
-            fetch('/admin/tickets/bulk-delete', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                },
-                body: JSON.stringify({
-                    ticket_ids: selectedIds
-                })
-            })
-            .then(response => {
-                console.log('Bulk delete response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Bulk delete response data:', data);
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert('Error deleting tickets: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Bulk delete error:', error);
-                alert('Error deleting tickets: ' + error.message);
-            });
-        }
-    }
-
-    // Image preview functions
-    function previewTicketImage(input, modalType) {
-        const file = input.files[0];
-        if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                alert('Please select an image file (JPG, PNG, WebP)');
-                input.value = '';
-                return;
-            }
-
-            // Validate file size (2MB max)
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Image size must be less than 2MB');
-                input.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                if (modalType === 'add') {
-                    const previewContainer = document.getElementById('addImagePreview');
-                    const previewImg = document.getElementById('addPreviewImg');
-                    
-                    previewImg.src = e.target.result;
-                    previewContainer.style.display = 'block';
-                } else if (modalType === 'edit') {
-                    const previewContainer = document.getElementById('editImagePreview');
-                    const newImagePreview = document.getElementById('editNewImagePreview');
-                    const previewImg = document.getElementById('editPreviewImg');
-                    
-                    previewImg.src = e.target.result;
-                    previewContainer.style.display = 'block';
-                    newImagePreview.style.display = 'block';
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function removeImagePreview(modalType) {
-        if (modalType === 'add') {
-            document.getElementById('ticket_image').value = '';
-            document.getElementById('addImagePreview').style.display = 'none';
-            document.getElementById('addPreviewImg').src = '';
-        } else if (modalType === 'edit') {
-            document.getElementById('edit_ticket_image').value = '';
-            document.getElementById('editNewImagePreview').style.display = 'none';
-            document.getElementById('editPreviewImg').src = '';
-        }
-    }
-
-    function showCurrentImage(ticket) {
-        const currentImageContainer = document.getElementById('editCurrentImageContainer');
-        const editImagePreview = document.getElementById('editImagePreview');
-        
-        if (ticket.image_url) {
-            const imageUrl = ticket.image_url.startsWith('http') 
-                ? ticket.image_url 
-                : 'https://admin.tfcmockup.com/' + ticket.image_url;
-                
-            currentImageContainer.innerHTML = `
-                <img src="${imageUrl}" alt="Current ticket image" 
-                     style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid var(--outline);">
-            `;
-            editImagePreview.style.display = 'block';
-        } else {
-            currentImageContainer.innerHTML = '<p style="color: var(--on-surface-variant); font-style: italic;">No image uploaded</p>';
-            editImagePreview.style.display = 'block';
-        }
-        
-        // Hide new image preview initially
-        document.getElementById('editNewImagePreview').style.display = 'none';
-    }
-
-    // View Ticket Modal Functions
-    let currentViewTicketId = null;
-
-    function openViewTicketModal(ticketId) {
-        currentViewTicketId = ticketId;
-        
-        // Find the view button and show loading state
-        const viewButton = document.querySelector(`button[onclick="openViewTicketModal(${ticketId})"]`);
-        const originalViewContent = viewButton.innerHTML;
-        
-        viewButton.disabled = true;
-        viewButton.innerHTML = '<span class="material-icons loading-spinner" style="font-size: 16px;">hourglass_empty</span>';
-        
-        // Fetch ticket data
-        fetch(`/admin/tickets/${ticketId}/edit`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-            }
-        })
+    // Show modal immediately
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Show loading indicator at top of modal
+    const modalBody = document.querySelector('#viewTicketModal .modal-body');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'viewLoadingIndicator';
+    loadingDiv.className = 'loading-indicator';
+    loadingDiv.innerHTML = '<span class="spinner"></span> Loading ticket details...';
+    modalBody.insertBefore(loadingDiv, modalBody.firstChild);
+    
+    // Fetch ticket data
+    fetch('/admin/tickets/' + ticketId + '/edit')
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Failed to fetch ticket data');
             }
             return response.json();
         })
         .then(data => {
-            if (data.success) {
-                populateViewModal(data.ticket);
-                document.getElementById('viewTicketModal').style.display = 'flex';
-                document.body.style.overflow = 'hidden';
+            // Remove loading indicator
+            const loadingIndicator = document.getElementById('viewLoadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
+            }
+            
+            console.log('Received ticket data for view:', data);
+            
+            if (data.success && data.ticket) {
+                const ticket = data.ticket;
+                
+                // Populate basic fields
+                document.getElementById('view_ticket_name').value = ticket.ticket_name || '';
+                document.getElementById('view_event_name').value = ticket.event?.name || 'No specific event';
+                document.getElementById('view_total_quantity').value = ticket.total_quantity || '';
+                document.getElementById('view_available_quantity').value = ticket.available_quantity || '';
+                document.getElementById('view_description').value = ticket.description || '';
+                document.getElementById('view_created_at').value = new Date(ticket.created_at).toLocaleDateString() || '';
+                
+                // Set status
+                const statusElement = document.getElementById('view_status');
+                if (ticket.is_active == 1) {
+                    statusElement.innerHTML = '<span style="color: var(--primary); font-weight: 600;">✓ Active</span>';
+                } else {
+                    statusElement.innerHTML = '<span style="color: var(--error); font-weight: 600;">✗ Inactive</span>';
+                }
+                
+                // Handle pricing display with form fields
+                const malaysianPricingSection = document.getElementById('view_malaysian_pricing');
+                const nonMalaysianPricingSection = document.getElementById('view_non_malaysian_pricing');
+                const noPricingSection = document.getElementById('view_no_pricing');
+                
+                // Hide all sections initially
+                malaysianPricingSection.style.display = 'none';
+                nonMalaysianPricingSection.style.display = 'none';
+                noPricingSection.style.display = 'none';
+                
+                let hasPricing = false;
+                
+                if (ticket.available_for_malaysians == 1) {
+                    malaysianPricingSection.style.display = 'block';
+                    document.getElementById('view_malaysian_adult_price').value = 'RM ' + (ticket.malaysian_adult_price || '0.00');
+                    document.getElementById('view_malaysian_teen_price').value = 'RM ' + (ticket.malaysian_teen_price || '0.00');
+                    document.getElementById('view_malaysian_university_price').value = 'RM ' + (ticket.malaysian_university_price || '0.00');
+                    document.getElementById('view_malaysian_child_price').value = 'RM ' + (ticket.malaysian_child_price || '0.00');
+                    hasPricing = true;
+                }
+                
+                if (ticket.available_for_non_malaysians == 1) {
+                    nonMalaysianPricingSection.style.display = 'block';
+                    document.getElementById('view_non_malaysian_adult_price').value = 'RM ' + (ticket.non_malaysian_adult_price || '0.00');
+                    document.getElementById('view_non_malaysian_teen_price').value = 'RM ' + (ticket.non_malaysian_teen_price || '0.00');
+                    document.getElementById('view_non_malaysian_university_price').value = 'RM ' + (ticket.non_malaysian_university_price || '0.00');
+                    document.getElementById('view_non_malaysian_child_price').value = 'RM ' + (ticket.non_malaysian_child_price || '0.00');
+                    hasPricing = true;
+                }
+                
+                if (!hasPricing) {
+                    noPricingSection.style.display = 'block';
+                }
+                
+                // Handle image display
+                const imageSection = document.getElementById('view_image_section');
+                const imageElement = document.getElementById('view_ticket_image');
+                
+                if (ticket.image_url) {
+                    let imagePath = ticket.image_url;
+                    if (imagePath.startsWith('storage/')) {
+                        imagePath = imagePath.substring(8);
+                    }
+                    imageElement.src = `/storage/${imagePath}`;
+                    imageSection.style.display = 'block';
+                } else {
+                    imageSection.style.display = 'none';
+                }
+                
+                // Store ticket ID for edit function
+                const editBtn = document.getElementById('editFromViewBtn');
+                if (editBtn) {
+                    editBtn.setAttribute('data-ticket-id', ticketId);
+                }
+                
             } else {
-                alert('Error loading ticket data: ' + (data.message || 'Unknown error'));
+                alert('Error: ' + (data.message || 'Failed to load ticket data'));
+            }
+        })
+        .catch(error => {
+            // Remove loading indicator on error
+            const loadingIndicator = document.getElementById('viewLoadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
+            }
+            
+            console.error('Error fetching ticket:', error);
+            alert('Error loading ticket: ' + error.message);
+        });
+}
+
+// Close view ticket modal
+function closeViewTicketModal() {
+    const modal = document.getElementById('viewTicketModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Open edit modal from view modal
+function openEditTicketFromView() {
+    const editBtn = document.getElementById('editFromViewBtn');
+    const ticketId = editBtn.getAttribute('data-ticket-id');
+    
+    if (ticketId) {
+        closeViewTicketModal();
+        openEditTicketModal(ticketId);
+    } else {
+        alert('Error: Ticket ID not found');
+    }
+}
+
+// Edit form target audience handler
+function handleEditTargetAudienceChange(audienceType) {
+    console.log('handleEditTargetAudienceChange called for:', audienceType);
+    
+    if (audienceType === 'malaysians') {
+        const checkbox = document.getElementById('edit_available_for_malaysians');
+        const section = document.getElementById('editMalaysianPricingSection');
+        
+        console.log('Malaysian checkbox:', checkbox);
+        console.log('Malaysian checkbox checked:', checkbox ? checkbox.checked : 'not found');
+        console.log('Malaysian section:', section);
+        
+        if (checkbox && section) {
+            if (checkbox.checked) {
+                section.style.display = 'block';
+                console.log('Malaysian section shown');
+            } else {
+                section.style.display = 'none';
+                console.log('Malaysian section hidden');
+            }
+        } else {
+            alert('Edit Malaysian elements not found! Checkbox: ' + !!checkbox + ', Section: ' + !!section);
+        }
+    } else if (audienceType === 'non_malaysians') {
+        const checkbox = document.getElementById('edit_available_for_non_malaysians');
+        const section = document.getElementById('editNonMalaysianPricingSection');
+        
+        console.log('Non-Malaysian checkbox:', checkbox);
+        console.log('Non-Malaysian checkbox checked:', checkbox ? checkbox.checked : 'not found');
+        console.log('Non-Malaysian section:', section);
+        
+        if (checkbox && section) {
+            if (checkbox.checked) {
+                section.style.display = 'block';
+                console.log('Non-Malaysian section shown');
+            } else {
+                section.style.display = 'none';
+                console.log('Non-Malaysian section hidden');
+            }
+        } else {
+            alert('Edit Non-Malaysian elements not found! Checkbox: ' + !!checkbox + ', Section: ' + !!section);
+        }
+    }
+}
+
+// Delete ticket function
+function deleteTicket(ticketId, totalBookings = 0) {
+    let confirmMessage = 'Are you sure you want to delete this ticket? This action cannot be undone.';
+    
+    if (totalBookings > 0) {
+        confirmMessage = `WARNING: This ticket has ${totalBookings} existing booking(s).\n\nDeleting this ticket will also remove all associated bookings and cannot be undone.\n\nAre you sure you want to proceed?`;
+    }
+    
+    if (confirm(confirmMessage)) {
+        // Use fetch to delete the ticket with AJAX
+        fetch(`/admin/tickets/${ticketId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                showSuccessMessage(data.message);
+                
+                // Remove the ticket row from the table
+                const ticketRow = document.querySelector(`tr[data-ticket-id="${ticketId}"]`);
+                if (ticketRow) {
+                    ticketRow.remove();
+                }
+                
+                // Refresh the page after a short delay to update the pagination and totals
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                alert('Error: ' + (data.message || 'Failed to delete ticket'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error loading ticket data. Please try again.');
-        })
-        .finally(() => {
-            // Restore button state
-            if (viewButton) {
-                viewButton.disabled = false;
-                viewButton.innerHTML = originalViewContent;
-            }
+            alert('An error occurred while deleting the ticket.');
         });
     }
+}
 
-    function closeViewTicketModal() {
-        document.getElementById('viewTicketModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
-        currentViewTicketId = null;
+// Assign edit functions to window
+window.openEditTicketModal = openEditTicketModal;
+window.closeEditTicketModal = closeEditTicketModal;
+window.handleEditTargetAudienceChange = handleEditTargetAudienceChange;
+window.deleteTicket = deleteTicket;
+window.submitCreateTicketForm = submitCreateTicketForm;
+
+// Add form event listener when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    const ticketForm = document.getElementById('ticketForm');
+    if (ticketForm) {
+        // Remove any existing event listeners first
+        ticketForm.removeEventListener('submit', submitCreateTicketForm);
+        // Add the event listener
+        ticketForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            submitCreateTicketForm(event);
+            return false;
+        });
     }
-
-    function populateViewModal(ticket) {
-        // Basic ticket information
-        document.getElementById('view_ticket_name').value = ticket.ticket_name || '';
-        document.getElementById('view_event_name').value = ticket.event ? ticket.event.title : 'No specific event';
-        
-        // Status badge
-        const statusContainer = document.getElementById('view_status');
-        statusContainer.innerHTML = ticket.is_active 
-            ? '<span class="badge badge-success"><span class="material-icons" style="font-size: 12px;">check_circle</span> Active</span>'
-            : '<span class="badge badge-error"><span class="material-icons" style="font-size: 12px;">block</span> Inactive</span>';
-        
-        document.getElementById('view_total_quantity').value = ticket.total_quantity || 'Unlimited';
-        document.getElementById('view_available_quantity').value = ticket.available_quantity || '0';
-        
-        // Format creation date
-        if (ticket.created_at) {
-            const date = new Date(ticket.created_at);
-            document.getElementById('view_created_at').value = date.toLocaleString();
-        } else {
-            document.getElementById('view_created_at').value = '-';
-        }
-
-        // Description
-        document.getElementById('view_description').value = ticket.description || '';
-
-        // Pricing container
-        const pricingContainer = document.getElementById('view_pricing_container');
-        if (ticket.countries && ticket.countries.length > 0) {
-            let pricingHTML = '';
-            
-            // Filter only active countries
-            const activeCountries = ticket.countries.filter(country => country.is_active);
-            
-            if (activeCountries.length > 0) {
-                activeCountries.forEach((country, index) => {
-                    pricingHTML += `
-                        <div style="border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; background: var(--surface);">
-                            <h4 style="margin: 0 0 1rem 0; color: var(--on-surface); font-size: 1rem;">${country.name}</h4>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
-                                <div>
-                                    <label class="form-label">Adult Price (RM)</label>
-                                    <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.adult_price).toFixed(2)}" readonly>
-                                </div>
-                                <div>
-                                    <label class="form-label">Teenagers From 13 (RM)</label>
-                                    <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.teen_price || country.pivot.adult_price).toFixed(2)}" readonly>
-                                </div>
-                                <div>
-                                    <label class="form-label">University Students (RM)</label>
-                                    <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.university_price || country.pivot.adult_price).toFixed(2)}" readonly>
-                                </div>
-                                <div>
-                                    <label class="form-label">Children Below 13 (RM)</label>
-                                    <input type="text" class="form-input" value="RM ${parseFloat(country.pivot.child_price).toFixed(2)}" readonly>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                pricingHTML = '<div style="text-align: center; color: var(--on-surface-variant); padding: 1rem;">No active currencies assigned</div>';
-            }
-            
-            pricingContainer.innerHTML = pricingHTML;
-        } else {
-            pricingContainer.innerHTML = '<div style="text-align: center; color: var(--on-surface-variant); padding: 1rem;">No pricing information available</div>';
-        }
-
-        // Ticket image
-        const imageSection = document.getElementById('view_image_section');
-        const imageElement = document.getElementById('view_ticket_image');
-        
-        if (ticket.ticket_image) {
-            imageElement.src = `/${ticket.ticket_image}`;
-            imageSection.style.display = 'block';
-        } else {
-            imageSection.style.display = 'none';
-        }
-    }
-
-    function openEditTicketFromView() {
-        console.log('Opening edit modal from view, current ticket ID:', currentViewTicketId);
-        
-        const editFromViewBtn = document.getElementById('editFromViewBtn');
-        const originalContent = editFromViewBtn ? editFromViewBtn.innerHTML : null;
-        
-        if (!currentViewTicketId) {
-            console.error('No ticket ID available for editing');
-            alert('Error: No ticket ID found. Please close this modal and try editing directly from the table.');
-            return;
-        }
-        
-        // Store the ticket ID before closing the modal (since closeViewTicketModal sets it to null)
-        const ticketIdToEdit = currentViewTicketId;
-        
-        // Show loading on edit button
-        if (editFromViewBtn) {
-            editFromViewBtn.disabled = true;
-            editFromViewBtn.innerHTML = '<span class="material-icons loading-spinner" style="font-size: 18px;">hourglass_empty</span> Opening Edit...';
-        }
-        
-        // Close view modal first
-        closeViewTicketModal();
-        
-        // Small delay to ensure view modal closes before opening edit modal
-        setTimeout(() => {
-            try {
-                console.log('About to call openEditTicketModal with ID:', ticketIdToEdit);
-                openEditTicketModal(ticketIdToEdit);
-                console.log('openEditTicketModal call completed');
-            } catch (error) {
-                console.error('Error opening edit modal:', error);
-                alert('Error opening edit modal: ' + error.message + '. Please try editing directly from the table.');
-            } finally {
-                // Restore button state if still available (might not be if modal was closed)
-                setTimeout(() => {
-                    if (editFromViewBtn && originalContent) {
-                        editFromViewBtn.disabled = false;
-                        editFromViewBtn.innerHTML = originalContent;
-                    }
-                }, 500);
-            }
-        }, 100);
-    }
+});
 </script>
 @endsection

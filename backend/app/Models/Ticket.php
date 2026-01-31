@@ -16,13 +16,33 @@ class Ticket extends Model
         'available_quantity',
         'description',
         'image_url',
-        'is_active'
+        'is_active',
+        'available_for_malaysians',
+        'available_for_non_malaysians',
+        'malaysian_adult_price',
+        'malaysian_teen_price',
+        'malaysian_university_price',
+        'malaysian_child_price',
+        'non_malaysian_adult_price',
+        'non_malaysian_teen_price',
+        'non_malaysian_university_price',
+        'non_malaysian_child_price'
     ];
 
     protected $casts = [
         'base_price' => 'decimal:2',
         'final_price' => 'decimal:2',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'available_for_malaysians' => 'boolean',
+        'available_for_non_malaysians' => 'boolean',
+        'malaysian_adult_price' => 'decimal:2',
+        'malaysian_teen_price' => 'decimal:2',
+        'malaysian_university_price' => 'decimal:2',
+        'malaysian_child_price' => 'decimal:2',
+        'non_malaysian_adult_price' => 'decimal:2',
+        'non_malaysian_teen_price' => 'decimal:2',
+        'non_malaysian_university_price' => 'decimal:2',
+        'non_malaysian_child_price' => 'decimal:2'
     ];
 
     public function event(): BelongsTo
@@ -30,54 +50,8 @@ class Ticket extends Model
         return $this->belongsTo(Event::class);
     }
 
-    public function countries()
-    {
-        return $this->belongsToMany(Country::class, 'ticket_country')
-                    ->withPivot('adult_price', 'child_price', 'teen_price', 'university_price')
-                    ->withTimestamps();
-    }
-
-    // Keep for backward compatibility
-    public function country(): BelongsTo
-    {
-        return $this->belongsTo(Country::class);
-    }
-
-    public function bookings()
+    public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'ticket_id');
-    }
-
-    public function getBookingsViaEventCountryAttribute()
-    {
-        return Booking::where('event_id', $this->event_id)
-                     ->where('country_id', $this->country_id)
-                     ->get();
-    }
-
-    public function calculateFinalPriceForCountry($countryId): array
-    {
-        $country = $this->countries()->where('country_id', $countryId)->first();
-        if ($country) {
-            return [
-                'adult_price' => $country->pivot->adult_price * $country->price_multiplier,
-                'child_price' => $country->pivot->child_price * $country->price_multiplier
-            ];
-        }
-        return ['adult_price' => 0, 'child_price' => 0];
-    }
-
-    public function calculateFinalPrice(): void
-    {
-        if ($this->country) {
-            $this->final_price = $this->base_price * $this->country->price_multiplier;
-        }
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-        
-        // Remove automatic price calculation since prices are now in pivot table
     }
 }
