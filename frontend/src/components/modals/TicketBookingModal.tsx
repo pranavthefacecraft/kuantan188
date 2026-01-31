@@ -5,6 +5,7 @@ import PaymentMethodSelector, { PaymentMethod } from './PaymentMethodSelector';
 import paymentApi, { BookingData } from '../../services/paymentApi';
 import PaymentLoading from '../loading/PaymentLoading';
 import frontendLogger from '../../utils/logger';
+import { eventsApi } from '../../services/api';
 
 interface Ticket {
   id: number;
@@ -75,6 +76,10 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   
+  // Currency state
+  const [currencies, setCurrencies] = useState<any[]>([]);
+  const [selectedCurrency, setSelectedCurrency] = useState<any>(null);
+  
   // Contact form state
   const [contactForm, setContactForm] = useState({
     firstName: '',
@@ -111,6 +116,32 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       setIsProcessingPayment(false);
     }
   }, [show, ticket]);
+
+  // Fetch currencies when component mounts
+  React.useEffect(() => {
+    const fetchCurrencies = async () => {
+      try {
+        console.log('Fetching currencies...');
+        const response = await eventsApi.getCurrencies();
+        console.log('Currencies response:', response);
+        const currencyData = response.data || [];
+        console.log('Currency data:', currencyData);
+        setCurrencies(currencyData);
+        // Set default currency (first one or USD if available)
+        const defaultCurrency = currencyData.find((curr: any) => curr.currency_code === 'USD') || currencyData[0];
+        console.log('Default currency:', defaultCurrency);
+        setSelectedCurrency(defaultCurrency);
+      } catch (error) {
+        console.error('Failed to fetch currencies:', error);
+        // Set fallback currency
+        setSelectedCurrency({ currency_code: 'USD', currency_symbol: '$', country_name: 'United States' });
+      }
+    };
+
+    if (show) {
+      fetchCurrencies();
+    }
+  }, [show]);
 
   const handleQuantityChange = (type: 'adult' | 'teenager' | 'university' | 'child', change: number) => {
     const currentQuantities = getCurrentQuantities();
@@ -199,7 +230,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
 
   // Helper function to get currency symbol
   const getCurrencySymbol = () => {
-    return 'RM'; // Always use RM since we're a Malaysian site
+    return selectedCurrency?.currency_symbol || 'RM'; // Use selected currency or default to RM
   };
 
   // Helper function to get minimum price based on selected tab
@@ -698,6 +729,26 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* Currency Selection */}
+                  <div className="mb-4">
+                    <h6 className="mb-3">Select Currency</h6>
+                    <Form.Select 
+                      value={selectedCurrency?.currency_code || ''}
+                      onChange={(e) => {
+                        const currency = currencies.find(curr => curr.currency_code === e.target.value);
+                        setSelectedCurrency(currency);
+                      }}
+                      className="currency-select"
+                    >
+                      <option value="">Choose currency...</option>
+                      {currencies.map((currency) => (
+                        <option key={currency.currency_code} value={currency.currency_code}>
+                          {currency.currency_symbol} - {currency.currency_code} ({currency.country_name})
+                        </option>
+                      ))}
+                    </Form.Select>
                   </div>
 
                   {/* Time Selection */}

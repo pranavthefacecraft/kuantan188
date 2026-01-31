@@ -113,6 +113,12 @@ export const eventsApi = {
     const params = category && category !== 'all' ? { category } : {};
     const response = await apiClient.get('/public/events/book-now', { params });
     return response.data;
+  },
+
+  // Get available currencies
+  async getCurrencies(): Promise<ApiResponse<any[]>> {
+    const response = await apiClient.get('/public/countries/currencies');
+    return response.data;
   }
 };
 

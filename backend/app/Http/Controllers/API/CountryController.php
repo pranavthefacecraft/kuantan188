@@ -56,4 +56,24 @@ class CountryController extends Controller
         $country->delete();
         return response()->json(['message' => 'Country deleted successfully']);
     }
+
+    public function getCurrencies(): JsonResponse
+    {
+        $currencies = Country::where('is_active', true)
+            ->select('currency_code', 'currency_symbol', 'name')
+            ->distinct()
+            ->get()
+            ->map(function ($country) {
+                return [
+                    'currency_code' => $country->currency_code,
+                    'currency_symbol' => $country->currency_symbol,
+                    'country_name' => $country->name
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $currencies
+        ]);
+    }
 }

@@ -20,6 +20,7 @@ Route::get('/auth/user', [AuthController::class, 'user'])->middleware('auth:sanc
 
 // Public routes
 Route::get('/countries', [CountryController::class, 'index']);
+Route::get('/public/countries/currencies', [CountryController::class, 'getCurrencies']);
 Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{event}', [EventController::class, 'show']);
 
