@@ -159,16 +159,6 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     return malayTotal + nonMalayTotal;
   };
 
-  // Helper function to get price adjustment based on selected time
-  const getTimePriceMultiplier = () => {
-    if (!selectedTime) return 0;
-    
-    const bestPriceSlots = ['09:00', '09:30', '10:00', '10:30'];
-    const isBestPrice = bestPriceSlots.includes(selectedTime);
-    
-    return isBestPrice ? 0 : 5; // +$5 for non-best-price slots
-  };
-
   // Helper function to get current tab quantities
   const getCurrentQuantities = () => {
     return activeTab === 'malaysian' ? malaysianQuantities : nonMalaysianQuantities;
