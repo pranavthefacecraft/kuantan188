@@ -121,15 +121,11 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   React.useEffect(() => {
     const fetchCurrencies = async () => {
       try {
-        console.log('Fetching currencies...');
         const response = await eventsApi.getCurrencies();
-        console.log('Currencies response:', response);
         const currencyData = response.data || [];
-        console.log('Currency data:', currencyData);
         setCurrencies(currencyData);
         // Set default currency (first one or USD if available)
         const defaultCurrency = currencyData.find((curr: any) => curr.currency_code === 'USD') || currencyData[0];
-        console.log('Default currency:', defaultCurrency);
         setSelectedCurrency(defaultCurrency);
       } catch (error) {
         console.error('Failed to fetch currencies:', error);
@@ -187,7 +183,14 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       malayTotal = (baseAdultPrice * getCurrentQuantities().adult) + (baseChildPrice * getCurrentQuantities().child);
     }
     
-    return malayTotal + nonMalayTotal;
+    let totalInMYR = malayTotal + nonMalayTotal;
+    
+    // Apply currency conversion if a currency is selected
+    if (selectedCurrency && selectedCurrency.exchange_rate && selectedCurrency.currency_code !== 'MYR') {
+      totalInMYR = totalInMYR / parseFloat(selectedCurrency.exchange_rate);
+    }
+    
+    return totalInMYR;
   };
 
   // Helper function to get current tab quantities
@@ -214,18 +217,28 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
 
   // Helper function to get price and currency for display
   const getPrice = (type: 'adult' | 'child') => {
+    let basePriceMYR = 0;
+    
     if (ticket?.pricing) {
       const pricing = activeTab === 'malaysian' ? ticket.pricing.malaysian : ticket.pricing.non_malaysian;
-      console.log('Active tab:', activeTab, 'Pricing:', pricing); // Debug log
       const priceValue = type === 'adult' ? pricing.adult_price : pricing.child_price;
-      const price = parseFloat(priceValue || '0');
-      console.log('Price for', type, ':', price); // Debug log
-      return { price, currency: 'RM' };
+      basePriceMYR = parseFloat(priceValue || '0');
     } else if (selectedCountry) {
-      const price = parseFloat(selectedCountry[`${type}_price`] || '0');
-      return { price, currency: selectedCountry.currency_symbol || '$' };
+      basePriceMYR = parseFloat(selectedCountry[`${type}_price`] || '0');
+    } else {
+      basePriceMYR = type === 'adult' ? 49 : 35;
     }
-    return { price: type === 'adult' ? 49 : 35, currency: '$' };
+    
+    // Apply currency conversion if a currency is selected
+    let convertedPrice = basePriceMYR;
+    if (selectedCurrency && selectedCurrency.exchange_rate && selectedCurrency.currency_code !== 'MYR') {
+      convertedPrice = basePriceMYR / parseFloat(selectedCurrency.exchange_rate);
+    }
+    
+    return { 
+      price: convertedPrice, 
+      currency: selectedCurrency?.currency_symbol || 'RM' 
+    };
   };
 
   // Helper function to get currency symbol

@@ -60,14 +60,15 @@ class CountryController extends Controller
     public function getCurrencies(): JsonResponse
     {
         $currencies = Country::where('is_active', true)
-            ->select('currency_code', 'currency_symbol', 'name')
+            ->select('currency_code', 'currency_symbol', 'name', 'price_multiplier')
             ->distinct()
             ->get()
             ->map(function ($country) {
                 return [
                     'currency_code' => $country->currency_code,
                     'currency_symbol' => $country->currency_symbol,
-                    'country_name' => $country->name
+                    'country_name' => $country->name,
+                    'exchange_rate' => $country->price_multiplier
                 ];
             });
 
