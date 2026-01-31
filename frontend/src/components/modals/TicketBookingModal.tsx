@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Row, Col, Form } from 'react-bootstrap';
 import { format, addDays } from 'date-fns';
 import PaymentMethodSelector, { PaymentMethod } from './PaymentMethodSelector';
@@ -18,6 +18,19 @@ interface Ticket {
   image_url?: string;
   total_quantity?: number;
   available_quantity?: number;
+  pricing?: {
+    malaysian: {
+      adult_price: string;
+      child_price: string;
+      available: boolean;
+    };
+    non_malaysian: {
+      adult_price: string;
+      child_price: string;
+      available: boolean;
+    };
+  };
+  // Legacy support
   countries?: Array<{
     id: number;
     name: string;
@@ -38,10 +51,23 @@ interface TicketBookingModalProps {
 const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, ticket }) => {
   const [currentStep, setCurrentStep] = useState<'selection' | 'details' | 'payment' | 'thankyou'>('selection');
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
-  const [adultQuantity, setAdultQuantity] = useState(1);
-  const [teenQuantity, setTeenQuantity] = useState(0);
-  const [universityQuantity, setUniversityQuantity] = useState(0);
-  const [childQuantity, setChildQuantity] = useState(0);
+  const [activeTab, setActiveTab] = useState<'malaysian' | 'non_malaysian'>('malaysian');
+  
+  // Separate quantities for Malaysian and Non-Malaysian
+  const [malaysianQuantities, setMalaysianQuantities] = useState({
+    adult: 1,
+    teenager: 0,
+    university: 0,
+    child: 0
+  });
+  
+  const [nonMalaysianQuantities, setNonMalaysianQuantities] = useState({
+    adult: 0,
+    teenager: 0,
+    university: 0,
+    child: 0
+  });
+  
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [showCalendar, setShowCalendar] = useState(false);
@@ -63,12 +89,12 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   // Reset modal state when it opens/closes
   React.useEffect(() => {
     if (show && ticket) {
+      console.log('Modal opened with ticket:', ticket); // Debug log
       setCurrentStep('selection');
       setSelectedCountry(ticket.countries?.[0] || null);
-      setAdultQuantity(1);
-      setTeenQuantity(0);
-      setUniversityQuantity(0);
-      setChildQuantity(0);
+      setActiveTab('malaysian');
+      setMalaysianQuantities({ adult: 1, teenager: 0, university: 0, child: 0 });
+      setNonMalaysianQuantities({ adult: 0, teenager: 0, university: 0, child: 0 });
       setSelectedDate(new Date());
       setSelectedTime('');
       setShowCalendar(false);
@@ -86,47 +112,51 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     }
   }, [show, ticket]);
 
-  const handleQuantityChange = (type: 'adult' | 'teen' | 'university' | 'child', change: number) => {
-    if (type === 'adult') {
-      const newQuantity = adultQuantity + change;
-      if (newQuantity >= 0) {
-        setAdultQuantity(newQuantity);
-      }
-    } else if (type === 'teen') {
-      const newQuantity = teenQuantity + change;
-      if (newQuantity >= 0) {
-        setTeenQuantity(newQuantity);
-      }
-    } else if (type === 'university') {
-      const newQuantity = universityQuantity + change;
-      if (newQuantity >= 0) {
-        setUniversityQuantity(newQuantity);
-      }
-    } else {
-      const newQuantity = childQuantity + change;
-      if (newQuantity >= 0) {
-        setChildQuantity(newQuantity);
-      }
+  const handleQuantityChange = (type: 'adult' | 'teenager' | 'university' | 'child', change: number) => {
+    const currentQuantities = getCurrentQuantities();
+    const newQuantity = currentQuantities[type] + change;
+    
+    if (newQuantity >= 0) {
+      const updatedQuantities = {
+        ...currentQuantities,
+        [type]: newQuantity
+      };
+      updateCurrentQuantities(updatedQuantities);
     }
   };
 
   const calculateTotal = () => {
-    if (!selectedCountry) return 0;
+    let malayTotal = 0;
+    let nonMalayTotal = 0;
     
-    const baseAdultPrice = parseFloat(selectedCountry.adult_price || '0');
-    const baseTeenPrice = parseFloat(selectedCountry.teen_price || selectedCountry.adult_price || '0');
-    const baseUniversityPrice = parseFloat(selectedCountry.university_price || selectedCountry.adult_price || '0');
-    const baseChildPrice = parseFloat(selectedCountry.child_price || '0');
+    if (ticket?.pricing) {
+      // Calculate Malaysian total
+      const malayPricing = ticket.pricing.malaysian;
+      const malayAdultPrice = parseFloat(malayPricing.adult_price || '0');
+      const malayChildPrice = parseFloat(malayPricing.child_price || '0');
+      
+      malayTotal = (malayAdultPrice * malaysianQuantities.adult) + 
+                  (malayAdultPrice * malaysianQuantities.teenager) + // Same as adult
+                  (malayAdultPrice * malaysianQuantities.university) + // Same as adult
+                  (malayChildPrice * malaysianQuantities.child);
+                  
+      // Calculate Non-Malaysian total
+      const nonMalayPricing = ticket.pricing.non_malaysian;
+      const nonMalayAdultPrice = parseFloat(nonMalayPricing.adult_price || '0');
+      const nonMalayChildPrice = parseFloat(nonMalayPricing.child_price || '0');
+      
+      nonMalayTotal = (nonMalayAdultPrice * nonMalaysianQuantities.adult) + 
+                     (nonMalayAdultPrice * nonMalaysianQuantities.teenager) + // Same as adult
+                     (nonMalayAdultPrice * nonMalaysianQuantities.university) + // Same as adult
+                     (nonMalayChildPrice * nonMalaysianQuantities.child);
+    } else if (selectedCountry) {
+      // Legacy fallback
+      const baseAdultPrice = parseFloat(selectedCountry.adult_price || '0');
+      const baseChildPrice = parseFloat(selectedCountry.child_price || '0');
+      malayTotal = (baseAdultPrice * getCurrentQuantities().adult) + (baseChildPrice * getCurrentQuantities().child);
+    }
     
-    // Calculate time-based pricing adjustment
-    const timeMultiplier = getTimePriceMultiplier();
-    
-    const adultPrice = baseAdultPrice + timeMultiplier;
-    const teenPrice = baseTeenPrice + timeMultiplier;
-    const universityPrice = baseUniversityPrice + timeMultiplier;
-    const childPrice = baseChildPrice + timeMultiplier;
-    
-    return (adultPrice * adultQuantity) + (teenPrice * teenQuantity) + (universityPrice * universityQuantity) + (childPrice * childQuantity);
+    return malayTotal + nonMalayTotal;
   };
 
   // Helper function to get price adjustment based on selected time
@@ -139,8 +169,77 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     return isBestPrice ? 0 : 5; // +$5 for non-best-price slots
   };
 
+  // Helper function to get current tab quantities
+  const getCurrentQuantities = () => {
+    return activeTab === 'malaysian' ? malaysianQuantities : nonMalaysianQuantities;
+  };
+  
+  // Helper function to update current tab quantities
+  const updateCurrentQuantities = (newQuantities: any) => {
+    if (activeTab === 'malaysian') {
+      setMalaysianQuantities(newQuantities);
+    } else {
+      setNonMalaysianQuantities(newQuantities);
+    }
+  };
+
   const getTotalQuantity = () => {
-    return adultQuantity + teenQuantity + universityQuantity + childQuantity;
+    const malayTotal = malaysianQuantities.adult + malaysianQuantities.teenager + 
+                      malaysianQuantities.university + malaysianQuantities.child;
+    const nonMalayTotal = nonMalaysianQuantities.adult + nonMalaysianQuantities.teenager + 
+                         nonMalaysianQuantities.university + nonMalaysianQuantities.child;
+    return malayTotal + nonMalayTotal;
+  };
+
+  // Helper function to get price and currency for display
+  const getPrice = (type: 'adult' | 'child') => {
+    if (ticket?.pricing) {
+      const pricing = activeTab === 'malaysian' ? ticket.pricing.malaysian : ticket.pricing.non_malaysian;
+      console.log('Active tab:', activeTab, 'Pricing:', pricing); // Debug log
+      const priceValue = type === 'adult' ? pricing.adult_price : pricing.child_price;
+      const price = parseFloat(priceValue || '0');
+      console.log('Price for', type, ':', price); // Debug log
+      return { price, currency: 'RM' };
+    } else if (selectedCountry) {
+      const price = parseFloat(selectedCountry[`${type}_price`] || '0');
+      return { price, currency: selectedCountry.currency_symbol || '$' };
+    }
+    return { price: type === 'adult' ? 49 : 35, currency: '$' };
+  };
+
+  // Helper function to get currency symbol
+  const getCurrencySymbol = () => {
+    return 'RM'; // Always use RM since we're a Malaysian site
+  };
+
+  // Helper function to get minimum price based on selected tab
+  const getMinPrice = () => {
+    if (!ticket?.pricing) {
+      console.log('No pricing data found, using fallback');
+      return '49'; // fallback to original price
+    }
+    
+    const pricing = activeTab === 'malaysian' ? ticket.pricing.malaysian : ticket.pricing.non_malaysian;
+    console.log('Getting min price for tab:', activeTab, 'Pricing:', pricing);
+    
+    // Get the lowest price available (child price is usually lower)
+    const adultPrice = pricing.adult_price ? parseFloat(pricing.adult_price) : 0;
+    const childPrice = pricing.child_price ? parseFloat(pricing.child_price) : 0;
+    
+    console.log('Adult price:', adultPrice, 'Child price:', childPrice);
+    
+    if (adultPrice === 0 && childPrice === 0) {
+      console.log('Both prices are 0, using fallback');
+      return '49'; // fallback
+    }
+    
+    // Return the minimum non-zero price
+    if (childPrice > 0 && (childPrice < adultPrice || adultPrice === 0)) {
+      console.log('Returning child price:', childPrice);
+      return childPrice.toString();
+    }
+    console.log('Returning adult price:', adultPrice);
+    return adultPrice.toString();
   };
 
   const handleContinueToDetails = () => {
@@ -167,8 +266,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       mobile_phone: contactForm.mobilePhone,
       country: contactForm.country || selectedCountry?.name || 'Malaysia',
       postal_code: contactForm.postalCode,
-      adult_tickets: adultQuantity,
-      child_tickets: childQuantity,
+      adult_tickets: malaysianQuantities.adult + nonMalaysianQuantities.adult,
+      child_tickets: malaysianQuantities.child + nonMalaysianQuantities.child,
       quantity: getTotalQuantity(),
       adult_price: parseFloat(selectedCountry?.adult_price || '0'),
       child_price: parseFloat(selectedCountry?.child_price || '0'),
@@ -233,6 +332,12 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     await handlePaymentFlow();
   };
 
+  // Add debug logging when component mounts
+  useEffect(() => {
+    console.log('TicketBookingModal opened with ticket:', ticket);
+    console.log('Active tab:', activeTab);
+  }, [ticket, activeTab]);
+
   const handleClose = () => {
     setCurrentStep('selection');
     setBookingResult(null);
@@ -289,6 +394,28 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                     {ticket.description && (
                       <p className="ticket-description text-muted small mb-3">{ticket.description}</p>
                     )}
+                    
+                    {/* Malaysian/Non-Malaysian Tabs */}
+                    {ticket.pricing && (
+                      <div className="pricing-tabs mb-3">
+                        <div className="btn-group w-100" role="group">
+                          <button
+                            type="button"
+                            className={`btn ${activeTab === 'malaysian' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setActiveTab('malaysian')}
+                          >
+                            Malaysian
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn ${activeTab === 'non_malaysian' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setActiveTab('non_malaysian')}
+                          >
+                            Non-Malaysian
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Country Selection */}
@@ -318,18 +445,18 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                       <div>
                         <span className="fw-bold">Adult</span>
                         <div className="small text-muted">
-                          from {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.adult_price).toFixed(0) : '49'}
+                          from {getPrice('adult').currency}{getPrice('adult').price.toFixed(0)}
                         </div>
                       </div>
                       <div className="quantity-controls d-flex align-items-center">
                         <Button 
                           className="quantity-btn"
                           onClick={() => handleQuantityChange('adult', -1)}
-                          disabled={adultQuantity === 0}
+                          disabled={getCurrentQuantities().adult === 0}
                         >
                           −
                         </Button>
-                        <span className="quantity-display mx-3">{adultQuantity}</span>
+                        <span className="quantity-display mx-3">{getCurrentQuantities().adult}</span>
                         <Button 
                           className="quantity-btn"
                           onClick={() => handleQuantityChange('adult', 1)}
@@ -346,21 +473,21 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                       <div>
                         <span className="fw-bold">Teenagers From 13</span>
                         <div className="small text-muted">
-                          from {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.teen_price || selectedCountry.adult_price).toFixed(0) : '49'}
+                          from {getPrice('adult').currency}{getPrice('adult').price.toFixed(0)}
                         </div>
                       </div>
                       <div className="quantity-controls d-flex align-items-center">
                         <Button 
                           className="quantity-btn"
-                          onClick={() => handleQuantityChange('teen', -1)}
-                          disabled={teenQuantity === 0}
+                          onClick={() => handleQuantityChange('teenager', -1)}
+                          disabled={getCurrentQuantities().teenager === 0}
                         >
                           −
                         </Button>
-                        <span className="quantity-display mx-3">{teenQuantity}</span>
+                        <span className="quantity-display mx-3">{getCurrentQuantities().teenager}</span>
                         <Button 
                           className="quantity-btn"
-                          onClick={() => handleQuantityChange('teen', 1)}
+                          onClick={() => handleQuantityChange('teenager', 1)}
                         >
                           +
                         </Button>
@@ -374,18 +501,18 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                       <div>
                         <span className="fw-bold">University Students</span>
                         <div className="small text-muted">
-                          from {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.university_price || selectedCountry.adult_price).toFixed(0) : '49'}
+                          from {getPrice('adult').currency}{getPrice('adult').price.toFixed(0)}
                         </div>
                       </div>
                       <div className="quantity-controls d-flex align-items-center">
                         <Button 
                           className="quantity-btn"
                           onClick={() => handleQuantityChange('university', -1)}
-                          disabled={universityQuantity === 0}
+                          disabled={getCurrentQuantities().university === 0}
                         >
                           −
                         </Button>
-                        <span className="quantity-display mx-3">{universityQuantity}</span>
+                        <span className="quantity-display mx-3">{getCurrentQuantities().university}</span>
                         <Button 
                           className="quantity-btn"
                           onClick={() => handleQuantityChange('university', 1)}
@@ -402,18 +529,18 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                       <div>
                         <span className="fw-bold">Children Below 13</span>
                         <div className="small text-muted">
-                          from {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.child_price).toFixed(0) : '35'}
+                          from {getPrice('child').currency}{getPrice('child').price.toFixed(0)}
                         </div>
                       </div>
                       <div className="quantity-controls d-flex align-items-center">
                         <Button 
                           className="quantity-btn"
                           onClick={() => handleQuantityChange('child', -1)}
-                          disabled={childQuantity === 0}
+                          disabled={getCurrentQuantities().child === 0}
                         >
                           −
                         </Button>
-                        <span className="quantity-display mx-3">{childQuantity}</span>
+                        <span className="quantity-display mx-3">{getCurrentQuantities().child}</span>
                         <Button 
                           className="quantity-btn"
                           onClick={() => handleQuantityChange('child', 1)}
@@ -431,7 +558,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                 <div className="booking-options">
                   {/* Date Selection */}
                   <div className="mb-4">
-                    <h6 className="mb-3">Select Date</h6>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h6 className="mb-0">Select Date</h6>
+                      <div className="total-price-display">
+                        <strong>{getCurrencySymbol()}{calculateTotal()}</strong>
+                        <div className="text-muted small">{getTotalQuantity()} ticket(s)</div>
+                      </div>
+                    </div>
                     <div className="date-options d-flex gap-2">
                       {[0, 1].map((dayOffset) => {
                         const date = addDays(new Date(), dayOffset);
@@ -452,7 +585,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                             <div className="date-label">
                               {isToday ? 'Today' : 'Tomorrow'}
                             </div>
-                            <div className="date-price">
+                            <div className="date-price" style={{display: 'none'}}>
                               {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.adult_price).toFixed(0) : '49'}
                             </div>
                           </button>
@@ -483,7 +616,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                                 <div className="date-label">Other Dates</div>
                               </>
                             )}
-                            <div className="date-price">
+                            <div className="date-price" style={{display: 'none'}}>
                               {selectedCountry?.currency_symbol || '$'}{selectedCountry ? parseFloat(selectedCountry.adult_price).toFixed(0) : '49'}
                             </div>
                           </button>
@@ -498,7 +631,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                           <Button variant="link" className="p-0 text-muted">
                             <i className="fas fa-chevron-left"></i>
                           </Button>
-                          <h6 className="mb-0 fw-bold">December 2025</h6>
+                          <h6 className="mb-0 fw-bold">{format(new Date(), 'MMMM yyyy')}</h6>
                           <Button variant="link" className="p-0 text-muted">
                             <i className="fas fa-chevron-right"></i>
                           </Button>
@@ -512,26 +645,31 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                           </div>
                           
                           <div className="calendar-days">
-                            {Array.from({length: 31}, (_, i) => i + 1).map(day => {
-                              const isToday = day === 4;
-                              const isTomorrow = day === 5;
-                              const isSelected = day === 12;
+                            {(() => {
+                              const currentDate = new Date();
+                              const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+                              const today = currentDate.getDate();
+                              const tomorrow = today + 1;
                               
-                              return (
-                                <div 
-                                  key={day}
-                                  className={`calendar-day ${isToday || isTomorrow ? 'highlight' : ''} ${isSelected ? 'selected' : ''}`}
-                                  onClick={() => {
-                                    const newDate = new Date(2025, 11, day); // December 2025
-                                    setSelectedDate(newDate);
-                                    setShowCalendar(false);
-                                  }}
-                                >
-                                  <div className="day-number">{day}</div>
-                                  <div className="day-price small">$49</div>
-                                </div>
-                              );
-                            })}
+                              return Array.from({length: daysInMonth}, (_, i) => i + 1).map(day => {
+                                const isToday = day === today;
+                                const isTomorrow = day === tomorrow;
+                                const isSelected = format(selectedDate, 'yyyy-MM-dd') === format(new Date(currentDate.getFullYear(), currentDate.getMonth(), day), 'yyyy-MM-dd');
+                                
+                                return (
+                                  <div key={day} className={`calendar-day ${isToday || isTomorrow ? 'highlight' : ''} ${isSelected ? 'selected' : ''}`}
+                                    onClick={() => {
+                                      const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                                      setSelectedDate(newDate);
+                                      setShowCalendar(false);
+                                    }}
+                                  >
+                                    <div className="day-number">{day}</div>
+                                    <div className="day-price small" style={{display: 'none'}}>{getCurrencySymbol()}{getMinPrice()}</div>
+                                  </div>
+                                );
+                              });
+                            })()}
                           </div>
                         </div>
 
@@ -549,7 +687,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                                 }}
                               >
                                 <span>15:00</span>
-                                <span className="text-muted">$49</span>
+                                <span className="text-muted" style={{display: 'none'}}>{getCurrencySymbol()}{getMinPrice()}</span>
                               </Button>
                             </div>
                             <div className="col-6">
@@ -563,7 +701,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                                 }}
                               >
                                 <span>15:30</span>
-                                <span className="text-muted">$49</span>
+                                <span className="text-muted" style={{display: 'none'}}>{getCurrencySymbol()}{getMinPrice()}</span>
                               </Button>
                             </div>
                           </div>
@@ -591,7 +729,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                             type="button"
                           >
                             <div className="time-label">{time}</div>
-                            <div className="time-price">
+                            <div className="time-price" style={{display: 'none'}}>
                               {selectedCountry?.currency_symbol || '$'}{price}
                             </div>
                             {isBestPrice && <div className="best-price-badge">Best price</div>}
@@ -726,16 +864,16 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                       <p className="ticket-datetime">{format(selectedDate, 'd MMMM yyyy HH:mm')}</p>
                       
                       <div className="ticket-quantity">
-                        {adultQuantity > 0 && (
+                        {getCurrentQuantities().adult > 0 && (
                           <div className="d-flex justify-content-between align-items-center">
-                            <span className="text-success">{adultQuantity}× Adult</span>
-                            <span>{selectedCountry?.currency_symbol || '$'}{(parseFloat(selectedCountry?.adult_price || '0') * adultQuantity).toFixed(0)}</span>
+                            <span className="text-success">{getCurrentQuantities().adult}× Adult</span>
+                            <span>{getCurrencySymbol()}{(getPrice('adult').price * getCurrentQuantities().adult).toFixed(0)}</span>
                           </div>
                         )}
-                        {childQuantity > 0 && (
+                        {getCurrentQuantities().child > 0 && (
                           <div className="d-flex justify-content-between align-items-center mt-1">
-                            <span className="text-success">{childQuantity}× Child</span>
-                            <span>{selectedCountry?.currency_symbol || '$'}{(parseFloat(selectedCountry?.child_price || '0') * childQuantity).toFixed(0)}</span>
+                            <span className="text-success">{getCurrentQuantities().child}× Child</span>
+                            <span>{getCurrencySymbol()}{(getPrice('child').price * getCurrentQuantities().child).toFixed(0)}</span>
                           </div>
                         )}
                       </div>
@@ -859,8 +997,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
               <p><strong>Date & Time:</strong> {format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}</p>
               <div className="mb-2">
                 <strong>Tickets:</strong>
-                {adultQuantity > 0 && <div className="ms-2">• Adult × {adultQuantity}</div>}
-                {childQuantity > 0 && <div className="ms-2">• Child × {childQuantity}</div>}
+                {getCurrentQuantities().adult > 0 && <div className="ms-2">• Adult × {getCurrentQuantities().adult}</div>}
+                {getCurrentQuantities().child > 0 && <div className="ms-2">• Child × {getCurrentQuantities().child}</div>}
               </div>
               <p><strong>Total Amount:</strong> {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</p>
               <p><strong>Payment Method:</strong> {paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Billplz Online Payment'}</p>
@@ -871,13 +1009,28 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       
       <Modal.Footer className="modal-footer-custom">
         {currentStep === 'selection' && (
-          <Button 
-            className="continue-button w-100"
-            onClick={handleContinueToDetails}
-            disabled={getTotalQuantity() === 0 || !selectedTime}
-          >
-            Continue →
-          </Button>
+          <>
+            <div className="total-summary d-flex justify-content-between align-items-center w-100 mb-3">
+              <div>
+                <div className="total-label">Total for {getTotalQuantity()} ticket(s)</div>
+                <div className="total-breakdown text-muted small">
+                  {getCurrentQuantities().adult > 0 && `${getCurrentQuantities().adult} Adult${getCurrentQuantities().adult > 1 ? 's' : ''}`}
+                  {getCurrentQuantities().adult > 0 && getCurrentQuantities().child > 0 && ', '}
+                  {getCurrentQuantities().child > 0 && `${getCurrentQuantities().child} Child${getCurrentQuantities().child > 1 ? 'ren' : ''}`}
+                </div>
+              </div>
+              <div className="total-price">
+                <strong style={{fontSize: '1.5rem'}}>{getCurrencySymbol()}{calculateTotal()}</strong>
+              </div>
+            </div>
+            <Button 
+              className="continue-button w-100"
+              onClick={handleContinueToDetails}
+              disabled={getTotalQuantity() === 0 || !selectedTime}
+            >
+              Continue →
+            </Button>
+          </>
         )}
         
         {currentStep === 'details' && (
