@@ -14,14 +14,14 @@ export const API_ENDPOINTS = {
   // Countries
   COUNTRIES: '/countries',
   
-  // Events
-  EVENTS: '/events',
+  // Events - using public routes for frontend
+  EVENTS: '/public/events',
   
-  // Tickets
-  TICKETS: '/tickets',
+  // Tickets - using public routes for frontend
+  TICKETS: '/public/tickets',
   
-  // Bookings
-  BOOKINGS: '/bookings',
+  // Bookings - using public routes for frontend
+  BOOKINGS: '/public/bookings',
 };
 
 const apiConfig = {
