@@ -364,14 +364,21 @@ class PublicEventController extends Controller
      */
     public function getTickets(): JsonResponse
     {
-        $tickets = \App\Models\Ticket::with(['event', 'countries'])
+        $tickets = \App\Models\Ticket::with(['event'])
                                    ->where('is_active', true)
                                    ->get()
                                    ->map(function ($ticket) {
-            // Get pricing from the first available country or use default
-            $firstCountry = $ticket->countries->first();
-            $adultPrice = $firstCountry ? $firstCountry->pivot->adult_price : null;
-            $childPrice = $firstCountry ? $firstCountry->pivot->child_price : null;
+            // Use the new simplified pricing structure
+            $adultPrice = null;
+            $childPrice = null;
+            
+            if ($ticket->available_for_malaysians) {
+                $adultPrice = $ticket->malaysian_adult_price;
+                $childPrice = $ticket->malaysian_child_price;
+            } elseif ($ticket->available_for_non_malaysians) {
+                $adultPrice = $ticket->non_malaysian_adult_price;
+                $childPrice = $ticket->non_malaysian_child_price;
+            }
             
             return [
                 'id' => $ticket->id,
@@ -396,15 +403,18 @@ class PublicEventController extends Controller
                     'title' => $ticket->event->title,
                     'location' => $ticket->event->location
                 ] : null,
-                'countries' => $ticket->countries->map(function($country) {
-                    return [
-                        'id' => $country->id,
-                        'name' => $country->name,
-                        'currency_symbol' => $country->currency_symbol,
-                        'adult_price' => $country->pivot->adult_price,
-                        'child_price' => $country->pivot->child_price
-                    ];
-                })
+                'pricing' => [
+                    'malaysian' => [
+                        'adult_price' => $ticket->malaysian_adult_price,
+                        'child_price' => $ticket->malaysian_child_price,
+                        'available' => $ticket->malaysian_available
+                    ],
+                    'non_malaysian' => [
+                        'adult_price' => $ticket->non_malaysian_adult_price,
+                        'child_price' => $ticket->non_malaysian_child_price,
+                        'available' => $ticket->non_malaysian_available
+                    ]
+                ]
             ];
         });
 
