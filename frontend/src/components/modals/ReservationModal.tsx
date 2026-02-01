@@ -19,7 +19,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
   const [childQuantity, setChildQuantity] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentStep, setCurrentStep] = useState<'tickets' | 'checkout' | 'payment' | 'thankyou'>('tickets');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('billplz');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   
   // Contact form state
@@ -700,7 +700,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                     <strong>Email:</strong> {contactForm.email}
                   </div>
                   <div className="col-12 mt-1">
-                    <strong>Payment:</strong> {paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Billplz Online Payment'}
+                    <strong>Payment:</strong> Billplz Online Payment
                   </div>
                 </div>
               </div>

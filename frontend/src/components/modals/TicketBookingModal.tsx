@@ -73,7 +73,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [showCalendar, setShowCalendar] = useState(false);
   const [bookingResult, setBookingResult] = useState<any>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('billplz');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   
   // Currency state
@@ -88,7 +88,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     mobilePhone: '',
     country: '',
     postalCode: '',
-    receiveUpdates: false
+    receiveUpdates: false,
+    termsAgreed: false
   });
 
   // Reset modal state when it opens/closes
@@ -110,9 +111,10 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         mobilePhone: '',
         country: '',
         postalCode: '',
-        receiveUpdates: false
+        receiveUpdates: false,
+        termsAgreed: false
       });
-      setPaymentMethod('cash_on_delivery');
+      setPaymentMethod('billplz');
       setIsProcessingPayment(false);
     }
   }, [show, ticket]);
@@ -124,8 +126,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
         const response = await eventsApi.getCurrencies();
         const currencyData = response.data || [];
         setCurrencies(currencyData);
-        // Set default currency (first one or USD if available)
-        const defaultCurrency = currencyData.find((curr: any) => curr.currency_code === 'USD') || currencyData[0];
+        // Set default currency (MYR first, then first available)
+        const defaultCurrency = currencyData.find((curr: any) => curr.currency_code === 'MYR') || currencyData[0];
         setSelectedCurrency(defaultCurrency);
       } catch (error) {
         console.error('Failed to fetch currencies:', error);
@@ -215,12 +217,43 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     return malayTotal + nonMalayTotal;
   };
 
-  // Helper function to get price and currency for display
+  // Helper function to get price and currency for display (tab-dependent)
   const getPrice = (type: 'adult' | 'child') => {
     let basePriceMYR = 0;
     
     if (ticket?.pricing) {
+      console.log('Full ticket pricing data:', ticket.pricing);
       const pricing = activeTab === 'malaysian' ? ticket.pricing.malaysian : ticket.pricing.non_malaysian;
+      console.log('Selected pricing for', activeTab, ':', pricing);
+      const priceValue = type === 'adult' ? pricing.adult_price : pricing.child_price;
+      basePriceMYR = parseFloat(priceValue || '0');
+      console.log('getPrice debug:', {
+        type,
+        activeTab,
+        priceValue,
+        basePriceMYR,
+        selectedCurrency,
+        exchangeRate: selectedCurrency?.exchange_rate
+      });
+    } else if (selectedCountry) {
+      basePriceMYR = parseFloat(selectedCountry[`${type}_price`] || '0');
+    } else {
+      basePriceMYR = type === 'adult' ? 49 : 35;
+    }
+    
+    // Don't apply currency conversion for individual prices - always show in original MYR
+    return { 
+      price: basePriceMYR, 
+      currency: 'RM' // Always show individual prices in MYR
+    };
+  };
+
+  // Helper function to get Malaysian price specifically
+  const getMalaysianPrice = (type: 'adult' | 'child') => {
+    let basePriceMYR = 0;
+    
+    if (ticket?.pricing) {
+      const pricing = ticket.pricing.malaysian;
       const priceValue = type === 'adult' ? pricing.adult_price : pricing.child_price;
       basePriceMYR = parseFloat(priceValue || '0');
     } else if (selectedCountry) {
@@ -229,16 +262,24 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       basePriceMYR = type === 'adult' ? 49 : 35;
     }
     
-    // Apply currency conversion if a currency is selected
-    let convertedPrice = basePriceMYR;
-    if (selectedCurrency && selectedCurrency.exchange_rate && selectedCurrency.currency_code !== 'MYR') {
-      convertedPrice = basePriceMYR / parseFloat(selectedCurrency.exchange_rate);
+    return basePriceMYR;
+  };
+
+  // Helper function to get Non-Malaysian price specifically
+  const getNonMalaysianPrice = (type: 'adult' | 'child') => {
+    let basePriceMYR = 0;
+    
+    if (ticket?.pricing) {
+      const pricing = ticket.pricing.non_malaysian;
+      const priceValue = type === 'adult' ? pricing.adult_price : pricing.child_price;
+      basePriceMYR = parseFloat(priceValue || '0');
+    } else if (selectedCountry) {
+      basePriceMYR = parseFloat(selectedCountry[`${type}_price`] || '0');
+    } else {
+      basePriceMYR = type === 'adult' ? 49 : 35;
     }
     
-    return { 
-      price: convertedPrice, 
-      currency: selectedCurrency?.currency_symbol || 'RM' 
-    };
+    return basePriceMYR;
   };
 
   // Helper function to get currency symbol
@@ -595,7 +636,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <h6 className="mb-0">Select Date</h6>
                       <div className="total-price-display">
-                        <strong>{getCurrencySymbol()}{calculateTotal()}</strong>
+                        <strong>{getCurrencySymbol()}{calculateTotal().toFixed(2)}</strong>
                         <div className="text-muted small">{getTotalQuantity()} ticket(s)</div>
                       </div>
                     </div>
@@ -883,8 +924,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                           I agree to the <button type="button" className="btn btn-link p-0 text-primary" style={{textDecoration: 'underline', fontSize: 'inherit'}}>booking terms</button> needed to complete the order <span className="text-danger">*</span>
                         </span>
                       }
-                      checked={contactForm.receiveUpdates}
-                      onChange={(e) => setContactForm({...contactForm, receiveUpdates: e.target.checked})}
+                      checked={contactForm.termsAgreed}
+                      onChange={(e) => setContactForm({...contactForm, termsAgreed: e.target.checked})}
                       required
                     />
                   </Form.Group>
@@ -918,58 +959,92 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                       <p className="ticket-datetime">{format(selectedDate, 'd MMMM yyyy HH:mm')}</p>
                       
                       <div className="ticket-quantity">
-                        {getCurrentQuantities().adult > 0 && (
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span className="text-success">{getCurrentQuantities().adult}× Adult</span>
-                            <span>{getCurrencySymbol()}{(getPrice('adult').price * getCurrentQuantities().adult).toFixed(0)}</span>
+                        {/* Malaysian Section */}
+                        {(malaysianQuantities.adult > 0 || malaysianQuantities.teenager > 0 || malaysianQuantities.university > 0 || malaysianQuantities.child > 0) && (
+                          <div className="mb-3">
+                            <h6 className="text-primary mb-2">Malaysian</h6>
+                            {malaysianQuantities.adult > 0 && (
+                              <div className="d-flex justify-content-between align-items-center">
+                                <span className="text-success">{malaysianQuantities.adult}× Adult</span>
+                                <span>RM{(getMalaysianPrice('adult') * malaysianQuantities.adult).toFixed(0)}</span>
+                              </div>
+                            )}
+                            {malaysianQuantities.teenager > 0 && (
+                              <div className="d-flex justify-content-between align-items-center mt-1">
+                                <span className="text-success">{malaysianQuantities.teenager}× Teenagers From 13</span>
+                                <span>RM{(getMalaysianPrice('adult') * malaysianQuantities.teenager).toFixed(0)}</span>
+                              </div>
+                            )}
+                            {malaysianQuantities.university > 0 && (
+                              <div className="d-flex justify-content-between align-items-center mt-1">
+                                <span className="text-success">{malaysianQuantities.university}× University Students</span>
+                                <span>RM{(getMalaysianPrice('adult') * malaysianQuantities.university).toFixed(0)}</span>
+                              </div>
+                            )}
+                            {malaysianQuantities.child > 0 && (
+                              <div className="d-flex justify-content-between align-items-center mt-1">
+                                <span className="text-success">{malaysianQuantities.child}× Children Below 13</span>
+                                <span>RM{(getMalaysianPrice('child') * malaysianQuantities.child).toFixed(0)}</span>
+                              </div>
+                            )}
                           </div>
                         )}
-                        {getCurrentQuantities().child > 0 && (
-                          <div className="d-flex justify-content-between align-items-center mt-1">
-                            <span className="text-success">{getCurrentQuantities().child}× Child</span>
-                            <span>{getCurrencySymbol()}{(getPrice('child').price * getCurrentQuantities().child).toFixed(0)}</span>
+                        
+                        {/* Non-Malaysian Section */}
+                        {(nonMalaysianQuantities.adult > 0 || nonMalaysianQuantities.teenager > 0 || nonMalaysianQuantities.university > 0 || nonMalaysianQuantities.child > 0) && (
+                          <div>
+                            <h6 className="text-info mb-2">Non-Malaysian</h6>
+                            {nonMalaysianQuantities.adult > 0 && (
+                              <div className="d-flex justify-content-between align-items-center">
+                                <span className="text-success">{nonMalaysianQuantities.adult}× Adult</span>
+                                <span>RM{(getNonMalaysianPrice('adult') * nonMalaysianQuantities.adult).toFixed(0)}</span>
+                              </div>
+                            )}
+                            {nonMalaysianQuantities.teenager > 0 && (
+                              <div className="d-flex justify-content-between align-items-center mt-1">
+                                <span className="text-success">{nonMalaysianQuantities.teenager}× Teenagers From 13</span>
+                                <span>RM{(getNonMalaysianPrice('adult') * nonMalaysianQuantities.teenager).toFixed(0)}</span>
+                              </div>
+                            )}
+                            {nonMalaysianQuantities.university > 0 && (
+                              <div className="d-flex justify-content-between align-items-center mt-1">
+                                <span className="text-success">{nonMalaysianQuantities.university}× University Students</span>
+                                <span>RM{(getNonMalaysianPrice('adult') * nonMalaysianQuantities.university).toFixed(0)}</span>
+                              </div>
+                            )}
+                            {nonMalaysianQuantities.child > 0 && (
+                              <div className="d-flex justify-content-between align-items-center mt-1">
+                                <span className="text-success">{nonMalaysianQuantities.child}× Children Below 13</span>
+                                <span>RM{(getNonMalaysianPrice('child') * nonMalaysianQuantities.child).toFixed(0)}</span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
                       
-                      <div className="ticket-actions mt-3">
-                        <Button variant="link" className="p-0 text-success me-3" size="sm">Edit</Button>
-                        <Button variant="link" className="p-0 text-success" size="sm">Remove</Button>
-                      </div>
                     </div>
                   </div>
-
-                  <Button className="continue-shopping-btn w-100 mb-4" variant="success" size="sm">
-                    + Continue shopping
-                  </Button>
 
                   {/* Pricing Breakdown */}
                   <div className="pricing-breakdown">
                     <div className="d-flex justify-content-between mb-2">
                       <span>Subtotal</span>
-                      <span>{selectedCountry?.currency_symbol || '$'}{calculateTotal().toFixed(2)}</span>
+                      <span>{getCurrencySymbol()}{calculateTotal().toFixed(2)}</span>
                     </div>
                     <div className="d-flex justify-content-between mb-2">
                       <span>Amusement Tax</span>
-                      <span>{selectedCountry?.currency_symbol || '$'}{(calculateTotal() * 0.05).toFixed(2)}</span>
+                      <span>{getCurrencySymbol()}{(calculateTotal() * 0.05).toFixed(2)}</span>
                     </div>
                     <div className="d-flex justify-content-between mb-3">
                       <span>Bar Tax</span>
-                      <span>{selectedCountry?.currency_symbol || '$'}{(calculateTotal() * 0.03).toFixed(2)}</span>
+                      <span>{getCurrencySymbol()}{(calculateTotal() * 0.03).toFixed(2)}</span>
                     </div>
                     
                     <hr />
                     
                     <div className="d-flex justify-content-between total-due">
                       <strong>Total Due</strong>
-                      <strong>{selectedCountry?.currency_symbol || '$'}{(calculateTotal() * 1.08).toFixed(2)}</strong>
-                    </div>
-
-                    <div className="promo-section mt-3">
-                      <Button variant="link" className="p-0 text-success">
-                        <i className="fas fa-plus-circle me-2"></i>
-                        Enter promo / gift card code
-                      </Button>
+                      <strong>{getCurrencySymbol()}{(calculateTotal() * 1.08).toFixed(2)}</strong>
                     </div>
                   </div>
                 </div>
@@ -1015,7 +1090,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                     <div className="d-flex align-items-center">
                       <span className="fw-bold">Payment Method:</span>
                       <span className="ms-2 badge bg-primary">
-                        {paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Billplz Online Payment'}
+                        Billplz Online Payment
                       </span>
                     </div>
                   </div>
@@ -1051,11 +1126,30 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
               <p><strong>Date & Time:</strong> {format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}</p>
               <div className="mb-2">
                 <strong>Tickets:</strong>
-                {getCurrentQuantities().adult > 0 && <div className="ms-2">• Adult × {getCurrentQuantities().adult}</div>}
-                {getCurrentQuantities().child > 0 && <div className="ms-2">• Child × {getCurrentQuantities().child}</div>}
+                {(() => {
+                  const totalAdult = malaysianQuantities.adult + nonMalaysianQuantities.adult;
+                  const totalTeenager = malaysianQuantities.teenager + nonMalaysianQuantities.teenager;
+                  const totalUniversity = malaysianQuantities.university + nonMalaysianQuantities.university;
+                  const totalChild = malaysianQuantities.child + nonMalaysianQuantities.child;
+                  
+                  console.log('Booking details breakdown:', {
+                    malaysianQuantities,
+                    nonMalaysianQuantities,
+                    totals: { totalAdult, totalTeenager, totalUniversity, totalChild }
+                  });
+                  
+                  return (
+                    <>
+                      {totalAdult > 0 && <div className="ms-2">• Adult × {totalAdult}</div>}
+                      {totalTeenager > 0 && <div className="ms-2">• Teenager × {totalTeenager}</div>}
+                      {totalUniversity > 0 && <div className="ms-2">• University Student × {totalUniversity}</div>}
+                      {totalChild > 0 && <div className="ms-2">• Child × {totalChild}</div>}
+                    </>
+                  );
+                })()}
               </div>
               <p><strong>Total Amount:</strong> {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</p>
-              <p><strong>Payment Method:</strong> {paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Billplz Online Payment'}</p>
+              <p><strong>Payment Method:</strong> Billplz Online Payment</p>
             </div>
           </div>
         )}
@@ -1067,14 +1161,9 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             <div className="total-summary d-flex justify-content-between align-items-center w-100 mb-3">
               <div>
                 <div className="total-label">Total for {getTotalQuantity()} ticket(s)</div>
-                <div className="total-breakdown text-muted small">
-                  {getCurrentQuantities().adult > 0 && `${getCurrentQuantities().adult} Adult${getCurrentQuantities().adult > 1 ? 's' : ''}`}
-                  {getCurrentQuantities().adult > 0 && getCurrentQuantities().child > 0 && ', '}
-                  {getCurrentQuantities().child > 0 && `${getCurrentQuantities().child} Child${getCurrentQuantities().child > 1 ? 'ren' : ''}`}
-                </div>
               </div>
               <div className="total-price">
-                <strong style={{fontSize: '1.5rem'}}>{getCurrencySymbol()}{calculateTotal()}</strong>
+                <strong style={{fontSize: '1.5rem'}}>{getCurrencySymbol()}{calculateTotal().toFixed(2)}</strong>
               </div>
             </div>
             <Button 

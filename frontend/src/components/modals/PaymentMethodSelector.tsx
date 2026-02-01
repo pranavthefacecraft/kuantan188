@@ -2,7 +2,7 @@ import React from 'react';
 import { Form } from 'react-bootstrap';
 import './PaymentMethodSelector.css';
 
-export type PaymentMethod = 'cash_on_delivery' | 'billplz';
+export type PaymentMethod = 'billplz';
 
 interface PaymentMethodSelectorProps {
   selectedMethod: PaymentMethod;
@@ -21,45 +21,6 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     <div className="payment-method-selector">
       <h6 className="fw-bold mb-3">Payment Method</h6>
       
-      {/* Cash on Delivery Option */}
-      <div className="payment-option mb-3">
-        <div className="p-4 border rounded position-relative">
-          <Form.Check
-            type="radio"
-            id="payment-cash"
-            name="paymentMethod"
-            value="cash_on_delivery"
-            checked={selectedMethod === 'cash_on_delivery'}
-            onChange={(e) => onMethodChange(e.target.value as PaymentMethod)}
-            className="position-absolute"
-            style={{ top: '20px', right: '20px' }}
-          />
-          
-          <div className="d-flex align-items-start">
-            <div className="payment-icon me-3">
-              <div 
-                className="d-flex align-items-center justify-content-center rounded-circle bg-light"
-                style={{ width: '50px', height: '50px' }}
-              >
-                💰
-              </div>
-            </div>
-            
-            <div className="flex-grow-1">
-              <h6 className="mb-2 fw-bold text-primary">Cash on Delivery</h6>
-              <div className="text-muted mb-3">
-                Pay with cash when your booking is confirmed.
-                <ul className="mt-2 mb-0">
-                  <li>No advance payment required</li>
-                  <li>Pay upon booking confirmation</li>
-                  <li>Secure and reliable</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Billplz Online Payment Option */}
       <div className="payment-option mb-3">
         <div className="p-4 border rounded position-relative">
@@ -123,17 +84,9 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           </span>
         </div>
         
-        {selectedMethod === 'cash_on_delivery' && (
-          <small className="text-muted d-block mt-2">
-            💡 Amount will be collected upon booking confirmation
-          </small>
-        )}
-        
-        {selectedMethod === 'billplz' && (
-          <small className="text-muted d-block mt-2">
-            🔒 Secure payment processed by Billplz
-          </small>
-        )}
+        <small className="text-muted d-block mt-2">
+          🔒 Secure payment processed by Billplz
+        </small>
       </div>
     </div>
   );
