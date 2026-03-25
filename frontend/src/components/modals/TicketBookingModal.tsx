@@ -126,7 +126,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       setPaymentMethod('billplz');
       setIsProcessingPayment(false);
     }
-  }, [show, ticket]);
+  }, [show, ticket, initialStep, initialMalaysianQuantities, initialNonMalaysianQuantities, initialDate, initialTime]);
 
   // Fetch currencies when component mounts
   React.useEffect(() => {
