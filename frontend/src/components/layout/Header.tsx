@@ -6,7 +6,7 @@ const Header: React.FC = () => {
   const location = useLocation();
 
   return (
-    <Navbar expand="lg" className="position-absolute w-100" style={{ backgroundColor: 'transparent', zIndex: 1000, top: 0 }}>
+    <Navbar expand="lg" className="bg-custom-dark position-absolute w-100" style={{ backgroundColor: 'transparent', zIndex: 1000, top: 0 }}>
       <Container>
         <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
           <img 

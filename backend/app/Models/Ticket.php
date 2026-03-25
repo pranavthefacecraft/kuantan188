@@ -12,6 +12,10 @@ class Ticket extends Model
     protected $fillable = [
         'ticket_name',
         'event_id',
+        'country_id',
+        'ticket_type',
+        'base_price',
+        'final_price',
         'total_quantity',
         'available_quantity',
         'description',
@@ -48,6 +52,11 @@ class Ticket extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
     }
 
     public function bookings(): HasMany

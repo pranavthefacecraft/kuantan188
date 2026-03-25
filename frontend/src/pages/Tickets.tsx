@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Spinner } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import ShareButton from '../components/ShareButton';
 import { testTickets } from '../data/testTickets';
 
 const Tickets: React.FC = () => {
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -141,7 +143,12 @@ const Tickets: React.FC = () => {
                           Total: RM{ticket.total_price}
                         </span>
                         <div>
-                          <Button variant="outline-primary" size="sm" className="me-2">
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm" 
+                            className="me-2"
+                            onClick={() => navigate(`/tickets/${ticket.id}`)}
+                          >
                             View Details
                           </Button>
                           <Button variant="outline-secondary" size="sm">

@@ -233,12 +233,21 @@ const Home: React.FC = () => {
                           {ticket.adult_price ? `RM ${ticket.adult_price}` : 
                            ticket.price ? `RM ${ticket.price}` : 'RM 20.00'}
                         </p>
-                        <Button 
-                          className="reserve-button get-tickets-button"
-                          onClick={() => handleGetTickets(ticket)}
-                        >
-                          Get Tickets
-                        </Button>
+                        <div className="d-grid gap-2">
+                          <Button 
+                            className="reserve-button get-tickets-button"
+                            onClick={() => handleGetTickets(ticket)}
+                          >
+                            Get Tickets
+                          </Button>
+                          <Button 
+                            variant="outline-light"
+                            size="sm"
+                            onClick={() => navigate(`/tickets/${ticket.id}`)}
+                          >
+                            Learn More
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -260,9 +269,14 @@ const Home: React.FC = () => {
                         <div className="mt-auto">
                           <p className="pricing-label mb-1">Starting at</p>
                           <p className="pricing-amount mb-3">RM --</p>
-                          <Button className="reserve-button get-tickets-button" disabled>
-                            Get Tickets
-                          </Button>
+                          <div className="d-grid gap-2">
+                            <Button className="reserve-button get-tickets-button" disabled>
+                              Get Tickets
+                            </Button>
+                            <Button variant="outline-light" size="sm" disabled>
+                              Learn More
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>

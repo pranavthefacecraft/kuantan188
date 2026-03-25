@@ -22,11 +22,15 @@ interface Ticket {
   pricing?: {
     malaysian: {
       adult_price: string;
+      teen_price?: string;
+      university_price?: string;
       child_price: string;
       available: boolean;
     };
     non_malaysian: {
       adult_price: string;
+      teen_price?: string;
+      university_price?: string;
       child_price: string;
       available: boolean;
     };
@@ -47,9 +51,14 @@ interface TicketBookingModalProps {
   show: boolean;
   onHide: () => void;
   ticket: Ticket | null;
+  initialStep?: 'selection' | 'details' | 'payment';
+  initialMalaysianQuantities?: { adult: number; teenager: number; university: number; child: number };
+  initialNonMalaysianQuantities?: { adult: number; teenager: number; university: number; child: number };
+  initialDate?: Date;
+  initialTime?: string;
 }
 
-const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, ticket }) => {
+const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, ticket, initialStep, initialMalaysianQuantities, initialNonMalaysianQuantities, initialDate, initialTime }) => {
   const [currentStep, setCurrentStep] = useState<'selection' | 'details' | 'payment' | 'thankyou'>('selection');
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'malaysian' | 'non_malaysian'>('malaysian');
@@ -96,13 +105,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   React.useEffect(() => {
     if (show && ticket) {
       console.log('Modal opened with ticket:', ticket); // Debug log
-      setCurrentStep('selection');
+      setCurrentStep(initialStep || 'selection');
       setSelectedCountry(ticket.countries?.[0] || null);
       setActiveTab('malaysian');
-      setMalaysianQuantities({ adult: 1, teenager: 0, university: 0, child: 0 });
-      setNonMalaysianQuantities({ adult: 0, teenager: 0, university: 0, child: 0 });
-      setSelectedDate(new Date());
-      setSelectedTime('');
+      setMalaysianQuantities(initialMalaysianQuantities || { adult: 1, teenager: 0, university: 0, child: 0 });
+      setNonMalaysianQuantities(initialNonMalaysianQuantities || { adult: 0, teenager: 0, university: 0, child: 0 });
+      setSelectedDate(initialDate || new Date());
+      setSelectedTime(initialTime || '');
       setShowCalendar(false);
       setContactForm({
         firstName: '',
@@ -162,21 +171,25 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       // Calculate Malaysian total
       const malayPricing = ticket.pricing.malaysian;
       const malayAdultPrice = parseFloat(malayPricing.adult_price || '0');
+      const malayTeenPrice = parseFloat(malayPricing.teen_price || malayPricing.adult_price || '0');
+      const malayUniversityPrice = parseFloat(malayPricing.university_price || malayPricing.adult_price || '0');
       const malayChildPrice = parseFloat(malayPricing.child_price || '0');
       
       malayTotal = (malayAdultPrice * malaysianQuantities.adult) + 
-                  (malayAdultPrice * malaysianQuantities.teenager) + // Same as adult
-                  (malayAdultPrice * malaysianQuantities.university) + // Same as adult
+                  (malayTeenPrice * malaysianQuantities.teenager) +
+                  (malayUniversityPrice * malaysianQuantities.university) +
                   (malayChildPrice * malaysianQuantities.child);
                   
       // Calculate Non-Malaysian total
       const nonMalayPricing = ticket.pricing.non_malaysian;
       const nonMalayAdultPrice = parseFloat(nonMalayPricing.adult_price || '0');
+      const nonMalayTeenPrice = parseFloat(nonMalayPricing.teen_price || nonMalayPricing.adult_price || '0');
+      const nonMalayUniversityPrice = parseFloat(nonMalayPricing.university_price || nonMalayPricing.adult_price || '0');
       const nonMalayChildPrice = parseFloat(nonMalayPricing.child_price || '0');
       
       nonMalayTotal = (nonMalayAdultPrice * nonMalaysianQuantities.adult) + 
-                     (nonMalayAdultPrice * nonMalaysianQuantities.teenager) + // Same as adult
-                     (nonMalayAdultPrice * nonMalaysianQuantities.university) + // Same as adult
+                     (nonMalayTeenPrice * nonMalaysianQuantities.teenager) +
+                     (nonMalayUniversityPrice * nonMalaysianQuantities.university) +
                      (nonMalayChildPrice * nonMalaysianQuantities.child);
     } else if (selectedCountry) {
       // Legacy fallback
@@ -218,27 +231,31 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   };
 
   // Helper function to get price and currency for display (tab-dependent)
-  const getPrice = (type: 'adult' | 'child') => {
+  const getPrice = (type: 'adult' | 'teen' | 'university' | 'child') => {
     let basePriceMYR = 0;
     
     if (ticket?.pricing) {
-      console.log('Full ticket pricing data:', ticket.pricing);
       const pricing = activeTab === 'malaysian' ? ticket.pricing.malaysian : ticket.pricing.non_malaysian;
-      console.log('Selected pricing for', activeTab, ':', pricing);
-      const priceValue = type === 'adult' ? pricing.adult_price : pricing.child_price;
+      let priceValue: string | undefined;
+      switch (type) {
+        case 'adult':
+          priceValue = pricing.adult_price;
+          break;
+        case 'teen':
+          priceValue = pricing.teen_price || pricing.adult_price;
+          break;
+        case 'university':
+          priceValue = pricing.university_price || pricing.adult_price;
+          break;
+        case 'child':
+          priceValue = pricing.child_price;
+          break;
+      }
       basePriceMYR = parseFloat(priceValue || '0');
-      console.log('getPrice debug:', {
-        type,
-        activeTab,
-        priceValue,
-        basePriceMYR,
-        selectedCurrency,
-        exchangeRate: selectedCurrency?.exchange_rate
-      });
     } else if (selectedCountry) {
-      basePriceMYR = parseFloat(selectedCountry[`${type}_price`] || '0');
+      basePriceMYR = parseFloat(selectedCountry[`${type}_price`] || selectedCountry.adult_price || '0');
     } else {
-      basePriceMYR = type === 'adult' ? 49 : 35;
+      basePriceMYR = type === 'child' ? 35 : 49;
     }
     
     // Don't apply currency conversion for individual prices - always show in original MYR
@@ -249,34 +266,46 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   };
 
   // Helper function to get Malaysian price specifically
-  const getMalaysianPrice = (type: 'adult' | 'child') => {
+  const getMalaysianPrice = (type: 'adult' | 'teen' | 'university' | 'child') => {
     let basePriceMYR = 0;
     
     if (ticket?.pricing) {
       const pricing = ticket.pricing.malaysian;
-      const priceValue = type === 'adult' ? pricing.adult_price : pricing.child_price;
+      let priceValue: string | undefined;
+      switch (type) {
+        case 'adult': priceValue = pricing.adult_price; break;
+        case 'teen': priceValue = pricing.teen_price || pricing.adult_price; break;
+        case 'university': priceValue = pricing.university_price || pricing.adult_price; break;
+        case 'child': priceValue = pricing.child_price; break;
+      }
       basePriceMYR = parseFloat(priceValue || '0');
     } else if (selectedCountry) {
-      basePriceMYR = parseFloat(selectedCountry[`${type}_price`] || '0');
+      basePriceMYR = parseFloat(selectedCountry[`${type}_price`] || selectedCountry.adult_price || '0');
     } else {
-      basePriceMYR = type === 'adult' ? 49 : 35;
+      basePriceMYR = type === 'child' ? 35 : 49;
     }
     
     return basePriceMYR;
   };
 
   // Helper function to get Non-Malaysian price specifically
-  const getNonMalaysianPrice = (type: 'adult' | 'child') => {
+  const getNonMalaysianPrice = (type: 'adult' | 'teen' | 'university' | 'child') => {
     let basePriceMYR = 0;
     
     if (ticket?.pricing) {
       const pricing = ticket.pricing.non_malaysian;
-      const priceValue = type === 'adult' ? pricing.adult_price : pricing.child_price;
+      let priceValue: string | undefined;
+      switch (type) {
+        case 'adult': priceValue = pricing.adult_price; break;
+        case 'teen': priceValue = pricing.teen_price || pricing.adult_price; break;
+        case 'university': priceValue = pricing.university_price || pricing.adult_price; break;
+        case 'child': priceValue = pricing.child_price; break;
+      }
       basePriceMYR = parseFloat(priceValue || '0');
     } else if (selectedCountry) {
-      basePriceMYR = parseFloat(selectedCountry[`${type}_price`] || '0');
+      basePriceMYR = parseFloat(selectedCountry[`${type}_price`] || selectedCountry.adult_price || '0');
     } else {
-      basePriceMYR = type === 'adult' ? 49 : 35;
+      basePriceMYR = type === 'child' ? 35 : 49;
     }
     
     return basePriceMYR;
@@ -290,31 +319,24 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   // Helper function to get minimum price based on selected tab
   const getMinPrice = () => {
     if (!ticket?.pricing) {
-      console.log('No pricing data found, using fallback');
       return '49'; // fallback to original price
     }
     
     const pricing = activeTab === 'malaysian' ? ticket.pricing.malaysian : ticket.pricing.non_malaysian;
-    console.log('Getting min price for tab:', activeTab, 'Pricing:', pricing);
     
-    // Get the lowest price available (child price is usually lower)
-    const adultPrice = pricing.adult_price ? parseFloat(pricing.adult_price) : 0;
-    const childPrice = pricing.child_price ? parseFloat(pricing.child_price) : 0;
+    // Get all available prices
+    const prices = [
+      pricing.adult_price ? parseFloat(pricing.adult_price) : 0,
+      pricing.teen_price ? parseFloat(pricing.teen_price) : 0,
+      pricing.university_price ? parseFloat(pricing.university_price) : 0,
+      pricing.child_price ? parseFloat(pricing.child_price) : 0
+    ].filter(p => p > 0);
     
-    console.log('Adult price:', adultPrice, 'Child price:', childPrice);
-    
-    if (adultPrice === 0 && childPrice === 0) {
-      console.log('Both prices are 0, using fallback');
+    if (prices.length === 0) {
       return '49'; // fallback
     }
     
-    // Return the minimum non-zero price
-    if (childPrice > 0 && (childPrice < adultPrice || adultPrice === 0)) {
-      console.log('Returning child price:', childPrice);
-      return childPrice.toString();
-    }
-    console.log('Returning adult price:', adultPrice);
-    return adultPrice.toString();
+    return Math.min(...prices).toString();
   };
 
   const handleContinueToDetails = () => {
@@ -548,7 +570,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                       <div>
                         <span className="fw-bold">Teenagers From 13</span>
                         <div className="small text-muted">
-                          from {getPrice('adult').currency}{getPrice('adult').price.toFixed(0)}
+                          from {getPrice('teen').currency}{getPrice('teen').price.toFixed(0)}
                         </div>
                       </div>
                       <div className="quantity-controls d-flex align-items-center">
@@ -576,7 +598,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                       <div>
                         <span className="fw-bold">University Students</span>
                         <div className="small text-muted">
-                          from {getPrice('adult').currency}{getPrice('adult').price.toFixed(0)}
+                          from {getPrice('university').currency}{getPrice('university').price.toFixed(0)}
                         </div>
                       </div>
                       <div className="quantity-controls d-flex align-items-center">
@@ -954,7 +976,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                       />
                     )}
                     <div className="ticket-info">
-                      <h6 className="ticket-title">360 CHICAGO {ticketName}</h6>
+                      <h6 className="ticket-title">{ticketName}</h6>
                       <p className="ticket-subtitle">{ticketName}</p>
                       <p className="ticket-datetime">{format(selectedDate, 'd MMMM yyyy HH:mm')}</p>
                       
@@ -972,13 +994,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                             {malaysianQuantities.teenager > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{malaysianQuantities.teenager}× Teenagers From 13</span>
-                                <span>RM{(getMalaysianPrice('adult') * malaysianQuantities.teenager).toFixed(0)}</span>
+                                <span>RM{(getMalaysianPrice('teen') * malaysianQuantities.teenager).toFixed(0)}</span>
                               </div>
                             )}
                             {malaysianQuantities.university > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{malaysianQuantities.university}× University Students</span>
-                                <span>RM{(getMalaysianPrice('adult') * malaysianQuantities.university).toFixed(0)}</span>
+                                <span>RM{(getMalaysianPrice('university') * malaysianQuantities.university).toFixed(0)}</span>
                               </div>
                             )}
                             {malaysianQuantities.child > 0 && (
@@ -1003,13 +1025,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                             {nonMalaysianQuantities.teenager > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{nonMalaysianQuantities.teenager}× Teenagers From 13</span>
-                                <span>RM{(getNonMalaysianPrice('adult') * nonMalaysianQuantities.teenager).toFixed(0)}</span>
+                                <span>RM{(getNonMalaysianPrice('teen') * nonMalaysianQuantities.teenager).toFixed(0)}</span>
                               </div>
                             )}
                             {nonMalaysianQuantities.university > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{nonMalaysianQuantities.university}× University Students</span>
-                                <span>RM{(getNonMalaysianPrice('adult') * nonMalaysianQuantities.university).toFixed(0)}</span>
+                                <span>RM{(getNonMalaysianPrice('university') * nonMalaysianQuantities.university).toFixed(0)}</span>
                               </div>
                             )}
                             {nonMalaysianQuantities.child > 0 && (

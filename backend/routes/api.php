@@ -30,6 +30,7 @@ Route::get('/public/events/featured', [PublicEventController::class, 'featured']
 Route::get('/public/events/book-now', [PublicEventController::class, 'bookNow']);
 Route::get('/public/events/{id}', [PublicEventController::class, 'show']);
 Route::get('/public/tickets', [PublicEventController::class, 'getTickets']);
+Route::get('/public/tickets/{id}', [PublicEventController::class, 'getTicketById']);
 Route::get('/public/events/debug', [PublicEventController::class, 'debug']);
 
 // Public bookings API

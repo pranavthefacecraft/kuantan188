@@ -368,16 +368,18 @@ class PublicEventController extends Controller
                                    ->where('is_active', true)
                                    ->get()
                                    ->map(function ($ticket) {
-            // Use the new simplified pricing structure
+            // Use the new simplified pricing structure with fallback to base_price
+            $fallbackPrice = $ticket->base_price ?? $ticket->final_price;
+
             $adultPrice = null;
             $childPrice = null;
             
             if ($ticket->available_for_malaysians) {
-                $adultPrice = $ticket->malaysian_adult_price;
-                $childPrice = $ticket->malaysian_child_price;
+                $adultPrice = $ticket->malaysian_adult_price ?? $fallbackPrice;
+                $childPrice = $ticket->malaysian_child_price ?? $fallbackPrice;
             } elseif ($ticket->available_for_non_malaysians) {
-                $adultPrice = $ticket->non_malaysian_adult_price;
-                $childPrice = $ticket->non_malaysian_child_price;
+                $adultPrice = $ticket->non_malaysian_adult_price ?? $fallbackPrice;
+                $childPrice = $ticket->non_malaysian_child_price ?? $fallbackPrice;
             }
             
             return [
@@ -405,14 +407,18 @@ class PublicEventController extends Controller
                 ] : null,
                 'pricing' => [
                     'malaysian' => [
-                        'adult_price' => $ticket->malaysian_adult_price,
-                        'child_price' => $ticket->malaysian_child_price,
-                        'available' => $ticket->malaysian_available
+                        'adult_price' => $ticket->malaysian_adult_price ?? $fallbackPrice,
+                        'teen_price' => $ticket->malaysian_teen_price ?? $fallbackPrice,
+                        'university_price' => $ticket->malaysian_university_price ?? $fallbackPrice,
+                        'child_price' => $ticket->malaysian_child_price ?? $fallbackPrice,
+                        'available' => $ticket->available_for_malaysians
                     ],
                     'non_malaysian' => [
-                        'adult_price' => $ticket->non_malaysian_adult_price,
-                        'child_price' => $ticket->non_malaysian_child_price,
-                        'available' => $ticket->non_malaysian_available
+                        'adult_price' => $ticket->non_malaysian_adult_price ?? $fallbackPrice,
+                        'teen_price' => $ticket->non_malaysian_teen_price ?? $fallbackPrice,
+                        'university_price' => $ticket->non_malaysian_university_price ?? $fallbackPrice,
+                        'child_price' => $ticket->non_malaysian_child_price ?? $fallbackPrice,
+                        'available' => $ticket->available_for_non_malaysians
                     ]
                 ]
             ];
@@ -422,6 +428,82 @@ class PublicEventController extends Controller
             'success' => true,
             'data' => $tickets,
             'total' => $tickets->count()
+        ]);
+    }
+
+    /**
+     * Get single ticket details by ID for public display
+     */
+    public function getTicketById($id): JsonResponse
+    {
+        $ticket = \App\Models\Ticket::with(['event'])
+                                    ->where('is_active', true)
+                                    ->find($id);
+
+        if (!$ticket) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ticket not found'
+            ], 404);
+        }
+
+        $adultPrice = null;
+        $childPrice = null;
+
+        // Fallback to base_price/final_price when malaysian/non_malaysian prices are null
+        $fallbackPrice = $ticket->base_price ?? $ticket->final_price;
+
+        if ($ticket->available_for_malaysians) {
+            $adultPrice = $ticket->malaysian_adult_price ?? $fallbackPrice;
+            $childPrice = $ticket->malaysian_child_price ?? $fallbackPrice;
+        } elseif ($ticket->available_for_non_malaysians) {
+            $adultPrice = $ticket->non_malaysian_adult_price ?? $fallbackPrice;
+            $childPrice = $ticket->non_malaysian_child_price ?? $fallbackPrice;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $ticket->id,
+                'ticket_name' => $ticket->ticket_name ?? 'Untitled Ticket',
+                'name' => $ticket->ticket_name ?? 'Untitled Ticket',
+                'description' => $ticket->description,
+                'adult_price' => $adultPrice,
+                'child_price' => $childPrice,
+                'base_price' => $ticket->base_price,
+                'final_price' => $ticket->final_price,
+                'price' => $adultPrice ?? $ticket->base_price ?? 50,
+                'image_url' => $ticket->image_url
+                    ? (str_starts_with($ticket->image_url, 'http')
+                        ? $ticket->image_url
+                        : 'https://admin.tfcmockup.com/' . $ticket->image_url)
+                    : 'https://via.placeholder.com/400x250/6c63ff/ffffff?text=' . urlencode($ticket->ticket_name ?? 'Ticket'),
+                'event_id' => $ticket->event_id,
+                'is_active' => $ticket->is_active,
+                'total_quantity' => $ticket->total_quantity,
+                'available_quantity' => $ticket->available_quantity,
+                'event' => $ticket->event ? [
+                    'id' => $ticket->event->id,
+                    'title' => $ticket->event->title,
+                    'location' => $ticket->event->location
+                ] : null,
+                'pricing' => [
+                    'malaysian' => [
+                        'adult_price' => $ticket->malaysian_adult_price ?? $fallbackPrice,
+                        'teen_price' => $ticket->malaysian_teen_price ?? $fallbackPrice,
+                        'university_price' => $ticket->malaysian_university_price ?? $fallbackPrice,
+                        'child_price' => $ticket->malaysian_child_price ?? $fallbackPrice,
+                        'available' => $ticket->available_for_malaysians
+                    ],
+                    'non_malaysian' => [
+                        'adult_price' => $ticket->non_malaysian_adult_price ?? $fallbackPrice,
+                        'teen_price' => $ticket->non_malaysian_teen_price ?? $fallbackPrice,
+                        'university_price' => $ticket->non_malaysian_university_price ?? $fallbackPrice,
+                        'child_price' => $ticket->non_malaysian_child_price ?? $fallbackPrice,
+                        'available' => $ticket->available_for_non_malaysians
+                    ]
+                ]
+            ]
         ]);
     }
 

@@ -108,6 +108,12 @@ export const eventsApi = {
     return response.data;
   },
 
+  // Get single ticket by ID
+  async getTicketById(id: number): Promise<ApiResponse<any>> {
+    const response = await apiClient.get(`/public/tickets/${id}`);
+    return response.data;
+  },
+
   // Get Book Now events with category filtering
   async getBookNowEvents(category?: string): Promise<ApiResponse<Event[]>> {
     const params = category && category !== 'all' ? { category } : {};
