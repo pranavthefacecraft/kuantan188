@@ -472,6 +472,13 @@
                             Reviews
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a href="{{ route('admin.custom-css') }}" 
+                           class="nav-link {{ request()->routeIs('admin.custom-css*') ? 'active' : '' }}">
+                            <span class="material-icons nav-icon">css</span>
+                            Custom CSS
+                        </a>
+                    </div>
                 </div>
 
                 <div class="nav-section">

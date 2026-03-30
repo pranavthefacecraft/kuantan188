@@ -181,6 +181,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/reviews', [AdminDashboardController::class, 'reviews'])->name('reviews');
     Route::post('/reviews/sync', [AdminDashboardController::class, 'syncGoogleReviews'])->name('reviews.sync');
     Route::put('/reviews/{review}/toggle-status', [AdminDashboardController::class, 'toggleReviewStatus'])->name('reviews.toggle-status');
+
+    // Custom CSS Management
+    Route::get('/custom-css', [AdminDashboardController::class, 'customCss'])->name('custom-css');
+    Route::post('/custom-css', [AdminDashboardController::class, 'storeCustomCss'])->name('custom-css.store');
+    Route::put('/custom-css/{customCss}', [AdminDashboardController::class, 'updateCustomCss'])->name('custom-css.update');
+    Route::delete('/custom-css/{customCss}', [AdminDashboardController::class, 'destroyCustomCss'])->name('custom-css.destroy');
+    Route::patch('/custom-css/{customCss}/toggle-status', [AdminDashboardController::class, 'toggleCustomCssStatus'])->name('custom-css.toggle-status');
 });
 
 // Simple test route

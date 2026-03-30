@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Event;
 use App\Models\Ticket;
 use App\Models\Country;
+use App\Models\CustomCss;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -1639,5 +1640,75 @@ class AdminDashboardController extends Controller
                 'message' => 'SMTP test failed: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Show custom CSS management page
+     */
+    public function customCss()
+    {
+        $cssEntries = CustomCss::latest()->get();
+        return view('admin.custom-css', compact('cssEntries'));
+    }
+
+    /**
+     * Store a new custom CSS entry
+     */
+    public function storeCustomCss(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'css_content' => 'required|string|max:65535',
+        ]);
+
+        CustomCss::create([
+            'name' => $request->name,
+            'css_content' => $request->css_content,
+            'is_active' => $request->has('is_active'),
+        ]);
+
+        return redirect()->route('admin.custom-css')->with('success', 'CSS entry created successfully.');
+    }
+
+    /**
+     * Update an existing custom CSS entry
+     */
+    public function updateCustomCss(Request $request, CustomCss $customCss)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'css_content' => 'required|string|max:65535',
+        ]);
+
+        $customCss->update([
+            'name' => $request->name,
+            'css_content' => $request->css_content,
+            'is_active' => $request->has('is_active'),
+        ]);
+
+        return redirect()->route('admin.custom-css')->with('success', 'CSS entry updated successfully.');
+    }
+
+    /**
+     * Delete a custom CSS entry
+     */
+    public function destroyCustomCss(CustomCss $customCss)
+    {
+        $customCss->delete();
+        return redirect()->route('admin.custom-css')->with('success', 'CSS entry deleted successfully.');
+    }
+
+    /**
+     * Toggle active status of a custom CSS entry
+     */
+    public function toggleCustomCssStatus(CustomCss $customCss)
+    {
+        $customCss->update(['is_active' => !$customCss->is_active]);
+
+        return response()->json([
+            'success' => true,
+            'is_active' => $customCss->is_active,
+            'message' => $customCss->is_active ? 'CSS entry activated.' : 'CSS entry deactivated.',
+        ]);
     }
 }

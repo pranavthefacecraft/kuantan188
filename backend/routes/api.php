@@ -43,6 +43,13 @@ Route::get('/public/bookings', [App\Http\Controllers\PublicBookingController::cl
 Route::get('/public/reviews', [ReviewController::class, 'index']);
 Route::get('/public/reviews/stats', [ReviewController::class, 'stats']);
 
+// Public Custom CSS route
+Route::get('/public/custom-css', function () {
+    $entries = \App\Models\CustomCss::where('is_active', true)->get();
+    $combinedCss = $entries->pluck('css_content')->implode("\n");
+    return response($combinedCss, 200)->header('Content-Type', 'text/css');
+});
+
 // Public Billplz Payment routes
 Route::post('/public/payment/billplz/create', [BillplzController::class, 'createPayment']);
 Route::post('/public/payment/billplz/callback', [BillplzController::class, 'handleCallback']);
