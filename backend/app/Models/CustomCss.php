@@ -13,6 +13,7 @@ class CustomCss extends Model
 
     protected $fillable = [
         'name',
+        'target',
         'css_content',
         'is_active',
     ];

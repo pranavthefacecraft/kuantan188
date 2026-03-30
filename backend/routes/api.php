@@ -45,7 +45,9 @@ Route::get('/public/reviews/stats', [ReviewController::class, 'stats']);
 
 // Public Custom CSS route
 Route::get('/public/custom-css', function () {
-    $entries = \App\Models\CustomCss::where('is_active', true)->get();
+    $entries = \App\Models\CustomCss::where('is_active', true)
+        ->whereIn('target', ['frontend', 'both'])
+        ->get();
     $combinedCss = $entries->pluck('css_content')->implode("\n");
     return response($combinedCss, 200)->header('Content-Type', 'text/css');
 });

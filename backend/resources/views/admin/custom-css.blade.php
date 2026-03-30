@@ -22,7 +22,7 @@
             <div>
                 <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Custom CSS</h2>
                 <p style="margin: 0.5rem 0 0 0; color: var(--on-surface-variant);">
-                    Add custom CSS classes for the frontend. Active entries are served to the public site.
+                    Add custom CSS for the frontend site, admin panel, or both. Active entries are applied automatically.
                 </p>
             </div>
             <div>
@@ -48,6 +48,7 @@
                         <thead>
                             <tr style="border-bottom: 2px solid var(--border);">
                                 <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Name</th>
+                                <th style="padding: 0.75rem; text-align: center; font-weight: 600;">Target</th>
                                 <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Preview</th>
                                 <th style="padding: 0.75rem; text-align: center; font-weight: 600;">Status</th>
                                 <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Updated</th>
@@ -58,6 +59,12 @@
                             @foreach($cssEntries as $entry)
                                 <tr style="border-bottom: 1px solid var(--border);">
                                     <td style="padding: 0.75rem; font-weight: 500;">{{ $entry->name }}</td>
+                                    <td style="padding: 0.75rem; text-align: center;">
+                                        <span style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 20px; font-weight: 500;
+                                            {{ $entry->target === 'admin' ? 'background: rgba(99,102,241,0.1); color: var(--primary); border: 1px solid rgba(99,102,241,0.3);' : ($entry->target === 'both' ? 'background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.3);' : 'background: rgba(6,182,212,0.1); color: var(--accent); border: 1px solid rgba(6,182,212,0.3);') }}">
+                                            {{ ucfirst($entry->target) }}
+                                        </span>
+                                    </td>
                                     <td style="padding: 0.75rem;">
                                         <code style="font-size: 0.8rem; background: var(--surface-variant); padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                             {{ Str::limit($entry->css_content, 80) }}
@@ -126,6 +133,15 @@
                            style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem;">
                 </div>
                 <div class="form-group">
+                    <label for="css_target" class="form-label" style="font-weight: 500; margin-bottom: 0.5rem; display: block;">Apply To</label>
+                    <select id="css_target" name="target" class="form-control" required
+                            style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem; background: var(--surface);">
+                        <option value="frontend">Frontend (public site)</option>
+                        <option value="admin">Admin Panel</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="css_content" class="form-label" style="font-weight: 500; margin-bottom: 0.5rem; display: block;">CSS Content</label>
                     <textarea id="css_content" name="css_content" rows="15" class="form-control" placeholder=".my-class {&#10;  color: #333;&#10;  font-size: 16px;&#10;}" required
                               style="width: 100%; padding: 0.875rem; border: 1px solid var(--border); border-radius: 0.5rem; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; line-height: 1.6; resize: vertical; background: #1e1e2e; color: #cdd6f4; tab-size: 2;"></textarea>
@@ -133,7 +149,7 @@
                 <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
                     <input type="checkbox" id="css_is_active" name="is_active" checked
                            style="width: 18px; height: 18px; accent-color: var(--primary);">
-                    <label for="css_is_active" style="font-weight: 500; cursor: pointer;">Active (serve to frontend)</label>
+                    <label for="css_is_active" style="font-weight: 500; cursor: pointer;">Active</label>
                 </div>
             </div>
             <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem;">
@@ -173,6 +189,7 @@
         document.getElementById('cssForm').action = '{{ route("admin.custom-css.store") }}';
         document.getElementById('formMethod').value = 'POST';
         document.getElementById('css_name').value = '';
+        document.getElementById('css_target').value = 'frontend';
         document.getElementById('css_content').value = '';
         document.getElementById('css_is_active').checked = true;
         document.getElementById('cssModal').style.display = 'block';
@@ -186,6 +203,7 @@
         document.getElementById('cssForm').action = '/admin/custom-css/' + id;
         document.getElementById('formMethod').value = 'PUT';
         document.getElementById('css_name').value = entry.name;
+        document.getElementById('css_target').value = entry.target;
         document.getElementById('css_content').value = entry.css_content;
         document.getElementById('css_is_active').checked = entry.is_active;
         document.getElementById('cssModal').style.display = 'block';

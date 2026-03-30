@@ -411,6 +411,17 @@
     </style>
 
     @yield('styles')
+
+    {{-- Inject active admin custom CSS --}}
+    @php
+        $adminCustomCss = \App\Models\CustomCss::where('is_active', true)
+            ->whereIn('target', ['admin', 'both'])
+            ->pluck('css_content')
+            ->implode("\n");
+    @endphp
+    @if($adminCustomCss)
+        <style id="admin-custom-css">{!! $adminCustomCss !!}</style>
+    @endif
 </head>
 <body>
     <div class="admin-container">

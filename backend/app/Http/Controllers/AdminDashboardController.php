@@ -1658,11 +1658,13 @@ class AdminDashboardController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'target' => 'required|in:frontend,admin,both',
             'css_content' => 'required|string|max:65535',
         ]);
 
         CustomCss::create([
             'name' => $request->name,
+            'target' => $request->target,
             'css_content' => $request->css_content,
             'is_active' => $request->has('is_active'),
         ]);
@@ -1677,11 +1679,13 @@ class AdminDashboardController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'target' => 'required|in:frontend,admin,both',
             'css_content' => 'required|string|max:65535',
         ]);
 
         $customCss->update([
             'name' => $request->name,
+            'target' => $request->target,
             'css_content' => $request->css_content,
             'is_active' => $request->has('is_active'),
         ]);
