@@ -81,7 +81,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         disabled={isSharing}
       >
         
-        <i className="fas fa-share-alt text-white"></i>
+        <i className="fas fa-share" style={{ color: '#FFFFFF' }}></i>
       </Dropdown.Toggle>
 
       <Dropdown.Menu 
