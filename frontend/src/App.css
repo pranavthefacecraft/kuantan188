@@ -6,7 +6,7 @@
 /* Custom variables for our theme */
 :root {
   --primary-color: #6366f1;
-  --primary-dark: #4f46e5;
+  --primary-dark: #1a0007;
   --secondary-color: #8b5cf6;
   --success-color: #10b981;
   --warning-color: #f59e0b;
@@ -15,7 +15,7 @@
   --light-bg: #f8fafc;
   --dark-text: #1e293b;
   --gray-text: #64748b;
-  --border-color: #e2e8f0;
+  --border-color: #ff014a;
 }
 
 /* Loading spinner */
@@ -28,13 +28,12 @@
 
 /* Custom button styles */
 .btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+  background-color: #66011d;
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-dark);
-  border-color: var(--primary-dark);
+  background-color: #ffffff;
+  /* border-color: var(--primary-dark); */
 }
 
 /* Gradient text */
@@ -47,7 +46,9 @@
 
 /* Card hover effects */
 .card-hover {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .card-hover:hover {
@@ -82,7 +83,9 @@
   border-radius: 1rem;
   background: white;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .stats-card:hover {
@@ -205,11 +208,11 @@
     z-index: 1050;
     transition: left 0.3s ease;
   }
-  
+
   .sidebar.show {
     left: 0;
   }
-  
+
   .main-content {
     margin-left: 0 !important;
   }
@@ -240,8 +243,12 @@
 }
 
 /* Additional responsive utilities */
-.min-vh-100 { min-height: 100vh; }
-.min-vh-50 { min-height: 50vh; }
+.min-vh-100 {
+  min-height: 100vh;
+}
+.min-vh-50 {
+  min-height: 50vh;
+}
 
 /* Hero section styling */
 .hero-section {
@@ -257,7 +264,9 @@
 
 /* Card hover effects */
 .hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .hover-lift:hover {
@@ -266,7 +275,9 @@
 }
 
 .hover-shadow {
-  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
 }
 
 .hover-shadow:hover {
@@ -300,7 +311,7 @@
   .display-4 {
     font-size: 2.5rem;
   }
-  
+
   .lead {
     font-size: 1.1rem;
   }
@@ -314,8 +325,12 @@
 }
 
 @keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Event Card Styles for Book Now Section */
@@ -324,7 +339,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border-radius: 12px;
+  border-radius: 0px;
   overflow: hidden;
   min-height: 300px;
   transition: transform 0.3s ease;
@@ -340,12 +355,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.2) 0%,
-    rgba(0, 0, 0, 0.4) 50%,
-    rgba(0, 0, 0, 0.7) 100%
-  );
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.7) 100%);
   z-index: 1;
 }
 
@@ -356,10 +366,10 @@
 }
 
 .event-card-content .column-title {
-  font-family: 'Erstoria', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  font-family: "Erstoria", sans-serif;
+  font-size: 40px;
+  font-weight: 500;
+  /* text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); */
   margin-bottom: 0.5rem;
 }
 
@@ -376,21 +386,17 @@
 }
 
 .event-card-content .reserve-button {
-  background-color: rgba(255, 255, 255, 0.9);
-  color: #1A0007;
-  border: none;
+  border-color: #ff014a;
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  border-radius: 2px;
   font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .event-card-content .reserve-button:hover {
   background-color: white;
-  color: #1A0007;
+  color: #1a0007;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Event Details Styles */
@@ -481,7 +487,9 @@
 
 .event-detail-page .card {
   border: none;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .event-info .text-primary {
@@ -591,19 +599,19 @@
 }
 
 .ticket-booking-modal .pricing-tabs .btn-primary {
-  background: #007bff;
+  background: #66011d;
   color: white;
 }
 
 .ticket-booking-modal .pricing-tabs .btn-outline-primary {
-  background: #f8f9fa;
-  color: #007bff;
-  border: 1px solid #e9ecef;
+  background: #ffffff;
+  color: #66011d;
+  border: 1px solid #66011d;
 }
 
 .ticket-booking-modal .pricing-tabs .btn-outline-primary:hover {
-  background: #e9ecef;
-  color: #0056b3;
+  background: #ffe6ed;
+  color: #1a0007;
 }
 
 /* Quantity Controls */
@@ -633,8 +641,8 @@
 }
 
 .ticket-booking-modal .quantity-controls .quantity-btn:hover:not(:disabled) {
-  border-color: #22c55e;
-  color: #22c55e;
+  border-color: #66001d;
+  color: #66001d;
 }
 
 .ticket-booking-modal .quantity-controls .quantity-btn:disabled {
@@ -661,7 +669,7 @@
 }
 
 .ticket-booking-modal .country-select:focus {
-  border-color: #22c55e;
+  border-color: #66001d;
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
   outline: none;
 }
@@ -683,22 +691,22 @@
 }
 
 .ticket-booking-modal .date-option:hover {
-  border-color: #22c55e;
+  border-color: #ff014a;
 }
 
 .ticket-booking-modal .date-option.selected {
-  border-color: #22c55e;
-  background-color: #f0fdf4;
+  border-color: #ff014a;
+  background-color: #ffffff;
 }
 
 .ticket-booking-modal .date-option.other-dates {
   background: #f8f9ff;
-  border-color: #6366f1;
+  border-color: #28a745;
 }
 
 .ticket-booking-modal .date-option.other-dates:hover {
-  border-color: #4f46e5;
-  background-color: #f0f2ff;
+  border-color: #28a745;
+  background-color: #e3f6e8;
 }
 
 .ticket-booking-modal .date-number {
@@ -778,18 +786,18 @@
 }
 
 .ticket-booking-modal .time-slot:hover {
-  border-color: #22c55e;
+  border-color: #66001d;
   background-color: #f9fafb;
 }
 
 .ticket-booking-modal .time-slot.selected {
-  border-color: #22c55e;
-  background-color: #f0fdf4;
+  border-color: #66001d;
+  background-color: #ffe6ed;
 }
 
-.ticket-booking-modal .time-slot.best-price {
-  border-color: #22c55e;
-}
+/* .ticket-booking-modal .time-slot.best-price {
+  border-color: #66001d;
+} */
 
 .ticket-booking-modal .time-label {
   font-weight: 600;
@@ -798,7 +806,7 @@
 }
 
 .ticket-booking-modal .time-price {
-  color: #22c55e;
+  color: #66001d;
   font-weight: 600;
   font-size: 0.875rem;
   margin-top: 2px;
@@ -808,7 +816,8 @@
   position: absolute;
   top: -6px;
   right: 8px;
-  background: #22c55e;
+  display: none;
+  background: #66001d;
   color: white;
   font-size: 0.6rem;
   padding: 2px 6px;
@@ -818,7 +827,7 @@
 
 /* Continue Button */
 .ticket-booking-modal .continue-button {
-  background: #22c55e;
+  background: #66001d;
   border: none;
   color: white;
   font-weight: 600;
@@ -1145,15 +1154,15 @@
   .ticket-booking-modal .ticket-selection-step {
     padding: 1rem;
   }
-  
+
   .ticket-booking-modal .modal-footer-custom {
     padding: 1rem;
   }
-  
+
   .ticket-booking-modal .time-slots {
     grid-template-columns: 1fr;
   }
-  
+
   .ticket-booking-modal .date-options {
     flex-direction: column;
   }
@@ -1162,7 +1171,7 @@
   .checkout-step .col-md-5 {
     margin-bottom: 20px;
   }
-  
+
   .order-summary-card {
     position: relative;
     top: auto;
@@ -1193,6 +1202,10 @@
 
 .share-button:focus {
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3) !important;
+}
+
+.event-card-item .dropdown-toggle::after {
+  display: none;
 }
 
 .share-dropdown-menu {
@@ -1242,19 +1255,19 @@
 
 /* Platform specific icon colors */
 .share-dropdown-menu .dropdown-item:hover [style*="color: #1877F2"] {
-  color: #1877F2 !important;
+  color: #1877f2 !important;
 }
 
 .share-dropdown-menu .dropdown-item:hover [style*="color: #1DA1F2"] {
-  color: #1DA1F2 !important;
+  color: #1da1f2 !important;
 }
 
 .share-dropdown-menu .dropdown-item:hover [style*="color: #25D366"] {
-  color: #25D366 !important;
+  color: #25d366 !important;
 }
 
 .share-dropdown-menu .dropdown-item:hover [style*="color: #0A66C2"] {
-  color: #0A66C2 !important;
+  color: #0a66c2 !important;
 }
 
 .share-dropdown-menu .dropdown-item:hover [style*="color: #0088cc"] {
@@ -1267,7 +1280,7 @@
     width: 32px;
     height: 32px;
   }
-  
+
   .share-dropdown-menu {
     min-width: 180px !important;
   }
@@ -1281,7 +1294,8 @@
 }
 
 /* Swiper Container Styles */
-.events-swiper, .tickets-swiper {
+.events-swiper,
+.tickets-swiper {
   margin: 0 60px !important;
   overflow: hidden !important;
   padding: 0 0px !important;
@@ -1289,7 +1303,8 @@
 }
 
 @media (max-width: 768px) {
-  .events-swiper, .tickets-swiper {
+  .events-swiper,
+  .tickets-swiper {
     margin: 0 0px !important;
     overflow: hidden !important;
     padding: 0 0px !important;
@@ -1302,14 +1317,14 @@
 /* Total Price Display Styles */
 .total-price-display {
   text-align: right;
-  background: rgba(34, 197, 94, 0.1);
+  background: #ffe6ed;
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  border: 1px solid #66001d;
 }
 
 .total-price-display strong {
-  color: #16a34a;
+  color: #66001d;
   font-size: 1.25rem;
 }
 
@@ -1319,10 +1334,9 @@
 }
 
 .total-summary {
-  background: rgba(34, 197, 94, 0.05);
+  background: #ffe6ed;
   padding: 1rem;
   border-radius: 8px;
-  border: 1px solid rgba(34, 197, 94, 0.1);
 }
 
 .total-label {
@@ -1341,7 +1355,7 @@
 }
 
 .total-price strong {
-  color: #16a34a;
+  color: #66011d;
 }
 .footer-title-responsive {
   margin-top: 100px;

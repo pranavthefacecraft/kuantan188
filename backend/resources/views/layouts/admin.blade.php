@@ -9,8 +9,8 @@
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Material Design Icons -->
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
@@ -30,10 +30,10 @@
         }
 
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #8b5cf6;
-            --accent: #06b6d4;
+            --primary: #66001D;
+            --primary-dark: #1A0007;
+            --secondary: #FFE6ED;
+            --accent: #1A0007;
             --success: #10b981;
             --warning: #f59e0b;
             --error: #ef4444;
@@ -50,7 +50,7 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: var(--on-surface);
@@ -77,13 +77,14 @@
         .sidebar-header {
             padding: 2rem 1.5rem;
             border-bottom: 1px solid var(--border);
-            background: var(--surface);
+            background: #1A0007;
         }
 
         .sidebar-logo {
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            justify-content: center;
             font-size: 1.25rem;
             font-weight: 700;
             color: var(--primary);
@@ -342,6 +343,11 @@
             font-weight: 500;
         }
 
+        .badge badge-info {
+            background: rgba(6, 182, 212, 0.1);
+            color: #FFE6ED;
+        }
+
         .badge-success {
             background: rgba(16, 185, 129, 0.1);
             color: var(--success);
@@ -429,8 +435,8 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <a href="{{ route('admin.dashboard') }}" class="sidebar-logo">
-                    <span class="material-icons">dashboard</span>
-                    Kuantan188 Admin
+                <img src="{{ asset('images/kuantan_white.png') }}" class="sidebar-logo">
+                    
                 </a>
             </div>
 

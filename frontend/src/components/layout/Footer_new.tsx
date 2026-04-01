@@ -31,11 +31,11 @@ const Footer: React.FC = () => {
             {/* Footer Menu */}
             <div className="footer-menu">
               <a href="/privacy-policy" className="text-white text-decoration-none me-3">Privacy & Policy</a>
-              <span className="text-white me-3">|</span>
+              {/* <span className="text-white me-3">|</span> */}
               <a href="/terms-conditions" className="text-white text-decoration-none me-3">Terms & Condition</a>
-              <span className="text-white me-3">|</span>
+              {/* <span className="text-white me-3">|</span> */}
               <a href="/contact" className="text-white text-decoration-none me-3">Contact</a>
-              <span className="text-white me-3">|</span>
+              {/* <span className="text-white me-3">|</span> */}
               <a href="https://tfcmockup.com" className="text-white text-decoration-none">Made by TFC</a>
             </div>
           </Col>

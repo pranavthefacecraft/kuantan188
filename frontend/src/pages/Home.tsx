@@ -240,13 +240,7 @@ const Home: React.FC = () => {
                           >
                             Get Tickets
                           </Button>
-                          <Button 
-                            variant="outline-light"
-                            size="sm"
-                            onClick={() => navigate(`/tickets/${ticket.id}`)}
-                          >
-                            Learn More
-                          </Button>
+                          
                         </div>
                       </div>
                     </div>
@@ -418,13 +412,13 @@ const Home: React.FC = () => {
                           <p className="pricing-label mb-1">Starting at</p>
                           <p className="pricing-amount mb-3">{event.price_display}</p>
                           <div className="d-flex gap-2 flex-column">
-                            <Button 
+                            {/* <Button 
                               variant="outline-light"
                               size="sm"
                               onClick={() => handleViewDetails(event.id)}
                             >
                               View Details
-                            </Button>
+                            </Button> */}
                             <Button 
                               className="reserve-button get-tickets-button"
                               onClick={() => handleReserve(event)}
@@ -472,8 +466,8 @@ const Home: React.FC = () => {
         <Container>
           <Row className="mb-5">
             <Col>
-              <h2 className="text-center fw-bold mb-3 text-white" style={{ fontFamily: 'Erstoria', fontSize: '72px' }}>
-                Our guests feedback
+              <h2 className="text-center fw-regular mb-3 text-white" style={{ fontFamily: 'Erstoria', fontSize: '72px', }}>
+                Our Guests Feedback
               </h2>
             </Col>
           </Row>
