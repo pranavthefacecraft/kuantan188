@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import { eventsApi, Event } from '../services/api';
 import ReservationModal from '../components/modals/ReservationModal';
@@ -14,8 +13,6 @@ import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
 const Home: React.FC = () => {
-  const navigate = useNavigate();
-
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   
@@ -77,10 +74,6 @@ const Home: React.FC = () => {
   const handleCloseTicketModal = () => {
     setShowTicketModal(false);
     setSelectedTicket(null);
-  };
-
-  const handleViewDetails = (eventId: number) => {
-    navigate(`/events/${eventId}`);
   };
 
   // Debug Swiper initialization
