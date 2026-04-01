@@ -700,7 +700,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ show, onHide, event
                     <strong>Email:</strong> {contactForm.email}
                   </div>
                   <div className="col-12 mt-1">
-                    <strong>Payment:</strong> Billplz Online Payment
+                    <strong>Payment:</strong> {paymentMethod === 'billplz' ? 'Billplz Online Payment' : 'Cash on Delivery'}
                   </div>
                 </div>
               </div>

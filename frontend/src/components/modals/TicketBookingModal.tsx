@@ -1111,8 +1111,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                   <div className="mt-3 p-3 bg-light border rounded">
                     <div className="d-flex align-items-center">
                       <span className="fw-bold">Payment Method:</span>
-                      <span className="ms-2 badge bg-primary">
-                        Billplz Online Payment
+                      <span className={`ms-2 badge ${paymentMethod === 'billplz' ? 'bg-primary' : 'bg-success'}`}>
+                        {paymentMethod === 'billplz' ? 'Billplz Online Payment' : 'Cash on Delivery'}
                       </span>
                     </div>
                   </div>
@@ -1171,7 +1171,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                 })()}
               </div>
               <p><strong>Total Amount:</strong> {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</p>
-              <p><strong>Payment Method:</strong> Billplz Online Payment</p>
+              <p><strong>Payment Method:</strong> {paymentMethod === 'billplz' ? 'Billplz Online Payment' : 'Cash on Delivery'}</p>
             </div>
           </div>
         )}
