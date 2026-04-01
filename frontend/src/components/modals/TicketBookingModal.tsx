@@ -988,25 +988,37 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                             {malaysianQuantities.adult > 0 && (
                               <div className="d-flex justify-content-between align-items-center">
                                 <span className="text-success">{malaysianQuantities.adult}× Adult</span>
-                                <span>RM{(getMalaysianPrice('adult') * malaysianQuantities.adult).toFixed(0)}</span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>RM{(getMalaysianPrice('adult') * malaysianQuantities.adult).toFixed(0)}</span>
+                                  <button type="button" className="btn btn-sm btn-outline-danger border-0 p-0 lh-1" style={{fontSize: '0.85rem'}} onClick={() => setMalaysianQuantities({...malaysianQuantities, adult: 0})} title="Remove">✕</button>
+                                </div>
                               </div>
                             )}
                             {malaysianQuantities.teenager > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{malaysianQuantities.teenager}× Teenagers From 13</span>
-                                <span>RM{(getMalaysianPrice('teen') * malaysianQuantities.teenager).toFixed(0)}</span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>RM{(getMalaysianPrice('teen') * malaysianQuantities.teenager).toFixed(0)}</span>
+                                  <button type="button" className="btn btn-sm btn-outline-danger border-0 p-0 lh-1" style={{fontSize: '0.85rem'}} onClick={() => setMalaysianQuantities({...malaysianQuantities, teenager: 0})} title="Remove">✕</button>
+                                </div>
                               </div>
                             )}
                             {malaysianQuantities.university > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{malaysianQuantities.university}× University Students</span>
-                                <span>RM{(getMalaysianPrice('university') * malaysianQuantities.university).toFixed(0)}</span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>RM{(getMalaysianPrice('university') * malaysianQuantities.university).toFixed(0)}</span>
+                                  <button type="button" className="btn btn-sm btn-outline-danger border-0 p-0 lh-1" style={{fontSize: '0.85rem'}} onClick={() => setMalaysianQuantities({...malaysianQuantities, university: 0})} title="Remove">✕</button>
+                                </div>
                               </div>
                             )}
                             {malaysianQuantities.child > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{malaysianQuantities.child}× Children Below 13</span>
-                                <span>RM{(getMalaysianPrice('child') * malaysianQuantities.child).toFixed(0)}</span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>RM{(getMalaysianPrice('child') * malaysianQuantities.child).toFixed(0)}</span>
+                                  <button type="button" className="btn btn-sm btn-outline-danger border-0 p-0 lh-1" style={{fontSize: '0.85rem'}} onClick={() => setMalaysianQuantities({...malaysianQuantities, child: 0})} title="Remove">✕</button>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1019,25 +1031,37 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                             {nonMalaysianQuantities.adult > 0 && (
                               <div className="d-flex justify-content-between align-items-center">
                                 <span className="text-success">{nonMalaysianQuantities.adult}× Adult</span>
-                                <span>RM{(getNonMalaysianPrice('adult') * nonMalaysianQuantities.adult).toFixed(0)}</span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>RM{(getNonMalaysianPrice('adult') * nonMalaysianQuantities.adult).toFixed(0)}</span>
+                                  <button type="button" className="btn btn-sm btn-outline-danger border-0 p-0 lh-1" style={{fontSize: '0.85rem'}} onClick={() => setNonMalaysianQuantities({...nonMalaysianQuantities, adult: 0})} title="Remove">✕</button>
+                                </div>
                               </div>
                             )}
                             {nonMalaysianQuantities.teenager > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{nonMalaysianQuantities.teenager}× Teenagers From 13</span>
-                                <span>RM{(getNonMalaysianPrice('teen') * nonMalaysianQuantities.teenager).toFixed(0)}</span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>RM{(getNonMalaysianPrice('teen') * nonMalaysianQuantities.teenager).toFixed(0)}</span>
+                                  <button type="button" className="btn btn-sm btn-outline-danger border-0 p-0 lh-1" style={{fontSize: '0.85rem'}} onClick={() => setNonMalaysianQuantities({...nonMalaysianQuantities, teenager: 0})} title="Remove">✕</button>
+                                </div>
                               </div>
                             )}
                             {nonMalaysianQuantities.university > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{nonMalaysianQuantities.university}× University Students</span>
-                                <span>RM{(getNonMalaysianPrice('university') * nonMalaysianQuantities.university).toFixed(0)}</span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>RM{(getNonMalaysianPrice('university') * nonMalaysianQuantities.university).toFixed(0)}</span>
+                                  <button type="button" className="btn btn-sm btn-outline-danger border-0 p-0 lh-1" style={{fontSize: '0.85rem'}} onClick={() => setNonMalaysianQuantities({...nonMalaysianQuantities, university: 0})} title="Remove">✕</button>
+                                </div>
                               </div>
                             )}
                             {nonMalaysianQuantities.child > 0 && (
                               <div className="d-flex justify-content-between align-items-center mt-1">
                                 <span className="text-success">{nonMalaysianQuantities.child}× Children Below 13</span>
-                                <span>RM{(getNonMalaysianPrice('child') * nonMalaysianQuantities.child).toFixed(0)}</span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>RM{(getNonMalaysianPrice('child') * nonMalaysianQuantities.child).toFixed(0)}</span>
+                                  <button type="button" className="btn btn-sm btn-outline-danger border-0 p-0 lh-1" style={{fontSize: '0.85rem'}} onClick={() => setNonMalaysianQuantities({...nonMalaysianQuantities, child: 0})} title="Remove">✕</button>
+                                </div>
                               </div>
                             )}
                           </div>
