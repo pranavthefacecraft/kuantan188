@@ -54,7 +54,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title mb-1 text-white-50">Total Reviews</h6>
-                            <h3 class="mb-0 fw-bold">{{ $stats['total_reviews'] }}</h3>
+                            <h3 class="mb-0 fw-regular">{{ $stats['total_reviews'] }}</h3>
                         </div>
                         <span class="material-icons" style="font-size: 2rem; opacity: 0.4;">star</span>
                     </div>
@@ -67,7 +67,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title mb-1 text-white-50">Active Reviews</h6>
-                            <h3 class="mb-0 fw-bold">{{ $stats['active_reviews'] }}</h3>
+                            <h3 class="mb-0 fw-regular">{{ $stats['active_reviews'] }}</h3>
                         </div>
                         <span class="material-icons" style="font-size: 2rem; opacity: 0.4;">visibility</span>
                     </div>
@@ -80,7 +80,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title mb-1 text-white-50">Average Rating</h6>
-                            <h3 class="mb-0 fw-bold">{{ number_format($stats['average_rating'], 1) }}</h3>
+                            <h3 class="mb-0 fw-regular">{{ number_format($stats['average_rating'], 1) }}</h3>
                         </div>
                         <span class="material-icons" style="font-size: 2rem; opacity: 0.4;">star_rate</span>
                     </div>
@@ -93,7 +93,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title mb-1 text-white-50">Last Sync</h6>
-                            <p class="mb-0 fw-bold h5">
+                            <p class="mb-0 fw-regular h5">
                                 @if($stats['latest_sync'])
                                     {{ $stats['latest_sync']->diffForHumans() }}
                                 @else

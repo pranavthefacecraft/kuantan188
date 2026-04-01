@@ -10,10 +10,10 @@ const Header: React.FC = () => {
       <Container>
         <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
           <img 
-            src="/Secondary_White.svg" 
+            src="/kuantan_white.png" 
             alt="Kuantan188 Logo" 
-            width="80"
-            height="23"
+            width="64"
+            height="84"
             className="me-2"
           />
         </Navbar.Brand>
@@ -26,35 +26,29 @@ const Header: React.FC = () => {
               to="/" 
               className={location.pathname === '/' ? 'active fw-semibold' : ''}
             >
-              Home
+              About
             </Nav.Link>
             <Nav.Link 
               as={Link} 
               to="/sky-deck" 
               className={location.pathname === '/sky-deck' ? 'active fw-semibold' : ''}
             >
-              Sky Deck
+              Experiences
             </Nav.Link>
             <Nav.Link 
               as={Link} 
               to="/observation-deck" 
               className={location.pathname === '/observation-deck' ? 'active fw-semibold' : ''}
             >
-              Observation Deck
+              Contacts
             </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/sky-walk" 
-              className={location.pathname === '/sky-walk' ? 'active fw-semibold' : ''}
-            >
-              Sky Walk
-            </Nav.Link>
+            
             
           </Nav>
           
           <div className="d-flex">
             <Button className="shop-button">
-              Shop
+              Tickets
             </Button>
           </div>
         </Navbar.Collapse>
