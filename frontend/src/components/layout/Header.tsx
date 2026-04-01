@@ -20,7 +20,7 @@ const Header: React.FC = () => {
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="mx-auto erstoria-nav">
+          <Nav className="mx-auto erstoria-nav gap-5">
             <Nav.Link 
               as={Link} 
               to="/" 
@@ -47,9 +47,7 @@ const Header: React.FC = () => {
           </Nav>
           
           <div className="d-flex">
-            <Button className="shop-button">
-              Tickets
-            </Button>
+           
           </div>
         </Navbar.Collapse>
       </Container>

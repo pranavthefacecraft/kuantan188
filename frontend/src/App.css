@@ -15,7 +15,7 @@
   --light-bg: #f8fafc;
   --dark-text: #1e293b;
   --gray-text: #64748b;
-  --border-color: #ff014a;
+  /* --border-color: #ff014a; */
 }
 
 /* Loading spinner */
@@ -33,7 +33,6 @@
 
 .btn-primary:hover {
   background-color: #ffffff;
-  /* border-color: var(--primary-dark); */
 }
 
 /* Gradient text */
@@ -957,7 +956,7 @@
 
 .ticket-title {
   font-weight: 600;
-  color: #333;
+  color: #1a0007;
   margin-bottom: 5px;
   font-size: 16px;
 }

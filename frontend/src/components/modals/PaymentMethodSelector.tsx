@@ -38,7 +38,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           <div className="d-flex align-items-start">
             <div className="payment-icon me-3">
               <div 
-                className="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white"
+                className="d-flex align-items-center justify-content-center bg-primary text-white"
                 style={{ width: '50px', height: '50px' }}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
