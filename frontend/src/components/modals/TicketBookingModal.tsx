@@ -370,7 +370,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       child_price: parseFloat(selectedCountry?.child_price || '0'),
       event_date: format(selectedDate, 'yyyy-MM-dd'),
       selected_time: selectedTime,
-      total_amount: calculateTotal(),
+      total_amount: parseFloat((calculateTotal() * 1.08).toFixed(2)),
       payment_method: paymentMethod,
       booking_status: paymentMethod === 'billplz' ? 'pending' : 'confirmed',
       receive_updates: contactForm.receiveUpdates
@@ -1108,8 +1108,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                   <PaymentMethodSelector
                     selectedMethod={paymentMethod}
                     onMethodChange={setPaymentMethod}
-                    totalAmount={calculateTotal()}
-                    currency={selectedCountry?.currency_symbol || 'RM'}
+                    totalAmount={parseFloat((calculateTotal() * 1.08).toFixed(2))}
+                    currency={getCurrencySymbol()}
                   />
                 </div>
               </Col>
@@ -1120,7 +1120,15 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                   <h6 className="mb-3">Order Summary</h6>
                   <div className="d-flex justify-content-between mb-2">
                     <span>Subtotal:</span>
-                    <span>{selectedCountry?.currency_symbol || 'RM'}{calculateTotal().toFixed(2)}</span>
+                    <span>{getCurrencySymbol()}{calculateTotal().toFixed(2)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Amusement Tax (5%):</span>
+                    <span>{getCurrencySymbol()}{(calculateTotal() * 0.05).toFixed(2)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Bar Tax (3%):</span>
+                    <span>{getCurrencySymbol()}{(calculateTotal() * 0.03).toFixed(2)}</span>
                   </div>
                   <div className="d-flex justify-content-between mb-2">
                     <span>Delivery Fee:</span>
@@ -1129,7 +1137,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                   <hr />
                   <div className="d-flex justify-content-between">
                     <strong>Total Amount:</strong>
-                    <strong className="text-primary">{selectedCountry?.currency_symbol || 'RM'}{calculateTotal().toFixed(2)}</strong>
+                    <strong className="text-primary">{getCurrencySymbol()}{(calculateTotal() * 1.08).toFixed(2)}</strong>
                   </div>
                   
                   <div className="mt-3 p-3 bg-light border rounded">
@@ -1194,7 +1202,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                   );
                 })()}
               </div>
-              <p><strong>Total Amount:</strong> {selectedCountry?.currency_symbol}{calculateTotal().toFixed(2)}</p>
+              <p><strong>Total Amount:</strong> {getCurrencySymbol()}{(calculateTotal() * 1.08).toFixed(2)}</p>
               <p><strong>Payment Method:</strong> {paymentMethod === 'billplz' ? 'Billplz Online Payment' : 'Cash on Delivery'}</p>
             </div>
           </div>
