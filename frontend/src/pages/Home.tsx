@@ -228,7 +228,11 @@ const Home: React.FC = () => {
                         </p>
                         <div className="d-grid gap-2">
                           <Button 
+                            variant={undefined} 
                             className="reserve-button get-tickets-button"
+                            style={{ 
+                              backgroundColor: 'transparent',
+                            }}
                             onClick={() => handleGetTickets(ticket)}
                           >
                             Get Tickets
@@ -413,6 +417,9 @@ const Home: React.FC = () => {
                               View Details
                             </Button> */}
                             <Button 
+                             style={{ 
+                              backgroundColor: 'transparent',
+                            }}
                               className="reserve-button get-tickets-button"
                               onClick={() => handleReserve(event)}
                             >

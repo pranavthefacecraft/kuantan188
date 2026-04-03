@@ -77,6 +77,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255, 255, 255, 0.2) !important',
+          textDecoration: 'none',
         }}
         disabled={isSharing}
       >
@@ -90,6 +91,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(10px)',
           minWidth: '200px',
+          
         }}
       >
         <div className="px-3 py-2 border-bottom">
