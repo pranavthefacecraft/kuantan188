@@ -130,7 +130,7 @@
     .form-check-input {
         width: 1.125rem;
         height: 1.125rem;
-        border: 2px solid var(--border);
+        /* border: 2px solid var(--border); */
         border-radius: 0.25rem;
         background: var(--surface);
         cursor: pointer;
@@ -139,8 +139,8 @@
     }
 
     .form-check-input:checked {
-        background: var(--primary);
-        border-color: var(--primary);
+        background: #66001D important!;
+        border-color: #66001D;
     }
 
     .form-check-input:checked::after {
@@ -156,7 +156,7 @@
 
     .form-check-label {
         font-size: 0.875rem;
-        color: var(--on-surface);
+        color: #66001D;
         cursor: pointer;
     }
 </style>
