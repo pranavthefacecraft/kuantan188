@@ -2032,8 +2032,23 @@
 
     function sendBookingEmail() {
         if (currentBookingId) {
-            alert('Email functionality to be implemented');
-            // TODO: Implement email sending functionality
+            if (!confirm('Send confirmation email for this booking?')) return;
+
+            fetch(`/api/bookings/${currentBookingId}/send-email`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    'Authorization': 'Bearer ' + (document.cookie.match(/token=([^;]+)/)?.[1] || '')
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(err => {
+                alert('Failed to send email: ' + err.message);
+            });
         }
     }
 

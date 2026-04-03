@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Mail\BookingConfirmation;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
 
@@ -239,6 +241,18 @@ class PublicBookingController extends Controller
             ]);
 
             \Log::info('[BOOKING_API] ===== BOOKING REQUEST COMPLETED SUCCESSFULLY =====');
+
+            // Send confirmation email
+            try {
+                $recipientEmail = $booking->email ?? $booking->customer_email;
+                if ($recipientEmail) {
+                    Mail::to($recipientEmail)->send(new BookingConfirmation($booking));
+                    \Log::info('[BOOKING_API] Confirmation email sent to: ' . $recipientEmail);
+                }
+            } catch (\Exception $emailException) {
+                \Log::warning('[BOOKING_API] Failed to send confirmation email: ' . $emailException->getMessage());
+                // Don't fail the booking if email fails
+            }
 
             return response()->json([
                 'success' => true,

@@ -5,8 +5,10 @@ namespace App\Services;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use App\Models\Booking;
+use App\Mail\BookingConfirmation;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class BillplzService
 {
@@ -184,6 +186,19 @@ class BillplzService
                 'payment_status' => $paymentStatus,
                 'bill_id' => $data['id']
             ]);
+
+            // Send confirmation email after successful payment
+            if ($data['paid']) {
+                try {
+                    $recipientEmail = $booking->email ?? $booking->customer_email;
+                    if ($recipientEmail) {
+                        Mail::to($recipientEmail)->send(new BookingConfirmation($booking->fresh()));
+                        Log::info('Payment confirmation email sent to: ' . $recipientEmail);
+                    }
+                } catch (\Exception $emailException) {
+                    Log::warning('Failed to send payment confirmation email: ' . $emailException->getMessage());
+                }
+            }
 
             return [
                 'success' => true,

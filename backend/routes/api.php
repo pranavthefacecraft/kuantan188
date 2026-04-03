@@ -89,6 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{booking}', [BookingController::class, 'show']);
     Route::put('/bookings/{booking}', [BookingController::class, 'update']);
     Route::delete('/bookings/{booking}', [BookingController::class, 'destroy']);
+    Route::post('/bookings/{id}/send-email', [App\Http\Controllers\AdminDashboardController::class, 'sendBookingEmail']);
     
     // Admin routes for Google Reviews
     Route::post('/reviews/fetch', [ReviewController::class, 'fetchFromGoogle']);

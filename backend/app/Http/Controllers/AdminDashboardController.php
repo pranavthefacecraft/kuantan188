@@ -1643,6 +1643,38 @@ class AdminDashboardController extends Controller
     }
 
     /**
+     * Send booking confirmation email to customer
+     */
+    public function sendBookingEmail(Request $request, $id)
+    {
+        try {
+            $booking = \App\Models\Booking::findOrFail($id);
+            $recipientEmail = $booking->email ?? $booking->customer_email;
+
+            if (!$recipientEmail) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No email address found for this booking.'
+                ], 400);
+            }
+
+            \Illuminate\Support\Facades\Mail::to($recipientEmail)
+                ->send(new \App\Mail\BookingConfirmation($booking));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Confirmation email sent to ' . $recipientEmail
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Show custom CSS management page
      */
     public function customCss()
