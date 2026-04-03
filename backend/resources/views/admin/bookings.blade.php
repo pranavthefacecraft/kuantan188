@@ -372,26 +372,24 @@
     }
 
     .btn-outline {
-        border-color: var(--border);
         background: var(--surface);
         color: var(--on-surface);
     }
 
     .btn-outline:hover {
         background: var(--surface-variant);
-        border-color: var(--primary);
         color: var(--primary);
     }
 
     .btn-primary {
         background: var(--primary);
-        border-color: var(--primary);
         color: white;
+        border: none !important;;
     }
 
     .btn-primary:hover {
         background: var(--primary-dark);
-        border-color: var(--primary-dark);
+        /* border-color: var(--primary-dark); */
         color: white;
     }
 
