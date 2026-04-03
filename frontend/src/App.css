@@ -28,11 +28,13 @@
 
 /* Custom button styles */
 .btn-primary {
-  background-color: #66011d;
+  /* background-color: #66011d; */
+  border-color: #ff014a;
 }
 
 .btn-primary:hover {
   background-color: #ffffff;
+  border-color: none !important;
 }
 
 /* Gradient text */
@@ -233,12 +235,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
+  background: #66001d;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-dark);
+  background: #66001d;
 }
 
 /* Additional responsive utilities */
@@ -362,6 +364,7 @@
   position: relative;
   z-index: 2;
   color: white;
+  border-color: #ff014a !important;
 }
 
 .event-card-content .column-title {
@@ -385,7 +388,7 @@
 }
 
 .event-card-content .reserve-button {
-  border-color: #ff014a;
+  border-color: #ff014a !important;
   padding: 0.75rem 1.5rem;
   border-radius: 2px;
   font-weight: 600;
@@ -393,7 +396,7 @@
 }
 
 .event-card-content .reserve-button:hover {
-  background-color: white;
+  background-color: #ff014a;
   color: #1a0007;
   transform: translateY(-2px);
 }
@@ -417,7 +420,7 @@
 }
 
 .event-details .small strong {
-  color: #212529;
+  color: #1a0007;
 }
 
 /* Event card improvements */
@@ -491,8 +494,12 @@
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+.text-primary {
+  color: #66001d !important;
+}
+
 .event-info .text-primary {
-  color: var(--primary-color) !important;
+  color: #66001d !important;
 }
 
 .booking-section .bg-light {
@@ -539,6 +546,7 @@
   font-weight: 600;
   font-size: 1.5rem;
   color: #1f2937;
+  font-family: poppins, sans-serif;
 }
 
 .ticket-booking-modal .modal-body-custom {
@@ -908,13 +916,13 @@
 
 .contact-details h5 {
   font-weight: 600;
-  color: #333;
+  color: #1a0007;
   margin-bottom: 20px;
 }
 
 .contact-details .form-label {
   font-weight: 500;
-  color: #555;
+  color: #1a0007;
   margin-bottom: 8px;
 }
 
@@ -928,7 +936,7 @@
 
 .contact-details .form-control:focus,
 .contact-details .form-select:focus {
-  border-color: #28a745;
+  border-color: #66001d;
   box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
 }
 
@@ -959,6 +967,7 @@
   color: #1a0007;
   margin-bottom: 5px;
   font-size: 16px;
+  font-family: poppins, sans-serif;
 }
 
 .ticket-subtitle {
@@ -979,11 +988,10 @@
 
 .ticket-actions .btn-link {
   font-size: 13px;
-  text-decoration: none;
 }
 
 .ticket-actions .btn-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .continue-shopping-btn {
@@ -1024,7 +1032,7 @@
 }
 
 .promo-section .btn-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* Payment Step Styles */
@@ -1046,7 +1054,7 @@
   justify-content: center;
   width: 60px;
   height: 60px;
-  background: rgba(40, 167, 69, 0.1);
+  background: #66001d;
   border-radius: 50%;
 }
 
