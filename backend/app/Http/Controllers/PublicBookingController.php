@@ -242,19 +242,7 @@ class PublicBookingController extends Controller
 
             \Log::info('[BOOKING_API] ===== BOOKING REQUEST COMPLETED SUCCESSFULLY =====');
 
-            // Send confirmation email
-            try {
-                $recipientEmail = $booking->email ?? $booking->customer_email;
-                if ($recipientEmail) {
-                    Mail::to($recipientEmail)->send(new BookingConfirmation($booking));
-                    \Log::info('[BOOKING_API] Confirmation email sent to: ' . $recipientEmail);
-                }
-            } catch (\Exception $emailException) {
-                \Log::warning('[BOOKING_API] Failed to send confirmation email: ' . $emailException->getMessage());
-                // Don't fail the booking if email fails
-            }
-
-            return response()->json([
+            $response = response()->json([
                 'success' => true,
                 'message' => 'Booking created successfully',
                 'booking' => [
@@ -271,6 +259,27 @@ class PublicBookingController extends Controller
                     'created_at' => $booking->created_at
                 ]
             ], 201);
+
+            // Send confirmation email after preparing response
+            // Using app()->terminating() to send after response is delivered
+            $bookingForEmail = $booking;
+            app()->terminating(function () use ($bookingForEmail) {
+                try {
+                    $recipientEmail = $bookingForEmail->email ?? $bookingForEmail->customer_email;
+                    \Log::info('[BOOKING_API] Attempting to send confirmation email to: ' . ($recipientEmail ?? 'NO EMAIL'));
+                    if ($recipientEmail) {
+                        Mail::to($recipientEmail)->send(new BookingConfirmation($bookingForEmail));
+                        \Log::info('[BOOKING_API] Confirmation email sent successfully to: ' . $recipientEmail);
+                    } else {
+                        \Log::warning('[BOOKING_API] No recipient email found, skipping email');
+                    }
+                } catch (\Throwable $emailException) {
+                    \Log::error('[BOOKING_API] Failed to send confirmation email: ' . $emailException->getMessage());
+                    \Log::error('[BOOKING_API] Email error trace: ' . $emailException->getTraceAsString());
+                }
+            });
+
+            return $response;
 
         } catch (\Exception $e) {
             \Log::error('[BOOKING_API] ===== BOOKING REQUEST FAILED =====');
