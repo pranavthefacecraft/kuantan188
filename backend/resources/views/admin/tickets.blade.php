@@ -12,7 +12,7 @@
                 <p style="margin: 0.5rem 0 0 0; color: var(--on-surface-variant);">Manage ticket prices and availability</p>
             </div>
             <div style="display: flex; gap: 1rem;">
-                <button onclick="alert('EMERGENCY BUTTON TEST'); var modal = document.getElementById('ticketModal'); if(modal) { modal.style.display='flex'; alert('Modal opened directly!'); } else { alert('Modal element not found!'); }" class="btn btn-primary">
+                <button onclick="openTicketModal()" class="btn btn-primary">
                     <span class="material-icons" style="font-size: 18px;">add</span>
                     Add New Ticket
                 </button>
