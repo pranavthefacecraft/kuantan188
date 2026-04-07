@@ -61,7 +61,7 @@
                                     <td style="padding: 0.75rem; font-weight: 500;">{{ $entry->name }}</td>
                                     <td style="padding: 0.75rem; text-align: center;">
                                         <span style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 20px; font-weight: 500;
-                                            {{ $entry->target === 'admin' ? 'background: rgba(99,102,241,0.1); color: var(--primary); border: 1px solid rgba(99,102,241,0.3);' : ($entry->target === 'both' ? 'background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.3);' : 'background: rgba(6,182,212,0.1); color: var(--accent); border: 1px solid rgba(6,182,212,0.3);') }}">
+                                            {{ $entry->target === 'admin' ? 'background-color: #FFE6ED; color: #66011d; border: 1px solid rgba(99,102,241,0.3);' : ($entry->target === 'both' ? 'background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.3);' : 'background: rgba(6,182,212,0.1); color: var(--accent); border: 1px solid rgba(6,182,212,0.3);') }}">
                                             {{ ucfirst($entry->target) }}
                                         </span>
                                     </td>

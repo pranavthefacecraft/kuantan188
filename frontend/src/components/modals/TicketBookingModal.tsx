@@ -1235,7 +1235,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             <Button variant="secondary" onClick={() => setCurrentStep('selection')}>
               Back
             </Button>
-            <Button variant="primary" onClick={handleContinueToPayment}>
+            <Button className='btn-confirm' variant="primary" onClick={handleContinueToPayment}>
               Continue to Payment
             </Button>
           </>
@@ -1246,7 +1246,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             <Button variant="secondary" onClick={() => setCurrentStep('details')}>
               Back
             </Button>
-            <Button variant="primary" onClick={handlePayment}>
+            <Button className='btn-confirm' variant="primary" onClick={handlePayment}>
               Process Payment
             </Button>
           </>

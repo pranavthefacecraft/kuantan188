@@ -27,8 +27,18 @@
 }
 
 /* Custom button styles */
-.btn-primary {
-  /* background-color: #66011d; */
+/* .btn-primary {
+  background-color: #66011d;
+  border-color: #ff014a;
+} */
+
+.btn-confirm {
+  background-color: #66011d;
+  border-color: #66011d;
+}
+
+.btn-confirm:hover {
+  background-color: #ff014a;
   border-color: #ff014a;
 }
 
@@ -60,7 +70,7 @@
 /* Sidebar styles */
 .sidebar {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  /* background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); */
   color: white;
 }
 
@@ -1012,7 +1022,7 @@
 
 .pricing-breakdown .d-flex {
   font-size: 14px;
-  color: #666;
+  color: #66001d;
 }
 
 .pricing-breakdown hr {
@@ -1023,7 +1033,7 @@
 .total-due {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: #66001d;
 }
 
 .promo-section .btn-link {
