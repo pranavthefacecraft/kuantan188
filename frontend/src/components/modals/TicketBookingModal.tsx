@@ -19,6 +19,21 @@ interface Ticket {
   image_url?: string;
   total_quantity?: number;
   available_quantity?: number;
+  is_all_day_pass?: boolean;
+  all_day_pass_pricing?: {
+    malaysian: {
+      adult_price: string;
+      teen_price?: string;
+      university_price?: string;
+      child_price: string;
+    };
+    non_malaysian: {
+      adult_price: string;
+      teen_price?: string;
+      university_price?: string;
+      child_price: string;
+    };
+  };
   pricing?: {
     malaysian: {
       adult_price: string;
@@ -80,6 +95,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
   
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
+  const [isAllDayPass, setIsAllDayPass] = useState<boolean>(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [bookingResult, setBookingResult] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('billplz');
@@ -112,6 +128,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       setNonMalaysianQuantities(initialNonMalaysianQuantities || { adult: 0, teenager: 0, university: 0, child: 0 });
       setSelectedDate(initialDate || new Date());
       setSelectedTime(initialTime || '');
+      setIsAllDayPass(false);
       setShowCalendar(false);
       setContactForm({
         firstName: '',
@@ -168,8 +185,11 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     let nonMalayTotal = 0;
     
     if (ticket?.pricing) {
+      // Determine which pricing to use
+      const useAllDayPricing = isAllDayPass && ticket.all_day_pass_pricing;
+      
       // Calculate Malaysian total
-      const malayPricing = ticket.pricing.malaysian;
+      const malayPricing = useAllDayPricing ? ticket.all_day_pass_pricing!.malaysian : ticket.pricing.malaysian;
       const malayAdultPrice = parseFloat(malayPricing.adult_price || '0');
       const malayTeenPrice = parseFloat(malayPricing.teen_price || malayPricing.adult_price || '0');
       const malayUniversityPrice = parseFloat(malayPricing.university_price || malayPricing.adult_price || '0');
@@ -181,7 +201,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                   (malayChildPrice * malaysianQuantities.child);
                   
       // Calculate Non-Malaysian total
-      const nonMalayPricing = ticket.pricing.non_malaysian;
+      const nonMalayPricing = useAllDayPricing ? ticket.all_day_pass_pricing!.non_malaysian : ticket.pricing.non_malaysian;
       const nonMalayAdultPrice = parseFloat(nonMalayPricing.adult_price || '0');
       const nonMalayTeenPrice = parseFloat(nonMalayPricing.teen_price || nonMalayPricing.adult_price || '0');
       const nonMalayUniversityPrice = parseFloat(nonMalayPricing.university_price || nonMalayPricing.adult_price || '0');
@@ -235,7 +255,10 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     let basePriceMYR = 0;
     
     if (ticket?.pricing) {
-      const pricing = activeTab === 'malaysian' ? ticket.pricing.malaysian : ticket.pricing.non_malaysian;
+      const useAllDayPricing = isAllDayPass && ticket.all_day_pass_pricing;
+      const pricing = useAllDayPricing 
+        ? (activeTab === 'malaysian' ? ticket.all_day_pass_pricing!.malaysian : ticket.all_day_pass_pricing!.non_malaysian)
+        : (activeTab === 'malaysian' ? ticket.pricing.malaysian : ticket.pricing.non_malaysian);
       let priceValue: string | undefined;
       switch (type) {
         case 'adult':
@@ -270,7 +293,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     let basePriceMYR = 0;
     
     if (ticket?.pricing) {
-      const pricing = ticket.pricing.malaysian;
+      const useAllDayPricing = isAllDayPass && ticket.all_day_pass_pricing;
+      const pricing = useAllDayPricing ? ticket.all_day_pass_pricing!.malaysian : ticket.pricing.malaysian;
       let priceValue: string | undefined;
       switch (type) {
         case 'adult': priceValue = pricing.adult_price; break;
@@ -293,7 +317,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     let basePriceMYR = 0;
     
     if (ticket?.pricing) {
-      const pricing = ticket.pricing.non_malaysian;
+      const useAllDayPricing = isAllDayPass && ticket.all_day_pass_pricing;
+      const pricing = useAllDayPricing ? ticket.all_day_pass_pricing!.non_malaysian : ticket.pricing.non_malaysian;
       let priceValue: string | undefined;
       switch (type) {
         case 'adult': priceValue = pricing.adult_price; break;
@@ -344,8 +369,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       alert('Please select at least one ticket');
       return;
     }
-    if (!selectedTime) {
-      alert('Please select a time slot');
+    if (!isAllDayPass && !selectedTime) {
+      alert('Please select a time slot or choose All Day Pass');
       return;
     }
     setCurrentStep('details');
@@ -369,7 +394,8 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       adult_price: parseFloat(selectedCountry?.adult_price || '0'),
       child_price: parseFloat(selectedCountry?.child_price || '0'),
       event_date: format(selectedDate, 'yyyy-MM-dd'),
-      selected_time: selectedTime,
+      selected_time: isAllDayPass ? undefined : selectedTime,
+      is_all_day_pass: isAllDayPass,
       total_amount: parseFloat((calculateTotal() * 1.08).toFixed(2)),
       payment_method: paymentMethod,
       booking_status: paymentMethod === 'billplz' ? 'pending' : 'confirmed',
@@ -830,6 +856,49 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                   {/* Time Selection */}
                   <div>
                     <h6 className="mb-3">Select time</h6>
+                    
+                    {/* All Day Pass Option */}
+                    {ticket.is_all_day_pass && (
+                      <div className="mb-3">
+                        <button
+                          type="button"
+                          className={`w-100 d-flex align-items-center justify-content-between p-3 rounded border ${isAllDayPass ? 'border-warning bg-warning bg-opacity-10' : 'border-secondary'}`}
+                          style={{
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            outline: isAllDayPass ? '2px solid #ff9800' : 'none',
+                            background: isAllDayPass ? 'rgba(255, 152, 0, 0.08)' : 'transparent'
+                          }}
+                          onClick={() => {
+                            setIsAllDayPass(!isAllDayPass);
+                            if (!isAllDayPass) {
+                              setSelectedTime(''); // Clear time slot when switching to All Day Pass
+                            }
+                          }}
+                        >
+                          <div className="d-flex align-items-center gap-2">
+                            <span style={{ fontSize: '1.5rem' }}>☀️</span>
+                            <div className="text-start">
+                              <div className="fw-bold" style={{ color: isAllDayPass ? '#e65100' : '#333' }}>All Day Pass</div>
+                              <div className="small text-muted">Visit anytime — no time slot needed</div>
+                            </div>
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            {isAllDayPass && (
+                              <span className="badge" style={{ background: '#ff9800', color: 'white' }}>Selected</span>
+                            )}
+                          </div>
+                        </button>
+                        {isAllDayPass && (
+                          <div className="mt-2 p-2 rounded" style={{ background: '#fff3e0', fontSize: '0.85rem', color: '#e65100' }}>
+                            <strong>All Day Pass pricing applied.</strong> Your total has been updated with All Day Pass rates.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Time Slots - hidden when All Day Pass is selected */}
+                    {!isAllDayPass && (
                     <div className="time-slots">
                       {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30'].map((time, index) => {
                         const bestPriceSlots = ['09:00', '09:30', '10:00', '10:30'];
@@ -854,6 +923,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                         );
                       })}
                     </div>
+                    )}
                   </div>
                 </div>
               </Col>
@@ -978,7 +1048,13 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
                     <div className="ticket-info">
                       <h6 className="ticket-title">{ticketName}</h6>
                       <p className="ticket-subtitle">{ticketName}</p>
-                      <p className="ticket-datetime">{format(selectedDate, 'd MMMM yyyy HH:mm')}</p>
+                      <p className="ticket-datetime">
+                        {format(selectedDate, 'd MMMM yyyy')} {isAllDayPass ? (
+                          <span className="badge" style={{ background: '#ff9800', color: 'white', fontSize: '0.75rem', marginLeft: '0.5rem' }}>☀️ All Day Pass</span>
+                        ) : (
+                          <span>{format(selectedDate, 'HH:mm')}</span>
+                        )}
+                      </p>
                       
                       <div className="ticket-quantity">
                         {/* Malaysian Section */}
@@ -1177,7 +1253,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             <div className="booking-details mt-4 p-3 bg-light rounded">
               <h6>Booking Details:</h6>
               <p><strong>Ticket:</strong> {ticketName}</p>
-              <p><strong>Date & Time:</strong> {format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}</p>
+              <p><strong>Date & Time:</strong> {format(selectedDate, 'MMMM d, yyyy')} {isAllDayPass ? '— All Day Pass ☀️' : `at ${selectedTime}`}</p>
               <div className="mb-2">
                 <strong>Tickets:</strong>
                 {(() => {
@@ -1223,7 +1299,7 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
             <Button 
               className="continue-button w-100"
               onClick={handleContinueToDetails}
-              disabled={getTotalQuantity() === 0 || !selectedTime}
+              disabled={getTotalQuantity() === 0 || (!isAllDayPass && !selectedTime)}
             >
               Continue →
             </Button>

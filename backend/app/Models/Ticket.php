@@ -30,7 +30,16 @@ class Ticket extends Model
         'non_malaysian_adult_price',
         'non_malaysian_teen_price',
         'non_malaysian_university_price',
-        'non_malaysian_child_price'
+        'non_malaysian_child_price',
+        'is_all_day_pass',
+        'malaysian_all_day_adult_price',
+        'malaysian_all_day_teen_price',
+        'malaysian_all_day_university_price',
+        'malaysian_all_day_child_price',
+        'non_malaysian_all_day_adult_price',
+        'non_malaysian_all_day_teen_price',
+        'non_malaysian_all_day_university_price',
+        'non_malaysian_all_day_child_price'
     ];
 
     protected $casts = [
@@ -46,7 +55,16 @@ class Ticket extends Model
         'non_malaysian_adult_price' => 'decimal:2',
         'non_malaysian_teen_price' => 'decimal:2',
         'non_malaysian_university_price' => 'decimal:2',
-        'non_malaysian_child_price' => 'decimal:2'
+        'non_malaysian_child_price' => 'decimal:2',
+        'is_all_day_pass' => 'boolean',
+        'malaysian_all_day_adult_price' => 'decimal:2',
+        'malaysian_all_day_teen_price' => 'decimal:2',
+        'malaysian_all_day_university_price' => 'decimal:2',
+        'malaysian_all_day_child_price' => 'decimal:2',
+        'non_malaysian_all_day_adult_price' => 'decimal:2',
+        'non_malaysian_all_day_teen_price' => 'decimal:2',
+        'non_malaysian_all_day_university_price' => 'decimal:2',
+        'non_malaysian_all_day_child_price' => 'decimal:2'
     ];
 
     public function event(): BelongsTo

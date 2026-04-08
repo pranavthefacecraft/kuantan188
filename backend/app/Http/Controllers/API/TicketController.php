@@ -38,7 +38,16 @@ class TicketController extends Controller
             'base_price' => 'required|numeric|min:0',
             'total_quantity' => 'required|integer|min:1',
             'description' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'is_all_day_pass' => 'boolean',
+            'malaysian_all_day_adult_price' => 'nullable|numeric|min:0',
+            'malaysian_all_day_teen_price' => 'nullable|numeric|min:0',
+            'malaysian_all_day_university_price' => 'nullable|numeric|min:0',
+            'malaysian_all_day_child_price' => 'nullable|numeric|min:0',
+            'non_malaysian_all_day_adult_price' => 'nullable|numeric|min:0',
+            'non_malaysian_all_day_teen_price' => 'nullable|numeric|min:0',
+            'non_malaysian_all_day_university_price' => 'nullable|numeric|min:0',
+            'non_malaysian_all_day_child_price' => 'nullable|numeric|min:0',
         ]);
 
         // Check if ticket already exists for this combination
@@ -77,7 +86,16 @@ class TicketController extends Controller
             'total_quantity' => 'integer|min:1',
             'available_quantity' => 'integer|min:0',
             'description' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'is_all_day_pass' => 'boolean',
+            'malaysian_all_day_adult_price' => 'nullable|numeric|min:0',
+            'malaysian_all_day_teen_price' => 'nullable|numeric|min:0',
+            'malaysian_all_day_university_price' => 'nullable|numeric|min:0',
+            'malaysian_all_day_child_price' => 'nullable|numeric|min:0',
+            'non_malaysian_all_day_adult_price' => 'nullable|numeric|min:0',
+            'non_malaysian_all_day_teen_price' => 'nullable|numeric|min:0',
+            'non_malaysian_all_day_university_price' => 'nullable|numeric|min:0',
+            'non_malaysian_all_day_child_price' => 'nullable|numeric|min:0',
         ]);
 
         $ticket->update($validated);

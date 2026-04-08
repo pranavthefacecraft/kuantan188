@@ -143,7 +143,9 @@ class PublicBookingController extends Controller
                 'event_date' => 'required|date',
                 'total_amount' => 'required|numeric|min:0',
                 'payment_method' => 'required|string|max:50',
-                'booking_status' => 'required|string|max:50'
+                'booking_status' => 'required|string|max:50',
+                'selected_time' => 'nullable|string|max:10',
+                'is_all_day_pass' => 'nullable|boolean'
             ]);
 
             if ($validator->fails()) {
@@ -210,6 +212,8 @@ class PublicBookingController extends Controller
                 'payment_reference' => null,
                 'payment_date' => null,
                 'status' => $request->booking_status ?? 'confirmed',
+                'selected_time' => $request->is_all_day_pass ? null : $request->selected_time,
+                'is_all_day_pass' => $request->is_all_day_pass ?? false,
             ];
 
             // Add optional fields only if they exist in database

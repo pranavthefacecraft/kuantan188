@@ -42,6 +42,7 @@ export interface BookingData {
   child_price?: number;
   event_date: string;
   selected_time?: string;
+  is_all_day_pass?: boolean;
   
   // Payment information
   total_amount: number;

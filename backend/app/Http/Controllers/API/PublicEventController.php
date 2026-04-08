@@ -420,7 +420,22 @@ class PublicEventController extends Controller
                         'child_price' => $ticket->non_malaysian_child_price ?? $fallbackPrice,
                         'available' => $ticket->available_for_non_malaysians
                     ]
-                ]
+                ],
+                'is_all_day_pass' => (bool) $ticket->is_all_day_pass,
+                'all_day_pass_pricing' => $ticket->is_all_day_pass ? [
+                    'malaysian' => [
+                        'adult_price' => $ticket->malaysian_all_day_adult_price,
+                        'teen_price' => $ticket->malaysian_all_day_teen_price,
+                        'university_price' => $ticket->malaysian_all_day_university_price,
+                        'child_price' => $ticket->malaysian_all_day_child_price,
+                    ],
+                    'non_malaysian' => [
+                        'adult_price' => $ticket->non_malaysian_all_day_adult_price,
+                        'teen_price' => $ticket->non_malaysian_all_day_teen_price,
+                        'university_price' => $ticket->non_malaysian_all_day_university_price,
+                        'child_price' => $ticket->non_malaysian_all_day_child_price,
+                    ]
+                ] : null
             ];
         });
 
@@ -502,7 +517,22 @@ class PublicEventController extends Controller
                         'child_price' => $ticket->non_malaysian_child_price ?? $fallbackPrice,
                         'available' => $ticket->available_for_non_malaysians
                     ]
-                ]
+                ],
+                'is_all_day_pass' => (bool) $ticket->is_all_day_pass,
+                'all_day_pass_pricing' => $ticket->is_all_day_pass ? [
+                    'malaysian' => [
+                        'adult_price' => $ticket->malaysian_all_day_adult_price,
+                        'teen_price' => $ticket->malaysian_all_day_teen_price,
+                        'university_price' => $ticket->malaysian_all_day_university_price,
+                        'child_price' => $ticket->malaysian_all_day_child_price,
+                    ],
+                    'non_malaysian' => [
+                        'adult_price' => $ticket->non_malaysian_all_day_adult_price,
+                        'teen_price' => $ticket->non_malaysian_all_day_teen_price,
+                        'university_price' => $ticket->non_malaysian_all_day_university_price,
+                        'child_price' => $ticket->non_malaysian_all_day_child_price,
+                    ]
+                ] : null
             ]
         ]);
     }

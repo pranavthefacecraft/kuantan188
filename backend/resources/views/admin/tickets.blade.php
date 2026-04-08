@@ -46,6 +46,12 @@
                                 <td>
                                     <div>
                                         <div style="font-weight: 600;">{{ $ticket->ticket_name ?? 'Unnamed Ticket' }}</div>
+                                        @if($ticket->is_all_day_pass)
+                                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: #fff3e0; color: #e65100; padding: 0.125rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 0.25rem;">
+                                                <span class="material-icons" style="font-size: 12px;">wb_sunny</span>
+                                                All Day Pass
+                                            </span>
+                                        @endif
                                         <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
                                             {{ $ticket->description ? Str::limit($ticket->description, 50) : 'No description' }}
                                         </div>
@@ -389,6 +395,80 @@
                         </div>
                     </div>
 
+                    <!-- All Day Pass Toggle for Edit -->
+                    <div class="form-group full-width">
+                        <div class="checkbox-group">
+                            <input type="hidden" name="is_all_day_pass" value="0">
+                            <input type="checkbox" 
+                                   id="edit_is_all_day_pass" 
+                                   name="is_all_day_pass" 
+                                   class="checkbox-input" 
+                                   value="1" 
+                                   onchange="handleAllDayPassToggle('edit')">
+                            <label for="edit_is_all_day_pass" class="checkbox-label">
+                                <span class="material-icons" style="font-size: 18px; color: #ff9800; margin-right: 0.5rem;">wb_sunny</span>
+                                Enable All Day Pass
+                            </label>
+                        </div>
+                        <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
+                            All Day Pass allows customers to visit anytime without selecting a time slot. Set separate pricing below.
+                        </small>
+                    </div>
+
+                    <!-- All Day Pass Malaysian Pricing for Edit -->
+                    <div class="form-group full-width" id="editAllDayMalaysianPricingSection" style="display: none;">
+                        <label class="form-label">
+                            <span class="material-icons" style="font-size: 18px; color: #ff9800; margin-right: 0.5rem; vertical-align: middle;">wb_sunny</span>
+                            <span class="material-icons" style="font-size: 18px; color: var(--primary); margin-right: 0.5rem; vertical-align: middle;">flag</span>
+                            All Day Pass — Malaysian Pricing (RM)
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <div>
+                                <label class="form-label">Adult (RM)</label>
+                                <input type="number" id="edit_malaysian_all_day_adult_price" name="malaysian_all_day_adult_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Teen (RM)</label>
+                                <input type="number" id="edit_malaysian_all_day_teen_price" name="malaysian_all_day_teen_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">University (RM)</label>
+                                <input type="number" id="edit_malaysian_all_day_university_price" name="malaysian_all_day_university_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Child (RM)</label>
+                                <input type="number" id="edit_malaysian_all_day_child_price" name="malaysian_all_day_child_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All Day Pass Non-Malaysian Pricing for Edit -->
+                    <div class="form-group full-width" id="editAllDayNonMalaysianPricingSection" style="display: none;">
+                        <label class="form-label">
+                            <span class="material-icons" style="font-size: 18px; color: #ff9800; margin-right: 0.5rem; vertical-align: middle;">wb_sunny</span>
+                            <span class="material-icons" style="font-size: 18px; color: var(--accent); margin-right: 0.5rem; vertical-align: middle;">public</span>
+                            All Day Pass — Non-Malaysian Pricing (USD)
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <div>
+                                <label class="form-label">Adult (USD)</label>
+                                <input type="number" id="edit_non_malaysian_all_day_adult_price" name="non_malaysian_all_day_adult_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Teen (USD)</label>
+                                <input type="number" id="edit_non_malaysian_all_day_teen_price" name="non_malaysian_all_day_teen_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">University (USD)</label>
+                                <input type="number" id="edit_non_malaysian_all_day_university_price" name="non_malaysian_all_day_university_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Child (USD)</label>
+                                <input type="number" id="edit_non_malaysian_all_day_child_price" name="non_malaysian_all_day_child_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
 
 
                     <div class="form-group">
@@ -611,6 +691,80 @@
                             <div>
                                 <label class="form-label">Child Price (USD)</label>
                                 <input type="number" name="non_malaysian_child_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All Day Pass Toggle -->
+                    <div class="form-group full-width">
+                        <div class="checkbox-group">
+                            <input type="hidden" name="is_all_day_pass" value="0">
+                            <input type="checkbox" 
+                                   id="is_all_day_pass" 
+                                   name="is_all_day_pass" 
+                                   class="checkbox-input" 
+                                   value="1" 
+                                   onchange="handleAllDayPassToggle('create')">
+                            <label for="is_all_day_pass" class="checkbox-label">
+                                <span class="material-icons" style="font-size: 18px; color: #ff9800; margin-right: 0.5rem;">wb_sunny</span>
+                                Enable All Day Pass
+                            </label>
+                        </div>
+                        <small style="color: var(--on-surface-variant); margin-top: 0.25rem; display: block;">
+                            All Day Pass allows customers to visit anytime without selecting a time slot. Set separate pricing below.
+                        </small>
+                    </div>
+
+                    <!-- All Day Pass Malaysian Pricing -->
+                    <div class="form-group full-width" id="allDayMalaysianPricingSection" style="display: none;">
+                        <label class="form-label">
+                            <span class="material-icons" style="font-size: 18px; color: #ff9800; margin-right: 0.5rem; vertical-align: middle;">wb_sunny</span>
+                            <span class="material-icons" style="font-size: 18px; color: var(--primary); margin-right: 0.5rem; vertical-align: middle;">flag</span>
+                            All Day Pass — Malaysian Pricing (RM)
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <div>
+                                <label class="form-label">Adult (RM)</label>
+                                <input type="number" name="malaysian_all_day_adult_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Teen (RM)</label>
+                                <input type="number" name="malaysian_all_day_teen_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">University (RM)</label>
+                                <input type="number" name="malaysian_all_day_university_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Child (RM)</label>
+                                <input type="number" name="malaysian_all_day_child_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All Day Pass Non-Malaysian Pricing -->
+                    <div class="form-group full-width" id="allDayNonMalaysianPricingSection" style="display: none;">
+                        <label class="form-label">
+                            <span class="material-icons" style="font-size: 18px; color: #ff9800; margin-right: 0.5rem; vertical-align: middle;">wb_sunny</span>
+                            <span class="material-icons" style="font-size: 18px; color: var(--accent); margin-right: 0.5rem; vertical-align: middle;">public</span>
+                            All Day Pass — Non-Malaysian Pricing (USD)
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <div>
+                                <label class="form-label">Adult (USD)</label>
+                                <input type="number" name="non_malaysian_all_day_adult_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Teen (USD)</label>
+                                <input type="number" name="non_malaysian_all_day_teen_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">University (USD)</label>
+                                <input type="number" name="non_malaysian_all_day_university_price" step="0.01" min="0" class="form-input" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="form-label">Child (USD)</label>
+                                <input type="number" name="non_malaysian_all_day_child_price" step="0.01" min="0" class="form-input" placeholder="0.00">
                             </div>
                         </div>
                     </div>
@@ -1278,6 +1432,11 @@ function closeTicketModal() {
             // Hide pricing sections
             document.getElementById('malaysianPricingSection').style.display = 'none';
             document.getElementById('nonMalaysianPricingSection').style.display = 'none';
+            // Hide All Day Pass pricing sections
+            var adpMal = document.getElementById('allDayMalaysianPricingSection');
+            var adpNonMal = document.getElementById('allDayNonMalaysianPricingSection');
+            if (adpMal) adpMal.style.display = 'none';
+            if (adpNonMal) adpNonMal.style.display = 'none';
             // Reset button state
             resetCreateButton();
         }
@@ -1384,6 +1543,7 @@ function addTicketToTable(ticket) {
         <td>
             <div>
                 <div style="font-weight: 600;">${ticket.ticket_name || 'Unnamed Ticket'}</div>
+                ${ticket.is_all_day_pass ? '<span style="display: inline-flex; align-items: center; gap: 0.25rem; background: #fff3e0; color: #e65100; padding: 0.125rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 0.25rem;"><span class="material-icons" style="font-size: 12px;">wb_sunny</span>All Day Pass</span>' : ''}
                 <div style="font-size: 0.875rem; color: var(--on-surface-variant);">
                     ${ticket.description ? (ticket.description.length > 50 ? ticket.description.substring(0, 50) + '...' : ticket.description) : 'No description'}
                 </div>
@@ -1521,6 +1681,10 @@ function submitCreateTicketForm(event) {
             form.reset();
             document.getElementById('malaysianPricingSection').style.display = 'none';
             document.getElementById('nonMalaysianPricingSection').style.display = 'none';
+            var adpMalReset = document.getElementById('allDayMalaysianPricingSection');
+            var adpNonMalReset = document.getElementById('allDayNonMalaysianPricingSection');
+            if (adpMalReset) adpMalReset.style.display = 'none';
+            if (adpNonMalReset) adpNonMalReset.style.display = 'none';
             
             // Don't reload the page - keep popup open with success message
         } else {
@@ -1543,12 +1707,24 @@ function handleTargetAudienceChange(audienceType) {
         if (checkbox && section) {
             section.style.display = checkbox.checked ? 'block' : 'none';
         }
+        // Also toggle All Day Pass Malaysian pricing
+        const allDayCheckbox = document.getElementById('is_all_day_pass');
+        const adpSection = document.getElementById('allDayMalaysianPricingSection');
+        if (adpSection) {
+            adpSection.style.display = (checkbox && checkbox.checked && allDayCheckbox && allDayCheckbox.checked) ? 'block' : 'none';
+        }
     } else if (audienceType === 'non_malaysians') {
         const checkbox = document.getElementById('available_for_non_malaysians');
         const section = document.getElementById('nonMalaysianPricingSection');
         
         if (checkbox && section) {
             section.style.display = checkbox.checked ? 'block' : 'none';
+        }
+        // Also toggle All Day Pass Non-Malaysian pricing
+        const allDayCheckbox = document.getElementById('is_all_day_pass');
+        const adpSection = document.getElementById('allDayNonMalaysianPricingSection');
+        if (adpSection) {
+            adpSection.style.display = (checkbox && checkbox.checked && allDayCheckbox && allDayCheckbox.checked) ? 'block' : 'none';
         }
     }
 }
@@ -1741,6 +1917,30 @@ function openEditTicketModal(ticketId) {
                     }
                 }
                 
+                // Handle All Day Pass
+                var allDayCheckbox = document.getElementById('edit_is_all_day_pass');
+                if (allDayCheckbox) {
+                    allDayCheckbox.checked = ticket.is_all_day_pass == 1;
+                    if (ticket.is_all_day_pass == 1) {
+                        // Show Malaysian All Day Pass pricing if Malaysian audience is selected
+                        if (ticket.available_for_malaysians == 1) {
+                            document.getElementById('editAllDayMalaysianPricingSection').style.display = 'block';
+                            document.getElementById('edit_malaysian_all_day_adult_price').value = ticket.malaysian_all_day_adult_price || '';
+                            document.getElementById('edit_malaysian_all_day_teen_price').value = ticket.malaysian_all_day_teen_price || '';
+                            document.getElementById('edit_malaysian_all_day_university_price').value = ticket.malaysian_all_day_university_price || '';
+                            document.getElementById('edit_malaysian_all_day_child_price').value = ticket.malaysian_all_day_child_price || '';
+                        }
+                        // Show Non-Malaysian All Day Pass pricing if Non-Malaysian audience is selected
+                        if (ticket.available_for_non_malaysians == 1) {
+                            document.getElementById('editAllDayNonMalaysianPricingSection').style.display = 'block';
+                            document.getElementById('edit_non_malaysian_all_day_adult_price').value = ticket.non_malaysian_all_day_adult_price || '';
+                            document.getElementById('edit_non_malaysian_all_day_teen_price').value = ticket.non_malaysian_all_day_teen_price || '';
+                            document.getElementById('edit_non_malaysian_all_day_university_price').value = ticket.non_malaysian_all_day_university_price || '';
+                            document.getElementById('edit_non_malaysian_all_day_child_price').value = ticket.non_malaysian_all_day_child_price || '';
+                        }
+                    }
+                }
+                
                 // Handle existing image display
                 const imagePreview = document.getElementById('editImagePreview');
                 const currentImageContainer = document.getElementById('editCurrentImageContainer');
@@ -1798,11 +1998,19 @@ function closeEditTicketModal() {
         if (malaysianSection) malaysianSection.style.display = 'none';
         if (nonMalaysianSection) nonMalaysianSection.style.display = 'none';
         
+        // Hide All Day Pass pricing sections
+        var adpMal = document.getElementById('editAllDayMalaysianPricingSection');
+        var adpNonMal = document.getElementById('editAllDayNonMalaysianPricingSection');
+        if (adpMal) adpMal.style.display = 'none';
+        if (adpNonMal) adpNonMal.style.display = 'none';
+        
         // Reset checkboxes
         var malaysianCheckbox = document.getElementById('edit_available_for_malaysians');
         var nonMalaysianCheckbox = document.getElementById('edit_available_for_non_malaysians');
         if (malaysianCheckbox) malaysianCheckbox.checked = false;
         if (nonMalaysianCheckbox) nonMalaysianCheckbox.checked = false;
+        var allDayCheckbox = document.getElementById('edit_is_all_day_pass');
+        if (allDayCheckbox) allDayCheckbox.checked = false;
     }
 }
 
@@ -1980,6 +2188,12 @@ function handleEditTargetAudienceChange(audienceType) {
         } else {
             alert('Edit Malaysian elements not found! Checkbox: ' + !!checkbox + ', Section: ' + !!section);
         }
+        // Also toggle All Day Pass Malaysian pricing
+        const allDayCheckbox = document.getElementById('edit_is_all_day_pass');
+        const adpSection = document.getElementById('editAllDayMalaysianPricingSection');
+        if (adpSection) {
+            adpSection.style.display = (checkbox && checkbox.checked && allDayCheckbox && allDayCheckbox.checked) ? 'block' : 'none';
+        }
     } else if (audienceType === 'non_malaysians') {
         const checkbox = document.getElementById('edit_available_for_non_malaysians');
         const section = document.getElementById('editNonMalaysianPricingSection');
@@ -1999,8 +2213,39 @@ function handleEditTargetAudienceChange(audienceType) {
         } else {
             alert('Edit Non-Malaysian elements not found! Checkbox: ' + !!checkbox + ', Section: ' + !!section);
         }
+        // Also toggle All Day Pass Non-Malaysian pricing
+        const allDayCheckbox = document.getElementById('edit_is_all_day_pass');
+        const adpSection = document.getElementById('editAllDayNonMalaysianPricingSection');
+        if (adpSection) {
+            adpSection.style.display = (checkbox && checkbox.checked && allDayCheckbox && allDayCheckbox.checked) ? 'block' : 'none';
+        }
     }
 }
+
+// All Day Pass toggle handler
+function handleAllDayPassToggle(mode) {
+    const prefix = mode === 'edit' ? 'edit' : '';
+    const checkboxId = mode === 'edit' ? 'edit_is_all_day_pass' : 'is_all_day_pass';
+    const malSectionId = mode === 'edit' ? 'editAllDayMalaysianPricingSection' : 'allDayMalaysianPricingSection';
+    const nonMalSectionId = mode === 'edit' ? 'editAllDayNonMalaysianPricingSection' : 'allDayNonMalaysianPricingSection';
+    const malAudienceId = mode === 'edit' ? 'edit_available_for_malaysians' : 'available_for_malaysians';
+    const nonMalAudienceId = mode === 'edit' ? 'edit_available_for_non_malaysians' : 'available_for_non_malaysians';
+
+    const checkbox = document.getElementById(checkboxId);
+    const malSection = document.getElementById(malSectionId);
+    const nonMalSection = document.getElementById(nonMalSectionId);
+    const malAudience = document.getElementById(malAudienceId);
+    const nonMalAudience = document.getElementById(nonMalAudienceId);
+
+    if (checkbox && checkbox.checked) {
+        if (malAudience && malAudience.checked && malSection) malSection.style.display = 'block';
+        if (nonMalAudience && nonMalAudience.checked && nonMalSection) nonMalSection.style.display = 'block';
+    } else {
+        if (malSection) malSection.style.display = 'none';
+        if (nonMalSection) nonMalSection.style.display = 'none';
+    }
+}
+window.handleAllDayPassToggle = handleAllDayPassToggle;
 
 // Delete ticket function
 function deleteTicket(ticketId, totalBookings = 0) {

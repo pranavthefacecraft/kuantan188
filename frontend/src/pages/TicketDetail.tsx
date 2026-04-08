@@ -530,29 +530,37 @@ const TicketDetail: React.FC<TicketDetailProps> = () => {
                   {/* Select Time */}
                   <Col md={4}>
                     <h6 className="fw-bold mb-3">Select time</h6>
-                    <div className="row g-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                      {timeSlots.map((slot) => (
-                        <div className="col-6" key={slot.time}>
-                          <Button
-                            variant={selectedTime === slot.time ? 'success' : 'outline-secondary'}
-                            className="w-100 position-relative"
-                            size="sm"
-                            onClick={() => setSelectedTime(slot.time)}
-                          >
-                            {slot.time}
-                            {slot.bestPrice && (
-                              <Badge 
-                                bg="success" 
-                                className="position-absolute top-0 start-100 translate-middle"
-                                style={{ fontSize: '10px' }}
-                              >
-                                Best price
-                              </Badge>
-                            )}
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                    {ticket?.is_all_day_pass ? (
+                      <div className="text-center p-3 rounded" style={{ backgroundColor: '#fff3e0', border: '2px solid #ff9800' }}>
+                        <div style={{ fontSize: '2rem' }}>☀️</div>
+                        <div className="fw-bold" style={{ color: '#e65100' }}>All Day Pass</div>
+                        <small className="text-muted">No time slot needed — valid for the entire day</small>
+                      </div>
+                    ) : (
+                      <div className="row g-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {timeSlots.map((slot) => (
+                          <div className="col-6" key={slot.time}>
+                            <Button
+                              variant={selectedTime === slot.time ? 'success' : 'outline-secondary'}
+                              className="w-100 position-relative"
+                              size="sm"
+                              onClick={() => setSelectedTime(slot.time)}
+                            >
+                              {slot.time}
+                              {slot.bestPrice && (
+                                <Badge 
+                                  bg="success" 
+                                  className="position-absolute top-0 start-100 translate-middle"
+                                  style={{ fontSize: '10px' }}
+                                >
+                                  Best price
+                                </Badge>
+                              )}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </Col>
                 </Row>
 
@@ -583,7 +591,7 @@ const TicketDetail: React.FC<TicketDetailProps> = () => {
         initialMalaysianQuantities={quantities.malaysian}
         initialNonMalaysianQuantities={quantities.non_malaysian}
         initialDate={selectedDate}
-        initialTime={selectedTime}
+        initialTime={ticket?.is_all_day_pass ? '' : selectedTime}
       />
     </div>
   );

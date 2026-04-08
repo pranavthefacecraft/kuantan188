@@ -42,7 +42,9 @@ class Booking extends Model
         'adult_price',
         'child_price',
         'payment_date',
-        'status'
+        'status',
+        'selected_time',
+        'is_all_day_pass'
     ];
 
     protected $casts = [
@@ -53,7 +55,8 @@ class Booking extends Model
         'payment_completed_at' => 'datetime',
         'event_date' => 'date',
         'receive_updates' => 'boolean',
-        'payment_metadata' => 'array'
+        'payment_metadata' => 'array',
+        'is_all_day_pass' => 'boolean'
     ];
 
     public function event(): BelongsTo

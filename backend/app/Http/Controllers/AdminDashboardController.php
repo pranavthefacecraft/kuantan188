@@ -783,7 +783,19 @@ class AdminDashboardController extends Controller
             'non_malaysian_adult_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
             'non_malaysian_teen_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
             'non_malaysian_university_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
-            'non_malaysian_child_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99'
+            'non_malaysian_child_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            // All Day Pass
+            'is_all_day_pass' => 'in:0,1',
+            // Malaysian All Day Pass pricing
+            'malaysian_all_day_adult_price' => 'nullable|numeric|min:0|max:999999.99',
+            'malaysian_all_day_teen_price' => 'nullable|numeric|min:0|max:999999.99',
+            'malaysian_all_day_university_price' => 'nullable|numeric|min:0|max:999999.99',
+            'malaysian_all_day_child_price' => 'nullable|numeric|min:0|max:999999.99',
+            // Non-Malaysian All Day Pass pricing
+            'non_malaysian_all_day_adult_price' => 'nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_all_day_teen_price' => 'nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_all_day_university_price' => 'nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_all_day_child_price' => 'nullable|numeric|min:0|max:999999.99'
         ]);
 
         // Validate that at least one target audience is selected
@@ -807,6 +819,8 @@ class AdminDashboardController extends Controller
                 $imageUrl = 'storage/tickets/' . $imageName;
             }
 
+            $isAllDayPass = $request->is_all_day_pass === '1';
+
             // Create the ticket with all pricing data
             $ticket = Ticket::create([
                 'ticket_name' => $request->ticket_name,
@@ -816,6 +830,7 @@ class AdminDashboardController extends Controller
                 'description' => $request->description,
                 'image_url' => $imageUrl,
                 'is_active' => $request->is_active === '1',
+                'is_all_day_pass' => $isAllDayPass,
                 'available_for_malaysians' => $request->available_for_malaysians === '1',
                 'available_for_non_malaysians' => $request->available_for_non_malaysians === '1',
                 // Malaysian pricing
@@ -827,7 +842,17 @@ class AdminDashboardController extends Controller
                 'non_malaysian_adult_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_adult_price : null,
                 'non_malaysian_teen_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_teen_price : null,
                 'non_malaysian_university_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_university_price : null,
-                'non_malaysian_child_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_child_price : null
+                'non_malaysian_child_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_child_price : null,
+                // Malaysian All Day Pass pricing
+                'malaysian_all_day_adult_price' => ($isAllDayPass && $request->available_for_malaysians === '1') ? $request->malaysian_all_day_adult_price : null,
+                'malaysian_all_day_teen_price' => ($isAllDayPass && $request->available_for_malaysians === '1') ? $request->malaysian_all_day_teen_price : null,
+                'malaysian_all_day_university_price' => ($isAllDayPass && $request->available_for_malaysians === '1') ? $request->malaysian_all_day_university_price : null,
+                'malaysian_all_day_child_price' => ($isAllDayPass && $request->available_for_malaysians === '1') ? $request->malaysian_all_day_child_price : null,
+                // Non-Malaysian All Day Pass pricing
+                'non_malaysian_all_day_adult_price' => ($isAllDayPass && $request->available_for_non_malaysians === '1') ? $request->non_malaysian_all_day_adult_price : null,
+                'non_malaysian_all_day_teen_price' => ($isAllDayPass && $request->available_for_non_malaysians === '1') ? $request->non_malaysian_all_day_teen_price : null,
+                'non_malaysian_all_day_university_price' => ($isAllDayPass && $request->available_for_non_malaysians === '1') ? $request->non_malaysian_all_day_university_price : null,
+                'non_malaysian_all_day_child_price' => ($isAllDayPass && $request->available_for_non_malaysians === '1') ? $request->non_malaysian_all_day_child_price : null,
             ]);
 
             if ($request->ajax()) {
@@ -892,7 +917,19 @@ class AdminDashboardController extends Controller
             'non_malaysian_adult_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
             'non_malaysian_teen_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
             'non_malaysian_university_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
-            'non_malaysian_child_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99'
+            'non_malaysian_child_price' => 'required_if:available_for_non_malaysians,1|nullable|numeric|min:0|max:999999.99',
+            // All Day Pass
+            'is_all_day_pass' => 'in:0,1',
+            // Malaysian All Day Pass pricing
+            'malaysian_all_day_adult_price' => 'nullable|numeric|min:0|max:999999.99',
+            'malaysian_all_day_teen_price' => 'nullable|numeric|min:0|max:999999.99',
+            'malaysian_all_day_university_price' => 'nullable|numeric|min:0|max:999999.99',
+            'malaysian_all_day_child_price' => 'nullable|numeric|min:0|max:999999.99',
+            // Non-Malaysian All Day Pass pricing
+            'non_malaysian_all_day_adult_price' => 'nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_all_day_teen_price' => 'nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_all_day_university_price' => 'nullable|numeric|min:0|max:999999.99',
+            'non_malaysian_all_day_child_price' => 'nullable|numeric|min:0|max:999999.99'
         ]);
 
         // Validate that at least one target audience is selected
@@ -904,6 +941,8 @@ class AdminDashboardController extends Controller
         }
 
         try {
+            $isAllDayPass = $request->is_all_day_pass === '1';
+
             // Handle image upload
             $updateData = [
                 'ticket_name' => $request->ticket_name,
@@ -912,6 +951,7 @@ class AdminDashboardController extends Controller
                 'available_quantity' => $request->total_quantity, // Update available quantity if total changed
                 'description' => $request->description,
                 'is_active' => $request->is_active === '1',
+                'is_all_day_pass' => $isAllDayPass,
                 'available_for_malaysians' => $request->available_for_malaysians === '1',
                 'available_for_non_malaysians' => $request->available_for_non_malaysians === '1',
                 // Malaysian pricing
@@ -923,7 +963,17 @@ class AdminDashboardController extends Controller
                 'non_malaysian_adult_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_adult_price : null,
                 'non_malaysian_teen_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_teen_price : null,
                 'non_malaysian_university_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_university_price : null,
-                'non_malaysian_child_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_child_price : null
+                'non_malaysian_child_price' => $request->available_for_non_malaysians === '1' ? $request->non_malaysian_child_price : null,
+                // Malaysian All Day Pass pricing
+                'malaysian_all_day_adult_price' => ($isAllDayPass && $request->available_for_malaysians === '1') ? $request->malaysian_all_day_adult_price : null,
+                'malaysian_all_day_teen_price' => ($isAllDayPass && $request->available_for_malaysians === '1') ? $request->malaysian_all_day_teen_price : null,
+                'malaysian_all_day_university_price' => ($isAllDayPass && $request->available_for_malaysians === '1') ? $request->malaysian_all_day_university_price : null,
+                'malaysian_all_day_child_price' => ($isAllDayPass && $request->available_for_malaysians === '1') ? $request->malaysian_all_day_child_price : null,
+                // Non-Malaysian All Day Pass pricing
+                'non_malaysian_all_day_adult_price' => ($isAllDayPass && $request->available_for_non_malaysians === '1') ? $request->non_malaysian_all_day_adult_price : null,
+                'non_malaysian_all_day_teen_price' => ($isAllDayPass && $request->available_for_non_malaysians === '1') ? $request->non_malaysian_all_day_teen_price : null,
+                'non_malaysian_all_day_university_price' => ($isAllDayPass && $request->available_for_non_malaysians === '1') ? $request->non_malaysian_all_day_university_price : null,
+                'non_malaysian_all_day_child_price' => ($isAllDayPass && $request->available_for_non_malaysians === '1') ? $request->non_malaysian_all_day_child_price : null,
             ];
 
             // Process image upload if provided
