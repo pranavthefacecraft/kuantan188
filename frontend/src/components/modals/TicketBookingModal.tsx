@@ -185,8 +185,12 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     let nonMalayTotal = 0;
     
     if (ticket?.pricing) {
-      // Determine which pricing to use
-      const useAllDayPricing = isAllDayPass && ticket.all_day_pass_pricing;
+      // Determine which pricing to use - only use all day pricing if it has actual values
+      const allDayHasPricing = ticket.all_day_pass_pricing && (
+        parseFloat(ticket.all_day_pass_pricing.malaysian?.adult_price || '0') > 0 ||
+        parseFloat(ticket.all_day_pass_pricing.non_malaysian?.adult_price || '0') > 0
+      );
+      const useAllDayPricing = isAllDayPass && allDayHasPricing;
       
       // Calculate Malaysian total
       const malayPricing = useAllDayPricing ? ticket.all_day_pass_pricing!.malaysian : ticket.pricing.malaysian;
@@ -255,7 +259,11 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     let basePriceMYR = 0;
     
     if (ticket?.pricing) {
-      const useAllDayPricing = isAllDayPass && ticket.all_day_pass_pricing;
+      const allDayHasPricing = ticket.all_day_pass_pricing && (
+        parseFloat(ticket.all_day_pass_pricing.malaysian?.adult_price || '0') > 0 ||
+        parseFloat(ticket.all_day_pass_pricing.non_malaysian?.adult_price || '0') > 0
+      );
+      const useAllDayPricing = isAllDayPass && allDayHasPricing;
       const pricing = useAllDayPricing 
         ? (activeTab === 'malaysian' ? ticket.all_day_pass_pricing!.malaysian : ticket.all_day_pass_pricing!.non_malaysian)
         : (activeTab === 'malaysian' ? ticket.pricing.malaysian : ticket.pricing.non_malaysian);
@@ -293,7 +301,11 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
     let basePriceMYR = 0;
     
     if (ticket?.pricing) {
-      const useAllDayPricing = isAllDayPass && ticket.all_day_pass_pricing;
+      const allDayHasPricing = ticket.all_day_pass_pricing && (
+        parseFloat(ticket.all_day_pass_pricing.malaysian?.adult_price || '0') > 0 ||
+        parseFloat(ticket.all_day_pass_pricing.non_malaysian?.adult_price || '0') > 0
+      );
+      const useAllDayPricing = isAllDayPass && allDayHasPricing;
       const pricing = useAllDayPricing ? ticket.all_day_pass_pricing!.malaysian : ticket.pricing.malaysian;
       let priceValue: string | undefined;
       switch (type) {
