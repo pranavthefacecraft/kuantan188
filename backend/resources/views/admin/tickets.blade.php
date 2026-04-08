@@ -11,7 +11,17 @@
                 <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Tickets Management</h2>
                 <p style="margin: 0.5rem 0 0 0; color: var(--on-surface-variant);">Manage ticket prices and availability</p>
             </div>
-            <div style="display: flex; gap: 1rem;">
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <div id="bulkDeleteBar" style="display: none; align-items: center; gap: 0.75rem;">
+                    <span id="selectedCount" style="font-size: 0.875rem; font-weight: 600; color: var(--primary);">0 selected</span>
+                    <button onclick="bulkDeleteTickets()" class="btn" style="background: var(--error); color: white; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.25rem;">
+                        <span class="material-icons" style="font-size: 18px;">delete_sweep</span>
+                        Delete Selected
+                    </button>
+                    <button onclick="clearSelection()" class="btn btn-outline" style="padding: 0.5rem 1rem;">
+                        Cancel
+                    </button>
+                </div>
                 <button onclick="openTicketModal()" class="btn btn-primary">
                     <span class="material-icons" style="font-size: 18px;">add</span>
                     Add New Ticket
@@ -27,6 +37,9 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th style="width: 40px; text-align: center;">
+                                <input type="checkbox" id="selectAllTickets" onchange="toggleSelectAll(this)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
+                            </th>
                             <th>Ticket Name</th>
                             <th>Event</th>
                             <th>Target Audience</th>
@@ -43,6 +56,9 @@
                     <tbody>
                         @forelse($tickets as $ticket)
                             <tr data-ticket-id="{{ $ticket->id }}">
+                                <td style="text-align: center;">
+                                    <input type="checkbox" class="ticket-checkbox" value="{{ $ticket->id }}" onchange="updateBulkSelection()" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
+                                </td>
                                 <td>
                                     <div>
                                         <div style="font-weight: 600;">{{ $ticket->ticket_name ?? 'Unnamed Ticket' }}</div>
@@ -233,7 +249,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" style="text-align: center; padding: 3rem; color: var(--on-surface-variant);">
+                                <td colspan="12" style="text-align: center; padding: 3rem; color: var(--on-surface-variant);">
                                     <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
                                         <span class="material-icons" style="font-size: 48px; opacity: 0.3;">confirmation_number</span>
                                         <div>
@@ -2108,16 +2124,35 @@ function openViewTicketModal(ticketId) {
                 
                 // Handle image display
                 const imageSection = document.getElementById('view_image_section');
-                const imageElement = document.getElementById('view_ticket_image');
+                let imageElement = document.getElementById('view_ticket_image');
+                const imageContainer = imageSection ? imageSection.querySelector('div') || imageSection : imageSection;
                 
-                if (ticket.image_url) {
+                // Restore the img element if it was replaced by error handler
+                if (!imageElement && imageContainer) {
+                    imageContainer.innerHTML = '<img id="view_ticket_image" src="" alt="Ticket Image" style="max-width: 100%; max-height: 300px; border-radius: 0.5rem;">';
+                    imageElement = document.getElementById('view_ticket_image');
+                }
+                
+                if (ticket.image_url && imageElement) {
                     let imagePath = ticket.image_url;
-                    if (imagePath.startsWith('storage/')) {
-                        imagePath = imagePath.substring(8);
+                    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+                        imageElement.src = imagePath;
+                    } else if (imagePath.startsWith('storage/')) {
+                        imageElement.src = '/' + imagePath;
+                    } else {
+                        imageElement.src = '/storage/' + imagePath;
                     }
-                    imageElement.src = `/storage/${imagePath}`;
+                    imageElement.style.display = '';
+                    imageElement.onerror = function() {
+                        this.style.display = 'none';
+                        if (this.nextElementSibling) this.nextElementSibling.remove();
+                        this.insertAdjacentHTML('afterend', '<p class="img-error-msg" style="color: var(--on-surface-variant); font-style: italic;">Image not available</p>');
+                    };
+                    // Remove any previous error message
+                    const prevError = imageContainer.querySelector('.img-error-msg');
+                    if (prevError) prevError.remove();
                     imageSection.style.display = 'block';
-                } else {
+                } else if (imageSection) {
                     imageSection.style.display = 'none';
                 }
                 
@@ -2298,6 +2333,81 @@ window.closeEditTicketModal = closeEditTicketModal;
 window.handleEditTargetAudienceChange = handleEditTargetAudienceChange;
 window.deleteTicket = deleteTicket;
 window.submitCreateTicketForm = submitCreateTicketForm;
+
+// Bulk delete functions
+function toggleSelectAll(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('.ticket-checkbox');
+    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+    updateBulkSelection();
+}
+
+function updateBulkSelection() {
+    const checkboxes = document.querySelectorAll('.ticket-checkbox');
+    const checked = document.querySelectorAll('.ticket-checkbox:checked');
+    const bulkBar = document.getElementById('bulkDeleteBar');
+    const countLabel = document.getElementById('selectedCount');
+    const selectAll = document.getElementById('selectAllTickets');
+    
+    if (checked.length > 0) {
+        bulkBar.style.display = 'flex';
+        countLabel.textContent = checked.length + ' selected';
+    } else {
+        bulkBar.style.display = 'none';
+    }
+    
+    // Update select-all checkbox state
+    if (selectAll) {
+        selectAll.checked = checkboxes.length > 0 && checked.length === checkboxes.length;
+        selectAll.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+    }
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.ticket-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    const selectAll = document.getElementById('selectAllTickets');
+    if (selectAll) selectAll.checked = false;
+    updateBulkSelection();
+}
+
+function bulkDeleteTickets() {
+    const checked = document.querySelectorAll('.ticket-checkbox:checked');
+    const ids = Array.from(checked).map(cb => cb.value);
+    
+    if (ids.length === 0) return;
+    
+    if (!confirm(`Are you sure you want to delete ${ids.length} ticket(s)? This action cannot be undone.\n\nTickets with existing bookings will be skipped.`)) {
+        return;
+    }
+    
+    fetch('{{ route("admin.tickets.bulk-delete") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ ticket_ids: ids })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccessMessage(data.message);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            alert('Error: ' + (data.message || 'Failed to delete tickets'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting tickets.');
+    });
+}
+
+window.toggleSelectAll = toggleSelectAll;
+window.updateBulkSelection = updateBulkSelection;
+window.clearSelection = clearSelection;
+window.bulkDeleteTickets = bulkDeleteTickets;
 
 // Add form event listener when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
