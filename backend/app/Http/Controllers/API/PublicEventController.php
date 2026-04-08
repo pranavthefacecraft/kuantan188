@@ -230,7 +230,7 @@ class PublicEventController extends Controller
      */
     private function getTicketPricing($event): array
     {
-        $tickets = $event->tickets()->with('countries')->get();
+        $tickets = $event->tickets()->with('country')->get();
         
         if ($tickets->isEmpty()) {
             return [
@@ -246,19 +246,20 @@ class PublicEventController extends Controller
         $countries = [];
 
         foreach ($tickets as $ticket) {
-            foreach ($ticket->countries as $country) {
-                $adultPrice = $country->pivot->adult_price ?? 0;
-                $childPrice = $country->pivot->child_price ?? 0;
-                
-                if ($adultPrice > 0) $adultPrices[] = $adultPrice;
-                if ($childPrice > 0) $childPrices[] = $childPrice;
-                
-                $countries[$country->id] = [
-                    'name' => $country->name,
-                    'code' => $country->code,
-                    'currency_symbol' => $country->currency_symbol,
-                    'adult_price' => $adultPrice,
-                    'child_price' => $childPrice
+            // Use direct pricing fields on ticket
+            $adultPrice = $ticket->malaysian_adult_price ?? $ticket->non_malaysian_adult_price ?? $ticket->base_price ?? 0;
+            $childPrice = $ticket->malaysian_child_price ?? $ticket->non_malaysian_child_price ?? $ticket->base_price ?? 0;
+            
+            if ($adultPrice > 0) $adultPrices[] = (float) $adultPrice;
+            if ($childPrice > 0) $childPrices[] = (float) $childPrice;
+            
+            if ($ticket->country) {
+                $countries[$ticket->country->id] = [
+                    'name' => $ticket->country->name,
+                    'code' => $ticket->country->code,
+                    'currency_symbol' => $ticket->country->currency_symbol ?? 'RM',
+                    'adult_price' => (float) $adultPrice,
+                    'child_price' => (float) $childPrice
                 ];
             }
         }

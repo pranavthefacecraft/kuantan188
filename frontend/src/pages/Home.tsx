@@ -31,22 +31,22 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch tickets and events
-        const [ticketsResponse, bookNowResponse] = await Promise.all([
+        // Fetch tickets and events independently so one failure doesn't block the other
+        const [ticketsResult, bookNowResult] = await Promise.allSettled([
           eventsApi.getTickets(),
           eventsApi.getBookNowEvents()
         ]);
         
-        if (ticketsResponse.success) {
-          setTickets(ticketsResponse.data);
+        if (ticketsResult.status === 'fulfilled' && ticketsResult.value.success) {
+          setTickets(ticketsResult.value.data);
         } else {
-          console.error('Failed to load tickets');
+          console.error('Failed to load tickets', ticketsResult.status === 'rejected' ? ticketsResult.reason : '');
         }
         
-        if (bookNowResponse.success) {
-          setBookNowEvents(bookNowResponse.data);
+        if (bookNowResult.status === 'fulfilled' && bookNowResult.value.success) {
+          setBookNowEvents(bookNowResult.value.data);
         } else {
-          console.error('Failed to load Book Now events');
+          console.error('Failed to load Book Now events', bookNowResult.status === 'rejected' ? bookNowResult.reason : '');
         }
         
       } catch (err) {
