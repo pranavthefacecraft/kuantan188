@@ -45,11 +45,15 @@
     -->
 
     <!-- AI Chatbot Widget -->
-    <script src="https://company.clevdex.com/widget/chat-widget.js"
-            data-bot-id="24"
-            data-company-id="24"
-            data-api-endpoint="https://company.clevdex.com/api/widget/chat"
-            data-primary-color="#435ebe"
-            data-position="bottom-right"></script>
+    <script>
+    window.chatWidgetConfig = {
+        companyId: 24,
+        apiBaseUrl: 'https://company.clevdex.com',
+        primaryColor: '#435ebe',
+        position: 'bottom-right',
+        title: 'AI Assistant'
+    };
+    </script>
+    <script src="https://company.clevdex.com/widget/chat-widget.js"></script>
   </body>
 </html>
