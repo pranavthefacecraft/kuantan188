@@ -22,6 +22,7 @@ return [
     'allowed_origins' => [
         'https://tickets.tfcmockup.com',      // Production: React frontend subdomain
         'https://kuantan188.tfcmockup.com',   // Existing staging domain
+        'https://company.clevdex.com',        // Clevdex chatbot server (API data source)
         'http://localhost:3000',              // Development
         'http://localhost:3001',              // Development alternative port
         'http://localhost:3002',              // Development React app current port
