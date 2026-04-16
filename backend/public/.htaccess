@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # Disable LiteSpeed reCAPTCHA bot verification for API routes
+    <IfModule LiteSpeed>
+        RewriteCond %{REQUEST_URI} ^/api/ [NC]
+        RewriteRule .* - [E=noabuse:1]
+    </IfModule>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
