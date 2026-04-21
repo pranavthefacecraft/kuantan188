@@ -23,6 +23,13 @@ jobs:
           extensions: mbstring,xml,ctype,iconv,intl,pdo_mysql,dom,filter,gd,json,pdo
           tools: composer:v2
 
+      - name: Create required Laravel directories
+        run: |
+          mkdir -p backend/bootstrap/cache
+          mkdir -p backend/storage/framework/{views,cache,sessions}
+          mkdir -p backend/storage/logs
+          chmod -R 775 backend/bootstrap/cache backend/storage
+
       - name: Install Composer dependencies
         working-directory: ./backend
         run: composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
