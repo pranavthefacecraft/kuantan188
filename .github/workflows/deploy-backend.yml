@@ -75,8 +75,15 @@ jobs:
             mkdir -p bootstrap/cache
 
             # Fix permissions
-            chown -R www-data:www-data storage bootstrap/cache
+            chown -R www-data:www-data /var/www/tickets-backend/backend
+            chmod -R 755 /var/www/tickets-backend/backend
             chmod -R 775 storage bootstrap/cache
+
+            # Clear stale cache before running artisan
+            rm -f bootstrap/cache/packages.php
+            rm -f bootstrap/cache/services.php
+            rm -f bootstrap/cache/config.php
+            rm -f bootstrap/cache/routes*.php
 
             # Laravel optimisation
             php artisan config:cache
