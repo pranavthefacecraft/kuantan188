@@ -1,7 +1,7 @@
 @extends('layouts.auth')
 
 @section('title', 'Welcome Back')
-@section('subtitle', 'Sign in to your Kuantan188 admin account')
+@section('subtitle', 'Sign in to your Kuantan188 admin account - v2')
 @section('icon', 'login')
 
 @section('content')
