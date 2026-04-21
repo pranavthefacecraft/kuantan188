@@ -38,6 +38,17 @@ jobs:
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Build Vite assets
+        working-directory: ./backend
+        run: |
+          npm install
+          npm run build
+
       - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
