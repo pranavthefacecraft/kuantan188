@@ -126,8 +126,8 @@ const Home: React.FC = () => {
             <div>
             <div className="text-start">
               <h1 className="hero-title-main">
-                <span className="hero-title-white">Get Your</span><br />
-                <span className="hero-title-red">Tickets</span>
+                <span className="hero-title-white">Book Your</span><br />
+                <span className="hero-title-red">Experience</span>
               </h1>
               <p className="hero-subtitle">
                 Choose your experience,<br />
