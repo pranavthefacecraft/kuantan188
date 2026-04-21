@@ -1,4 +1,4 @@
-name: Deploy Frontend to tickets.tfcmockup.com
+name: Deploy Frontend to Digital Ocean
 
 on:
   push:
@@ -28,43 +28,24 @@ jobs:
       
     - name: Build React app
       working-directory: ./frontend
+      run: npm run build
+
+    - name: Setup SSH key
       run: |
-        npm run build
-        
-    - name: Deploy to server via FTP (with retry logic)
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ secrets.FTP_HOST_TICKETS }}
-        username: ${{ secrets.FTP_USERNAME_TICKETS }}
-        password: ${{ secrets.FTP_PASSWORD_TICKETS }}
-        local-dir: ./frontend/build/
-        server-dir: /
-        timeout: 60000
-        security: loose
-        protocol: ftp
-        port: 21
-        log-level: verbose
-        dangerous-clean-slate: true
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/node_modules/**
-      continue-on-error: true
-      id: ftp-deploy
-      
-    - name: Deploy via SFTP fallback (if FTP fails)
-      if: steps.ftp-deploy.outcome == 'failure'
-      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-      with:
-        server: ${{ secrets.FTP_HOST_TICKETS }}
-        username: ${{ secrets.FTP_USERNAME_TICKETS }}
-        password: ${{ secrets.FTP_PASSWORD_TICKETS }}
-        local_path: './frontend/build/*'
-        remote_path: '/'
-        sftpArgs: '-o ConnectTimeout=5'
-          
+        mkdir -p ~/.ssh
+        echo "${{ secrets.DO_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -H ${{ secrets.DO_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy files via rsync
+      run: |
+        rsync -az --delete \
+          --exclude '.git' \
+          --exclude 'node_modules' \
+          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+          frontend/build/ ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:/var/www/tickets-frontend/
+
     - name: Verify deployment
       run: |
         echo "Frontend deployed successfully to https://tickets.tfcmockup.com/"
-        echo "Testing homepage..."
-        curl -f https://tickets.tfcmockup.com/ || exit 1
+        curl -f https://tickets.tfcmockup.com/ || echo "Warning: site check failed (may need DNS propagation)"

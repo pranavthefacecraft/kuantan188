@@ -1,4 +1,4 @@
-﻿name: Deploy Backend to Server
+﻿name: Deploy Backend to Digital Ocean
 
 on:
   push:
@@ -20,84 +20,64 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          # Provide extensions as a single comma-separated string to avoid YAML sequence issues
           extensions: mbstring,xml,ctype,iconv,intl,pdo_mysql,dom,filter,gd,json,pdo
           tools: composer:v2
 
-      - name: Create Laravel directories (local)
-        run: |
-          mkdir -p backend/bootstrap/cache
-          mkdir -p backend/storage/app/public
-          mkdir -p backend/storage/framework/{cache,sessions,views}
-          mkdir -p backend/storage/logs
-          chmod 755 backend/bootstrap/cache backend/storage -R
-
-      - name: Install dependencies (CI)
+      - name: Install Composer dependencies
         working-directory: ./backend
-        run: |
-          composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
+        run: composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
         env:
           COMPOSER_PROCESS_TIMEOUT: 600
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
 
-      - name: Prepare deployment files (fixed for Laravel)
+      - name: Setup SSH key
         run: |
-          rm -rf deploy || true
-          mkdir -p deploy
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DO_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DO_HOST }} >> ~/.ssh/known_hosts
 
-          rsync -av --delete \
-            --exclude 'vendor' \
-            --exclude 'node_modules' \
-            --exclude 'tests' \
+      - name: Deploy files via rsync
+        run: |
+          rsync -az --delete \
             --exclude '.git' \
             --exclude '.env' \
+            --exclude 'node_modules' \
+            --exclude 'tests' \
             --exclude 'storage/framework/views/*' \
             --exclude 'storage/framework/cache/*' \
             --exclude 'bootstrap/cache/*.php' \
-            backend/ deploy/
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            backend/ ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:/var/www/tickets-backend/backend/
 
-          mkdir -p deploy/storage/app/public
-          mkdir -p deploy/storage/framework/{views,cache,sessions}
-          mkdir -p deploy/storage/logs
-          mkdir -p deploy/bootstrap/cache
-
-          touch deploy/storage/app/public/.gitkeep
-          touch deploy/storage/framework/views/.gitkeep
-          touch deploy/storage/framework/cache/.gitkeep
-          touch deploy/storage/framework/sessions/.gitkeep
-          touch deploy/storage/logs/.gitkeep
-          touch deploy/bootstrap/cache/.gitkeep
-
-          mkdir -p deploy/public
-          echo "<IfModule mod_rewrite.c>" > deploy/public/.htaccess
-          echo "    <IfModule mod_negotiation.c>" >> deploy/public/.htaccess
-          echo "        Options -MultiViews -Indexes" >> deploy/public/.htaccess
-          echo "    </IfModule>" >> deploy/public/.htaccess
-          echo "    RewriteEngine On" >> deploy/public/.htaccess
-          echo "    RewriteCond %{HTTP:Authorization} ." >> deploy/public/.htaccess
-          echo "    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]" >> deploy/public/.htaccess
-          echo "    RewriteCond %{REQUEST_FILENAME} !-d" >> deploy/public/.htaccess
-          echo "    RewriteCond %{REQUEST_URI} (.+)/$" >> deploy/public/.htaccess
-          echo "    RewriteRule ^ %1 [L,R=301]" >> deploy/public/.htaccess
-          echo "    RewriteCond %{REQUEST_FILENAME} !-d" >> deploy/public/.htaccess
-          echo "    RewriteCond %{REQUEST_FILENAME} !-f" >> deploy/public/.htaccess
-          echo "    RewriteRule ^ index.php [L]" >> deploy/public/.htaccess
-          echo "</IfModule>" >> deploy/public/.htaccess
-
-          rm -f deploy/bootstrap/cache/*.php || true
-          rm -f deploy/storage/framework/views/* || true
-          chmod -R 775 deploy/storage deploy/bootstrap/cache || true
-
-      - name: Deploy to server via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Run post-deploy commands on server
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          server: ${{ secrets.FTP_HOST_TICKETSADMIN }}
-          username: ${{ secrets.FTP_USERNAME_TICKETSADMIN }}
-          password: ${{ secrets.FTP_PASSWORD_TICKETSADMIN }}
-          local-dir: deploy/
-          server-dir: /
-          log-level: verbose
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd /var/www/tickets-backend/backend
+
+            # Ensure storage directories exist
+            mkdir -p storage/app/public
+            mkdir -p storage/framework/{views,cache,sessions}
+            mkdir -p storage/logs
+            mkdir -p bootstrap/cache
+
+            # Fix permissions
+            chown -R www-data:www-data storage bootstrap/cache
+            chmod -R 775 storage bootstrap/cache
+
+            # Laravel optimisation
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan migrate --force
+            php artisan storage:link || true
+
+            echo "Backend deployment complete."
           timeout: 300000
           security: loose
           protocol: ftp
