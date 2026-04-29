@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\Schema;
 
 class PublicBookingController extends Controller
 {
+    private function safeLog(string $level, string $message, array $context = []): void
+    {
+        try {
+            \Log::{$level}($message, $context);
+        } catch (\Throwable $loggingException) {
+            // Do not let logging failures break public booking requests.
+        }
+    }
+
     /**
      * Test endpoint for debugging
      */
@@ -122,13 +131,13 @@ class PublicBookingController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            \Log::info('[BOOKING_API] ===== NEW BOOKING REQUEST STARTED =====');
-            \Log::info('[BOOKING_API] Request method:', [$request->method()]);
-            \Log::info('[BOOKING_API] Request URL:', [$request->url()]);
-            \Log::info('[BOOKING_API] Request headers:', $request->headers->all());
-            \Log::info('[BOOKING_API] Request body (raw):', [$request->getContent()]);
-            \Log::info('[BOOKING_API] Request data (parsed):', $request->all());
-            \Log::info('[BOOKING_API] Database columns available:', \Schema::getColumnListing('bookings'));
+            $this->safeLog('info', '[BOOKING_API] ===== NEW BOOKING REQUEST STARTED =====');
+            $this->safeLog('info', '[BOOKING_API] Request method:', [$request->method()]);
+            $this->safeLog('info', '[BOOKING_API] Request URL:', [$request->url()]);
+            $this->safeLog('info', '[BOOKING_API] Request headers:', $request->headers->all());
+            $this->safeLog('info', '[BOOKING_API] Request body (raw):', [$request->getContent()]);
+            $this->safeLog('info', '[BOOKING_API] Request data (parsed):', $request->all());
+            $this->safeLog('info', '[BOOKING_API] Database columns available:', \Schema::getColumnListing('bookings'));
             
             $validator = Validator::make($request->all(), [
                 'event_id' => 'nullable|integer', // Made optional for ticket bookings
@@ -149,8 +158,8 @@ class PublicBookingController extends Controller
             ]);
 
             if ($validator->fails()) {
-                \Log::error('[BOOKING_API] Validation failed:', $validator->errors()->toArray());
-                \Log::error('[BOOKING_API] Failed validation rules for data:', $request->all());
+                $this->safeLog('error', '[BOOKING_API] Validation failed:', $validator->errors()->toArray());
+                $this->safeLog('error', '[BOOKING_API] Failed validation rules for data:', $request->all());
                 return response()->json([
                     'success' => false,
                     'error' => 'Validation failed',
@@ -159,36 +168,36 @@ class PublicBookingController extends Controller
                 ], 422);
             }
 
-            \Log::info('[BOOKING_API] Validation passed, proceeding to create booking...');
+            $this->safeLog('info', '[BOOKING_API] Validation passed, proceeding to create booking...');
 
             // Handle ticket_id and event_id relationship
             $finalEventId = $request->event_id;
             $finalTicketId = $request->ticket_id;
             
             if ($request->ticket_id) {
-                \Log::info('[BOOKING_API] This is a ticket booking, ticket_id:', ['ticket_id' => $request->ticket_id]);
+                $this->safeLog('info', '[BOOKING_API] This is a ticket booking, ticket_id:', ['ticket_id' => $request->ticket_id]);
                 // If ticket_id is provided, try to get the event_id from the ticket
                 try {
                     $ticket = \App\Models\Ticket::find($request->ticket_id);
                     if ($ticket && $ticket->event_id) {
                         $finalEventId = $ticket->event_id;
-                        \Log::info('[BOOKING_API] Found event_id from ticket:', ['event_id' => $finalEventId]);
+                        $this->safeLog('info', '[BOOKING_API] Found event_id from ticket:', ['event_id' => $finalEventId]);
                     } else {
-                        \Log::info('[BOOKING_API] Ticket has no event_id or ticket not found, making event_id null for standalone ticket');
+                        $this->safeLog('info', '[BOOKING_API] Ticket has no event_id or ticket not found, making event_id null for standalone ticket');
                         $finalEventId = null;
                     }
                 } catch (\Exception $e) {
-                    \Log::warning('[BOOKING_API] Could not fetch ticket details:', ['error' => $e->getMessage()]);
+                    $this->safeLog('warning', '[BOOKING_API] Could not fetch ticket details:', ['error' => $e->getMessage()]);
                     $finalEventId = null;
                 }
             } elseif ($request->event_id) {
-                \Log::info('[BOOKING_API] This is a direct event booking, event_id:', ['event_id' => $request->event_id]);
+                $this->safeLog('info', '[BOOKING_API] This is a direct event booking, event_id:', ['event_id' => $request->event_id]);
                 $finalTicketId = null; // Direct event bookings don't have ticket_id
             }
 
             // Generate booking reference
             $bookingReference = 'KB' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            \Log::info('[BOOKING_API] Generated booking reference:', ['reference' => $bookingReference]);
+            $this->safeLog('info', '[BOOKING_API] Generated booking reference:', ['reference' => $bookingReference]);
 
             // Only include fields that exist in the database schema
             $bookingData = [
@@ -230,13 +239,13 @@ class PublicBookingController extends Controller
                 $bookingData['country'] = $request->country;
             }
 
-            \Log::info('[BOOKING_API] Final booking data to be inserted:', $bookingData);
-            \Log::info('[BOOKING_API] Attempting to create booking in database...');
+            $this->safeLog('info', '[BOOKING_API] Final booking data to be inserted:', $bookingData);
+            $this->safeLog('info', '[BOOKING_API] Attempting to create booking in database...');
 
             $booking = Booking::create($bookingData);
 
-            \Log::info('[BOOKING_API] Booking created successfully in database');
-            \Log::info('[BOOKING_API] Created booking details:', [
+            $this->safeLog('info', '[BOOKING_API] Booking created successfully in database');
+            $this->safeLog('info', '[BOOKING_API] Created booking details:', [
                 'id' => $booking->id, 
                 'reference' => $booking->booking_reference,
                 'customer_name' => $booking->customer_name,
@@ -244,7 +253,7 @@ class PublicBookingController extends Controller
                 'total_amount' => $booking->total_amount
             ]);
 
-            \Log::info('[BOOKING_API] ===== BOOKING REQUEST COMPLETED SUCCESSFULLY =====');
+            $this->safeLog('info', '[BOOKING_API] ===== BOOKING REQUEST COMPLETED SUCCESSFULLY =====');
 
             $response = response()->json([
                 'success' => true,
@@ -270,30 +279,29 @@ class PublicBookingController extends Controller
             app()->terminating(function () use ($bookingForEmail) {
                 try {
                     $recipientEmail = $bookingForEmail->email ?? $bookingForEmail->customer_email;
-                    \Log::info('[BOOKING_API] Attempting to send confirmation email to: ' . ($recipientEmail ?? 'NO EMAIL'));
+                    $this->safeLog('info', '[BOOKING_API] Attempting to send confirmation email to: ' . ($recipientEmail ?? 'NO EMAIL'));
                     if ($recipientEmail) {
                         Mail::to($recipientEmail)->send(new BookingConfirmation($bookingForEmail));
-                        \Log::info('[BOOKING_API] Confirmation email sent successfully to: ' . $recipientEmail);
+                        $this->safeLog('info', '[BOOKING_API] Confirmation email sent successfully to: ' . $recipientEmail);
                     } else {
-                        \Log::warning('[BOOKING_API] No recipient email found, skipping email');
+                        $this->safeLog('warning', '[BOOKING_API] No recipient email found, skipping email');
                     }
                 } catch (\Throwable $emailException) {
-                    \Log::error('[BOOKING_API] Failed to send confirmation email: ' . $emailException->getMessage());
-                    \Log::error('[BOOKING_API] Email error trace: ' . $emailException->getTraceAsString());
+                    $this->safeLog('error', '[BOOKING_API] Failed to send confirmation email: ' . $emailException->getMessage());
+                    $this->safeLog('error', '[BOOKING_API] Email error trace: ' . $emailException->getTraceAsString());
                 }
             });
 
             return $response;
 
         } catch (\Exception $e) {
-            \Log::error('[BOOKING_API] ===== BOOKING REQUEST FAILED =====');
-            \Log::error('[BOOKING_API] Exception type: ' . get_class($e));
-            \Log::error('[BOOKING_API] Error message: ' . $e->getMessage());
-            \Log::error('[BOOKING_API] Error file: ' . $e->getFile());
-            \Log::error('[BOOKING_API] Error line: ' . $e->getLine());
-            \Log::error('[BOOKING_API] Stack trace: ' . $e->getTraceAsString());
-            \Log::error('[BOOKING_API] Request data that caused error:', $request->all());
-            \Log::error('[BOOKING_API] Database connection status: ' . (\DB::connection()->getPdo() ? 'Connected' : 'Not Connected'));
+            $this->safeLog('error', '[BOOKING_API] ===== BOOKING REQUEST FAILED =====');
+            $this->safeLog('error', '[BOOKING_API] Exception type: ' . get_class($e));
+            $this->safeLog('error', '[BOOKING_API] Error message: ' . $e->getMessage());
+            $this->safeLog('error', '[BOOKING_API] Error file: ' . $e->getFile());
+            $this->safeLog('error', '[BOOKING_API] Error line: ' . $e->getLine());
+            $this->safeLog('error', '[BOOKING_API] Stack trace: ' . $e->getTraceAsString());
+            $this->safeLog('error', '[BOOKING_API] Request data that caused error:', $request->all());
             
             return response()->json([
                 'success' => false,

@@ -13,6 +13,15 @@ class BillplzController extends Controller
 {
     private $billplzService;
 
+    private function safeLog(string $level, string $message, array $context = []): void
+    {
+        try {
+            Log::{$level}($message, $context);
+        } catch (\Throwable $loggingException) {
+            // Keep payment flow running even if server log permissions are broken.
+        }
+    }
+
     public function __construct(BillplzService $billplzService)
     {
         $this->billplzService = $billplzService;
@@ -93,7 +102,7 @@ class BillplzController extends Controller
                         // Reconstruct URL with proper format
                         $paymentUrl = $baseUrl . $billId . '?' . $queryString;
                         
-                        Log::info('Fixed malformed Billplz URL', [
+                        $this->safeLog('info', 'Fixed malformed Billplz URL', [
                             'original_url' => $billData['url'],
                             'fixed_url' => $paymentUrl,
                             'bill_id' => $billId
@@ -116,7 +125,7 @@ class BillplzController extends Controller
                 'payment_metadata' => $billData
             ]);
 
-            Log::info('Payment bill created successfully', [
+            $this->safeLog('info', 'Payment bill created successfully', [
                 'booking_id' => $booking->id,
                 'bill_id' => $billData['id'],
                 'original_url' => $billData['url'],
@@ -135,7 +144,7 @@ class BillplzController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error creating payment bill', [
+            $this->safeLog('error', 'Error creating payment bill', [
                 'error' => $e->getMessage(),
                 'booking_id' => $request->booking_id ?? null
             ]);

@@ -20,6 +20,15 @@ class BillplzService
     private $callbackUrl;
     private $redirectUrl;
 
+    private function safeLog(string $level, string $message, array $context = []): void
+    {
+        try {
+            Log::{$level}($message, $context);
+        } catch (\Throwable $loggingException) {
+            // Keep payment service operational when file logging is unavailable.
+        }
+    }
+
     public function __construct()
     {
         $this->apiKey = Config::get('services.billplz.api_key');
@@ -72,7 +81,7 @@ class BillplzService
                 'reference_2' => $booking->event_title,
             ];
 
-            Log::info('Creating Billplz bill', ['booking_id' => $booking->id, 'bill_data' => $billData]);
+            $this->safeLog('info', 'Creating Billplz bill', ['booking_id' => $booking->id, 'bill_data' => $billData]);
 
             $response = $this->client->post('bills', [
                 'form_params' => $billData
@@ -80,7 +89,7 @@ class BillplzService
 
             $result = json_decode($response->getBody()->getContents(), true);
 
-            Log::info('Billplz bill created successfully', ['booking_id' => $booking->id, 'bill_id' => $result['id']]);
+            $this->safeLog('info', 'Billplz bill created successfully', ['booking_id' => $booking->id, 'bill_id' => $result['id']]);
 
             return [
                 'success' => true,
@@ -88,7 +97,7 @@ class BillplzService
             ];
 
         } catch (RequestException $e) {
-            Log::error('Failed to create Billplz bill', [
+            $this->safeLog('error', 'Failed to create Billplz bill', [
                 'booking_id' => $booking->id,
                 'error' => $e->getMessage(),
                 'response' => $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null
