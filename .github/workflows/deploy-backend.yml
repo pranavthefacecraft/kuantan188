@@ -64,6 +64,8 @@ jobs:
             --exclude '.env' \
             --exclude 'node_modules' \
             --exclude 'tests' \
+            --exclude 'public/uploads/***' \
+            --exclude 'public/storage/tickets/***' \
             --exclude 'storage/framework/views/*' \
             --exclude 'storage/framework/cache/*' \
             --exclude 'bootstrap/cache/*.php' \
@@ -81,9 +83,12 @@ jobs:
 
             # Ensure storage directories exist
             mkdir -p storage/app/public
+            mkdir -p storage/app/public/uploads/events
             mkdir -p storage/framework/{views,cache,sessions}
             mkdir -p storage/logs
             mkdir -p bootstrap/cache
+            mkdir -p public/uploads/events
+            mkdir -p public/storage/tickets
 
             # Fix permissions
             chown -R www-data:www-data /var/www/tickets-backend/backend
