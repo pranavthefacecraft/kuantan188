@@ -80,6 +80,22 @@ if (!file_exists($logPath)) {
     exit;
 }
 
+$notice = '';
+$noticeType = 'ok';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $action = isset($_POST['action']) ? trim((string) $_POST['action']) : '';
+    if ($action === 'clear') {
+        $result = @file_put_contents($logPath, '');
+        if ($result === false) {
+            $notice = 'Failed to clear log file. Check file permissions.';
+            $noticeType = 'err';
+        } else {
+            $notice = 'Log file cleared successfully.';
+            $noticeType = 'ok';
+        }
+    }
+}
+
 $linesParam = isset($_GET['lines']) ? (int) $_GET['lines'] : 200;
 $linesParam = max(20, min($linesParam, 1000));
 
@@ -111,6 +127,10 @@ $refreshUrl = $self . '?token=' . rawurlencode($providedToken) . '&lines=' . $li
         .bar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
         .meta { color: #9ca3af; font-size: 13px; }
         .btn { background: #2563eb; color: #fff; border: 0; border-radius: 6px; padding: 8px 12px; text-decoration: none; }
+        .btn-danger { background: #dc2626; cursor: pointer; }
+        .notice { margin: 8px 0 12px; padding: 8px 10px; border-radius: 6px; font-size: 13px; }
+        .notice-ok { background: #052e16; color: #bbf7d0; border: 1px solid #166534; }
+        .notice-err { background: #450a0a; color: #fecaca; border: 1px solid #7f1d1d; }
         pre { background: #0b1220; border: 1px solid #374151; border-radius: 8px; padding: 12px; overflow: auto; max-height: 78vh; white-space: pre-wrap; }
         .line { margin: 0; padding: 2px 0; border-bottom: 1px solid #1f2937; }
         .err { color: #fca5a5; }
@@ -124,7 +144,14 @@ $refreshUrl = $self . '?token=' . rawurlencode($providedToken) . '&lines=' . $li
         <span class="meta">File: <?php echo esc($logPath); ?></span>
         <span class="meta">Showing last <?php echo (int) $linesParam; ?> lines</span>
         <a class="btn" href="<?php echo esc($refreshUrl); ?>">Refresh</a>
+        <form method="post" action="<?php echo esc($refreshUrl); ?>" onsubmit="return confirm('Clear the log file now?');" style="display:inline; margin:0;">
+            <input type="hidden" name="action" value="clear">
+            <button type="submit" class="btn btn-danger">Clear Log</button>
+        </form>
     </div>
+    <?php if ($notice !== ''): ?>
+    <div class="notice <?php echo $noticeType === 'err' ? 'notice-err' : 'notice-ok'; ?>"><?php echo esc($notice); ?></div>
+    <?php endif; ?>
     <pre>
 <?php foreach ($tail as $line): ?>
 <?php
