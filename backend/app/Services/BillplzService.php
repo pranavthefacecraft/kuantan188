@@ -50,11 +50,7 @@ class BillplzService
                 'User-Agent' => 'Kuantan188/1.0 (Laravel)',
             ],
             'timeout' => 30,
-            'verify' => true, // Verify SSL certificates
-            'curl' => [
-                CURLOPT_SSL_VERIFYHOST => 2,
-                CURLOPT_SSL_VERIFYPEER => true,
-            ]
+            'verify' => true,
         ]);
     }
 
