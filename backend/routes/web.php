@@ -149,6 +149,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('/events', [AdminDashboardController::class, 'storeEvent'])->name('events.store');
     Route::get('/events/{event}/edit', [AdminDashboardController::class, 'editEvent'])->name('events.edit');
     Route::put('/events/{event}', [AdminDashboardController::class, 'updateEvent'])->name('events.update');
+    Route::delete('/events/{event}', [AdminDashboardController::class, 'destroyEvent'])->name('events.destroy');
     Route::post('/events/{event}/toggle-status', [AdminDashboardController::class, 'toggleEventStatus'])->name('events.toggle-status');
     Route::get('/bookings', [AdminDashboardController::class, 'bookings'])->name('bookings');
     

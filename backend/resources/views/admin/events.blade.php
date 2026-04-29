@@ -45,7 +45,7 @@
                     </thead>
                     <tbody>
                         @forelse($events as $event)
-                            <tr>
+                            <tr data-event-id="{{ $event->id }}">
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 1rem;">
                                         @if($event->image_url)
@@ -158,6 +158,12 @@
                                     <div style="display: flex; gap: 0.5rem;">
                                         <button onclick="openEditEventModal({{ $event->id }})" class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
                                             <span class="material-icons" style="font-size: 16px;">edit</span>
+                                        </button>
+                                        <button onclick="deleteEvent({{ $event->id }}, {{ $bookingsCount }})"
+                                                class="btn btn-outline"
+                                                style="padding: 0.25rem 0.5rem;"
+                                                title="Delete Event">
+                                            <span class="material-icons" style="font-size: 16px; color: #ef4444;">delete</span>
                                         </button>
                                         <button onclick="toggleEventStatus({{ $event->id }}, {{ $event->is_active ? 'true' : 'false' }})" 
                                                 class="btn btn-outline" 
@@ -384,6 +390,11 @@
         max-height: 90vh;
         overflow: hidden;
         animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
     }
 
     @keyframes modalSlideIn {
@@ -917,6 +928,53 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred while updating the event status.');
+            });
+        }
+    }
+
+    function deleteEvent(eventId, bookingCount = 0) {
+        let message = 'Are you sure you want to delete this event? This action cannot be undone.';
+        if (bookingCount > 0) {
+            message = `WARNING: This event has ${bookingCount} existing booking(s).\n\nDeleting this event will also remove all associated bookings and cannot be undone.\n\nAre you sure you want to proceed?`;
+        }
+        if (confirm(message)) {
+            const btn = document.querySelector(`tr[data-event-id="${eventId}"] button[onclick^="deleteEvent"]`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="font-size: 16px; color: #ef4444; animation: spin 0.8s linear infinite;">autorenew</span>';
+            }
+            fetch(`/admin/events/${eventId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.querySelector(`tr[data-event-id="${eventId}"]`);
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s';
+                        row.style.opacity = '0';
+                        setTimeout(() => row.remove(), 300);
+                    }
+                } else {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="material-icons" style="font-size: 16px; color: #ef4444;">delete</span>';
+                    }
+                    alert('Error: ' + (data.message || 'Failed to delete event'));
+                }
+            })
+            .catch(error => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="material-icons" style="font-size: 16px; color: #ef4444;">delete</span>';
+                }
+                console.error('Error:', error);
+                alert('An error occurred while deleting the event.');
             });
         }
     }

@@ -1242,6 +1242,30 @@ class AdminDashboardController extends Controller
     }
 
     /**
+     * Delete an event
+     */
+    public function destroyEvent(Event $event)
+    {
+        try {
+            if ($event->image_url && file_exists(public_path($event->image_url))) {
+                unlink(public_path($event->image_url));
+            }
+
+            $event->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Event deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting event: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Toggle event status (active/inactive)
      */
     public function toggleEventStatus(Event $event)
