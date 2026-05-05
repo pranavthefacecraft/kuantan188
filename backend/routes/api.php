@@ -38,6 +38,7 @@ Route::get('/public/bookings/test', [App\Http\Controllers\PublicBookingControlle
 Route::get('/public/bookings/test-create', [App\Http\Controllers\PublicBookingController::class, 'testCreate']);
 Route::post('/public/bookings', [App\Http\Controllers\PublicBookingController::class, 'store']);
 Route::get('/public/bookings', [App\Http\Controllers\PublicBookingController::class, 'getBookingsByEmail']);
+Route::get('/public/bookings/reference/{reference}', [BookingController::class, 'getByReference']);
 
 // Public Google Reviews routes
 Route::get('/public/reviews', [ReviewController::class, 'index']);
@@ -64,10 +65,6 @@ Route::post('/public/payment/billplz/cancel/{billId}', [BillplzController::class
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
 Route::get('/events/{event}/countries/{country}/tickets', [TicketController::class, 'getByEventAndCountry']);
-
-// Booking routes
-Route::post('/bookings', [BookingController::class, 'store']);
-Route::get('/bookings/reference/{reference}', [BookingController::class, 'getByReference']);
 
 // Protected routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
