@@ -44,6 +44,11 @@ Route::get('/public/bookings/reference/{reference}', [BookingController::class, 
 Route::get('/public/reviews', [ReviewController::class, 'index']);
 Route::get('/public/reviews/stats', [ReviewController::class, 'stats']);
 
+// Sentry Test Route
+Route::get('/public/sentry-test', function () {
+    throw new \Exception('This is a test error for Sentry!');
+});
+
 // Public Custom CSS route
 Route::get('/public/custom-css', function () {
     $entries = \App\Models\CustomCss::where('is_active', true)

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { eventsApi } from '../services/api';
+import SentryErrorButton from './SentryErrorButton';
 
 interface ApiTestPageProps {}
 
@@ -28,7 +29,10 @@ const ApiTestPage: React.FC<ApiTestPageProps> = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-xl">Loading API data...</div>
+        <div className="text-center">
+          <div className="text-xl mb-4">Loading API data...</div>
+          <SentryErrorButton />
+        </div>
       </div>
     );
   }
@@ -36,8 +40,11 @@ const ApiTestPage: React.FC<ApiTestPageProps> = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          <strong>Error:</strong> {error}
+        <div className="text-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <strong>Error:</strong> {error}
+          </div>
+          <SentryErrorButton />
         </div>
       </div>
     );
@@ -46,7 +53,10 @@ const ApiTestPage: React.FC<ApiTestPageProps> = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">API Test Page - Book Now Events Data</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-center flex-1">API Test Page - Book Now Events Data</h1>
+          <SentryErrorButton />
+        </div>
         
         {/* API Summary */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
