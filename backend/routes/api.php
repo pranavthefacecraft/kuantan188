@@ -22,6 +22,35 @@ Route::get('/version', function () {
     ]);
 });
 
+// Sentry test endpoint
+Route::get('/sentry-test', function () {
+    $testType = request()->get('type', 'exception');
+    
+    switch ($testType) {
+        case 'exception':
+            throw new \Exception('Test Exception: Backend Sentry is working! Triggered at ' . now()->toIso8601String());
+            
+        case 'error':
+            trigger_error('Test Error: Backend Sentry error tracking test', E_USER_ERROR);
+            break;
+            
+        case 'message':
+            \Sentry\captureMessage('Test Message: Backend Sentry messaging is working!', \Sentry\Severity::info());
+            return response()->json(['message' => 'Test message sent to Sentry']);
+            
+        case 'info':
+            return response()->json([
+                'sentry_dsn' => config('sentry.dsn') ? 'Configured' : 'Not configured',
+                'environment' => config('sentry.environment'),
+                'release' => config('sentry.release'),
+                'sample_rate' => config('sentry.sample_rate'),
+            ]);
+            
+        default:
+            return response()->json(['error' => 'Invalid test type. Use ?type=exception|error|message|info']);
+    }
+});
+
 // Authentication routes
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
