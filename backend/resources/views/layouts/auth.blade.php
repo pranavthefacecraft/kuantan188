@@ -44,7 +44,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a0007 100%, #1a0007 100%);
             min-height: 100vh;
             color: var(--on-surface);
             display: flex;
@@ -80,27 +80,10 @@
         }
 
         .auth-header {
-            padding: 2.5rem 2rem 1rem 2rem;
+            padding: 2rem 2rem 1rem 2rem;
             text-align: center;
             background: var(--surface);
             position: relative;
-        }
-
-        .auth-logo {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 4rem;
-            height: 4rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 1rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .auth-logo .material-icons {
-            color: white;
-            font-size: 2rem;
         }
 
         .auth-title {
@@ -426,9 +409,6 @@
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <div class="auth-logo">
-                    <span class="material-icons">@yield('icon', 'dashboard')</span>
-                </div>
                 <h1 class="auth-title">@yield('title', 'Welcome')</h1>
                 <p class="auth-subtitle">@yield('subtitle', 'Please sign in to continue')</p>
             </div>
