@@ -12,6 +12,16 @@ use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\BillplzController;
 use App\Http\Controllers\TestPaymentController;
 
+// Version check endpoint - Deployment Test
+Route::get('/version', function () {
+    return response()->json([
+        'app' => 'Kuantan188 Ticketing API',
+        'version' => '2.0.0',
+        'deployed_at' => '2026-07-03 (New DigitalOcean Droplet)',
+        'status' => 'active'
+    ]);
+});
+
 // Authentication routes
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
