@@ -1,7 +1,7 @@
 @extends('layouts.auth')
 
 @section('title', 'Welcome Back')
-@section('subtitle', 'Sign in to your Kuantan188 admin account - v2')
+@section('subtitle', 'Sign in to your Kuantan188')
 @section('icon', 'login')
 
 @section('content')
@@ -71,8 +71,5 @@
 @endsection
 
 @section('footer')
-    <p class="auth-footer-text">
-        Don't have an account? 
-        <a href="{{ route('register') }}" class="auth-footer-link">Create one here</a>
-    </p>
+   
 @endsection
