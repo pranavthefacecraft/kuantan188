@@ -37,6 +37,8 @@ export interface BookingData {
   // Booking details
   quantity: number;
   adult_tickets?: number;
+  teenager_tickets?: number;
+  university_tickets?: number;
   child_tickets?: number;
   adult_price?: number;
   child_price?: number;

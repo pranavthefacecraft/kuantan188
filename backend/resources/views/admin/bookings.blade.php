@@ -148,19 +148,20 @@
                                 <td>
                                     <div>
                                         <div><strong>{{ $booking->quantity }}</strong> ticket(s)</div>
-                                        @if($booking->adult_tickets > 0 || $booking->child_tickets > 0)
-                                            <div class="quantity-detail">
-                                                @if($booking->adult_tickets > 0)
-                                                    {{ $booking->adult_tickets }} Adults
-                                                @endif
-                                                @if($booking->adult_tickets > 0 && $booking->child_tickets > 0)
-                                                    <br>
-                                                @endif
-                                                @if($booking->child_tickets > 0)
-                                                    {{ $booking->child_tickets }} Children
-                                                @endif
-                                            </div>
-                                        @endif
+                                        <div class="quantity-detail" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">
+                                            @if($booking->adult_tickets > 0)
+                                                <div>{{ $booking->adult_tickets }}× Adult</div>
+                                            @endif
+                                            @if($booking->teenager_tickets > 0)
+                                                <div>{{ $booking->teenager_tickets }}× Teenagers From 13</div>
+                                            @endif
+                                            @if($booking->university_tickets > 0)
+                                                <div>{{ $booking->university_tickets }}× University Students</div>
+                                            @endif
+                                            @if($booking->child_tickets > 0)
+                                                <div>{{ $booking->child_tickets }}× Children Below 13</div>
+                                            @endif
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
