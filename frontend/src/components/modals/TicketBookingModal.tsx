@@ -1258,9 +1258,9 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
               )}
             </p>
             
-            {bookingResult && (
+            {bookingResult && bookingResult.booking && (
               <div className="alert alert-success mt-3">
-                <strong>Booking Reference:</strong> {bookingResult.booking_reference}
+                <strong>Booking Reference:</strong> {bookingResult.booking.booking_reference}
               </div>
             )}
             
