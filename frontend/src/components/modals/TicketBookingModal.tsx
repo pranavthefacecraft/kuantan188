@@ -400,7 +400,9 @@ const TicketBookingModal: React.FC<TicketBookingModalProps> = ({ show, onHide, t
       mobile_phone: contactForm.mobilePhone,
       country: contactForm.country || selectedCountry?.name || 'Malaysia',
       postal_code: contactForm.postalCode,
-      adult_tickets: malaysianQuantities.adult + nonMalaysianQuantities.adult,
+      adult_tickets: malaysianQuantities.adult + nonMalaysianQuantities.adult + 
+                     malaysianQuantities.teenager + nonMalaysianQuantities.teenager +
+                     malaysianQuantities.university + nonMalaysianQuantities.university,
       child_tickets: malaysianQuantities.child + nonMalaysianQuantities.child,
       quantity: getTotalQuantity(),
       adult_price: parseFloat(selectedCountry?.adult_price || '0'),
