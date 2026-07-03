@@ -1685,7 +1685,12 @@
                                 </div>
                                 <div class="booking-footer-container">
                                     <div class="booking-customer-detail">
-                                        ${booking.adult_quantity} Adults${booking.child_quantity > 0 ? `, ${booking.child_quantity} Children` : ''}
+                                        ${[
+                                            booking.adult_tickets > 0 ? `${booking.adult_tickets} Adult` : '',
+                                            booking.teenager_tickets > 0 ? `${booking.teenager_tickets} Teenagers From 13` : '',
+                                            booking.university_tickets > 0 ? `${booking.university_tickets} University Students` : '',
+                                            booking.child_tickets > 0 ? `${booking.child_tickets} Children Below 13` : ''
+                                        ].filter(Boolean).join(', ')}
                                     </div>
                                     <div class="booking-amount">
                                         RM ${parseFloat(booking.total_amount).toFixed(2)}
@@ -1766,8 +1771,10 @@
                                 <div class="col-md-6">
                                     <p><strong>Customer:</strong> ${booking.customer_name}</p>
                                     <p><strong>Email:</strong> ${booking.customer_email}</p>
-                                    <p><strong>Adults:</strong> ${booking.adult_quantity}</p>
-                                    ${booking.child_quantity > 0 ? `<p><strong>Children:</strong> ${booking.child_quantity}</p>` : ''}
+                                    ${booking.adult_tickets > 0 ? `<p><strong>Adult:</strong> ${booking.adult_tickets}</p>` : ''}
+                                    ${booking.teenager_tickets > 0 ? `<p><strong>Teenagers From 13:</strong> ${booking.teenager_tickets}</p>` : ''}
+                                    ${booking.university_tickets > 0 ? `<p><strong>University Students:</strong> ${booking.university_tickets}</p>` : ''}
+                                    ${booking.child_tickets > 0 ? `<p><strong>Children Below 13:</strong> ${booking.child_tickets}</p>` : ''}
                                 </div>
                             </div>
                             ${booking.booking_type === 'Event' ? `
@@ -2005,22 +2012,46 @@
                         Ticket Information
                     </h5>
                     <div class="ticket-details-grid">
+                        ${booking.adult_tickets > 0 ? `
                         <div>
-                            <label class="customer-label">Adults</label>
-                            <div class="ticket-quantity-value">${booking.adult_quantity || 0}</div>
-                        </div>
-                        <div>
-                            <label class="customer-label">Children</label>
-                            <div class="ticket-quantity-value">${booking.child_quantity || 0}</div>
+                            <label class="customer-label">Adult</label>
+                            <div class="ticket-quantity-value">${booking.adult_tickets}</div>
                         </div>
                         <div>
                             <label class="customer-label">Adult Price</label>
                             <div>RM ${parseFloat(booking.adult_price || 0).toFixed(2)}</div>
                         </div>
+                        ` : ''}
+                        ${booking.teenager_tickets > 0 ? `
+                        <div>
+                            <label class="customer-label">Teenagers From 13</label>
+                            <div class="ticket-quantity-value">${booking.teenager_tickets}</div>
+                        </div>
+                        <div>
+                            <label class="customer-label">Teenager Price</label>
+                            <div>RM ${parseFloat(booking.teenager_price || 0).toFixed(2)}</div>
+                        </div>
+                        ` : ''}
+                        ${booking.university_tickets > 0 ? `
+                        <div>
+                            <label class="customer-label">University Students</label>
+                            <div class="ticket-quantity-value">${booking.university_tickets}</div>
+                        </div>
+                        <div>
+                            <label class="customer-label">University Price</label>
+                            <div>RM ${parseFloat(booking.university_price || 0).toFixed(2)}</div>
+                        </div>
+                        ` : ''}
+                        ${booking.child_tickets > 0 ? `
+                        <div>
+                            <label class="customer-label">Children Below 13</label>
+                            <div class="ticket-quantity-value">${booking.child_tickets}</div>
+                        </div>
                         <div>
                             <label class="customer-label">Child Price</label>
                             <div>RM ${parseFloat(booking.child_price || 0).toFixed(2)}</div>
                         </div>
+                        ` : ''}
                     </div>
                 </div>
             </div>
