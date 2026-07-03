@@ -366,8 +366,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.7) 100%);
+  /* Option 1: Dark overlay for better text readability */
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.8) 100%);
+  
+  /* Option 2: Dark red/maroon overlay matching theme - Uncomment to use */
+  /* background: linear-gradient(180deg, rgba(26, 0, 7, 0.4) 0%, rgba(26, 0, 7, 0.6) 50%, rgba(26, 0, 7, 0.85) 100%); */
+  
   z-index: 1;
+  pointer-events: none; /* Allow clicks to pass through */
 }
 
 .event-card-content {
