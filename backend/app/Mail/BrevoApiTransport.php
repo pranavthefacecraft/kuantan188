@@ -23,15 +23,18 @@ class BrevoApiTransport extends AbstractTransport
     {
         $email = MessageConverter::toEmail($message->getOriginalMessage());
         
+        // Helper to get name or fallback to email
+        $getName = fn($addr) => !empty($addr->getName()) ? $addr->getName() : explode('@', $addr->getAddress())[0];
+        
         // Build payload for Brevo API
         $payload = [
             'sender' => [
                 'email' => $email->getFrom()[0]->getAddress(),
-                'name' => $email->getFrom()[0]->getName() ?? 'Kuantan188',
+                'name' => $getName($email->getFrom()[0]),
             ],
             'to' => array_map(fn($addr) => [
                 'email' => $addr->getAddress(),
-                'name' => $addr->getName() ?? $addr->getAddress(),
+                'name' => $getName($addr),
             ], $email->getTo()),
             'subject' => $email->getSubject(),
         ];
@@ -40,7 +43,7 @@ class BrevoApiTransport extends AbstractTransport
         if ($email->getCc()) {
             $payload['cc'] = array_map(fn($addr) => [
                 'email' => $addr->getAddress(),
-                'name' => $addr->getName() ?? $addr->getAddress(),
+                'name' => $getName($addr),
             ], $email->getCc());
         }
 
@@ -48,7 +51,7 @@ class BrevoApiTransport extends AbstractTransport
         if ($email->getBcc()) {
             $payload['bcc'] = array_map(fn($addr) => [
                 'email' => $addr->getAddress(),
-                'name' => $addr->getName() ?? $addr->getAddress(),
+                'name' => $getName($addr),
             ], $email->getBcc());
         }
 
@@ -57,7 +60,7 @@ class BrevoApiTransport extends AbstractTransport
             $replyTo = $email->getReplyTo()[0];
             $payload['replyTo'] = [
                 'email' => $replyTo->getAddress(),
-                'name' => $replyTo->getName() ?? $replyTo->getAddress(),
+                'name' => $getName($replyTo),
             ];
         }
 

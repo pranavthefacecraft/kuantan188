@@ -71,7 +71,7 @@ class TestBrevoApi extends Command
                 "From: Kuantan188 Booking System\n\n" .
                 "If you received this email, the Brevo API integration is working correctly!",
                 function ($message) use ($email) {
-                    $message->to($email)
+                    $message->to($email, 'Test Recipient')
                             ->subject('Kuantan188 - Brevo API Test Email');
                 }
             );
