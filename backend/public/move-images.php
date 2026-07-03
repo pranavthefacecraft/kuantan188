@@ -14,14 +14,32 @@ if (function_exists('opcache_reset')) {
 $oldPath = __DIR__ . '/storage/tickets';
 $newPath = __DIR__ . '/uploads/tickets';
 
-$version = '2.0';
-$lastUpdated = '2026-07-03 18:00:00';
+$version = '3.0';
+$lastUpdated = '2026-07-03 18:05:00';
 
-echo "<h1>Ticket Image Migration v{$version}</h1>";
-echo "<p style='color: #666;'>Last Updated: {$lastUpdated} UTC</p>";
-echo "<p style='color: #666;'>Current Server Time: " . date('Y-m-d H:i:s') . "</p>";
-echo "<hr>";
-echo "<pre>";
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ticket Image Migration</title>
+</head>
+<body>
+<h1>Ticket Image Migration v<?php echo $version; ?></h1>
+<p style='color: #666;'>Last Updated: <?php echo $lastUpdated; ?> UTC</p>
+<p style='color: #666;'>Current Server Time: <?php echo date('Y-m-d H:i:s'); ?></p>
+<p style='color: red; font-weight: bold;'>⚠️ NOTE: For full diagnostic, use: <a href="check-images.php" target="_blank">check-images.php</a></p>
+<hr>
+<pre>
+<?php
+echo "🔍 Debug Info:\n";
+echo "Current script: " . __FILE__ . "\n";
+echo "Script dir: " . __DIR__ . "\n";
+echo "Old path: $oldPath\n";
+echo "New path: $newPath\n";
+echo "Old path exists: " . (is_dir($oldPath) ? 'YES' : 'NO') . "\n";
+echo "New path exists: " . (is_dir($newPath) ? 'YES' : 'NO') . "\n";
+echo "\n";
+?>
 
 // Check if old directory exists
 if (!is_dir($oldPath)) {
@@ -218,3 +236,34 @@ if ($successCount > 0) {
 
 echo "\n=== Complete ===\n";
 echo "</pre>";
+?>
+
+<script>
+console.log('🔍 Move Images Script v3.0 Loaded');
+console.log('Old Path: <?php echo $oldPath; ?>');
+console.log('New Path: <?php echo $newPath; ?>');
+console.log('Old Path Exists:', <?php echo is_dir($oldPath) ? 'true' : 'false'; ?>);
+console.log('New Path Exists:', <?php echo is_dir($newPath) ? 'true' : 'false'; ?>);
+console.log('For full diagnostic, visit: https://admin.tfcmockup.com/check-images.php');
+console.warn('⚠️ This page may have cached output. For latest info, use check-images.php');
+</script>
+
+<div style="background: #e3f2fd; border: 2px solid #2196f3; padding: 20px; margin: 20px 0; border-radius: 8px;">
+    <h2 style="margin-top: 0; color: #1976d2;">💡 Better Diagnostic Available</h2>
+    <p style="font-size: 16px;">For a comprehensive diagnostic with full details, use:</p>
+    <p style="font-size: 20px; margin: 15px 0;">
+        <a href="check-images.php" style="color: #1976d2; font-weight: bold;">
+            👉 https://admin.tfcmockup.com/check-images.php
+        </a>
+    </p>
+    <p>This shows:</p>
+    <ul>
+        <li>✅ All tickets in a table format</li>
+        <li>📊 File existence status for each ticket</li>
+        <li>📁 Complete directory structure</li>
+        <li>🎯 Clear action steps</li>
+    </ul>
+</div>
+
+</body>
+</html>
