@@ -1,6 +1,12 @@
 # Brevo API Email Integration
 
+✅ **Status: Fully Configured & Working**
+
 This system uses Brevo (formerly Sendinblue) API for sending emails, bypassing SMTP firewall restrictions.
+
+**Booking confirmation emails are automatically sent** when customers complete bookings through the frontend.
+
+---
 
 ## Setup Instructions
 
@@ -98,14 +104,36 @@ Check your plan at: https://app.brevo.com/settings/plan
 
 ## Booking Confirmation Emails
 
-Once configured, booking confirmation emails will be sent automatically when customers complete a booking through the frontend.
+✅ **Already Implemented!** Booking confirmation emails are sent automatically when customers complete a booking through the frontend.
+
+### What Gets Sent
 
 The email includes:
-- Booking reference number
-- Event details (name, date, venue)
-- Customer information
-- Ticket quantities and total amount
-- Payment method
+- **Booking reference number** (e.g., KB20260703001)
+- **Event details** (name, date, venue)
+- **Customer information**
+- **Ticket quantities** (adult/child breakdown)
+- **Total amount** in RM
+- **Payment method** (Cash on Delivery / Billplz)
+- **Payment status** with color-coded badges
+- **Special notices** for cash payments or pending payments
+
+### Email Template
+
+The beautiful HTML email template is located at:
+- **Template**: `resources/views/emails/booking-confirmation.blade.php`
+- **Mailable Class**: `app/Mail/BookingConfirmation.php`
+- **Integration**: `app/Http/Controllers/PublicBookingController.php` (line ~280)
+
+### Test Booking Email
+
+To test the actual booking confirmation email with real booking data:
+
+```
+https://admin.tfcmockup.com/test-booking-email.php?email=your-email@example.com
+```
+
+This sends the same email customers receive, using the most recent booking in the database.
 
 ## Testing in Development
 
