@@ -147,10 +147,18 @@
                                 </td>
                                 <td>
                                     <div>
-                                        <div>{{ $booking->adult_quantity }} Adults</div>
-                                        @if($booking->child_quantity > 0)
+                                        <div><strong>{{ $booking->quantity }}</strong> ticket(s)</div>
+                                        @if($booking->adult_tickets > 0 || $booking->child_tickets > 0)
                                             <div class="quantity-detail">
-                                                {{ $booking->child_quantity }} Children
+                                                @if($booking->adult_tickets > 0)
+                                                    {{ $booking->adult_tickets }} Adults
+                                                @endif
+                                                @if($booking->adult_tickets > 0 && $booking->child_tickets > 0)
+                                                    <br>
+                                                @endif
+                                                @if($booking->child_tickets > 0)
+                                                    {{ $booking->child_tickets }} Children
+                                                @endif
                                             </div>
                                         @endif
                                     </div>
@@ -159,10 +167,10 @@
                                     <div class="amount-main">
                                         RM {{ number_format($booking->total_amount, 2) }}
                                     </div>
-                                    @if($booking->adult_quantity > 0 && $booking->child_quantity > 0)
+                                    @if($booking->adult_tickets > 0 && $booking->child_tickets > 0)
                                         <div class="price-breakdown">
-                                            A: RM{{ number_format(optional($booking->ticket)->adult_price ?? $booking->adult_price ?? 0, 2) }} × {{ $booking->adult_quantity }}<br>
-                                            C: RM{{ number_format(optional($booking->ticket)->child_price ?? $booking->child_price ?? 0, 2) }} × {{ $booking->child_quantity }}
+                                            A: RM{{ number_format(optional($booking->ticket)->adult_price ?? $booking->adult_price ?? 0, 2) }} × {{ $booking->adult_tickets }}<br>
+                                            C: RM{{ number_format(optional($booking->ticket)->child_price ?? $booking->child_price ?? 0, 2) }} × {{ $booking->child_tickets }}
                                         </div>
                                     @endif
                                 </td>
