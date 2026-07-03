@@ -29,6 +29,9 @@ MAIL_MAILER=brevo_api
 # Email From Settings
 MAIL_FROM_ADDRESS="pranav@thefacecraft.com"
 MAIL_FROM_NAME="Kuantan188 Bookings"
+
+# Admin Notification Emails (comma-separated)
+ADMIN_NOTIFICATION_EMAILS=admin@kuantan188.com,yusri@thefacecraft.com,pranav@thefacecraft.com
 ```
 
 ### 3. Clear Configuration Cache
@@ -106,9 +109,9 @@ Check your plan at: https://app.brevo.com/settings/plan
 
 ✅ **Already Implemented!** Booking confirmation emails are sent automatically when customers complete a booking through the frontend.
 
-### What Gets Sent
+### Customer Confirmation Email
 
-The email includes:
+**What customers receive:**
 - **Booking reference number** (e.g., KB20260703001)
 - **Event details** (name, date, venue)
 - **Customer information**
@@ -118,22 +121,54 @@ The email includes:
 - **Payment status** with color-coded badges
 - **Special notices** for cash payments or pending payments
 
+**Template:** `resources/views/emails/booking-confirmation.blade.php`  
+**Mailable:** `app/Mail/BookingConfirmation.php`
+
+### Admin Notification Email
+
+✅ **New Feature!** Admins automatically receive detailed notifications for every new booking.
+
+**What admins receive:**
+- 📋 **Complete booking details** with reference number
+- 👤 **Full customer information** (name, email, phone, country, postal code)
+- 🎟️ **Ticket breakdown** (quantities, prices, event date/time)
+- 💳 **Payment details** (method, status, reference if available)
+- 📊 **Booking status** with color-coded badges
+- 🔗 **Quick link** to view booking in admin panel
+
+**Template:** `resources/views/emails/admin-booking-notification.blade.php`  
+**Mailable:** `app/Mail/AdminBookingNotification.php`
+
+**Configure admin recipients** in `.env`:
+```env
+ADMIN_NOTIFICATION_EMAILS=admin@kuantan188.com,yusri@thefacecraft.com,pranav@thefacecraft.com
+```
+
+You can add multiple admin emails separated by commas. All listed admins will receive notifications for every booking.
+- **Payment status** with color-coded badges
+- **Special notices** for cash payments or pending payments
+
 ### Email Template
 
-The beautiful HTML email template is located at:
-- **Template**: `resources/views/emails/booking-confirmation.blade.php`
-- **Mailable Class**: `app/Mail/BookingConfirmation.php`
+The beautiful HTML email templates are located at:
+- **Customer Template**: `resources/views/emails/booking-confirmation.blade.php`
+- **Admin Template**: `resources/views/emails/admin-booking-notification.blade.php`
+- **Mailable Classes**: `app/Mail/BookingConfirmation.php` & `app/Mail/AdminBookingNotification.php`
 - **Integration**: `app/Http/Controllers/PublicBookingController.php` (line ~280)
 
-### Test Booking Email
+### Test Emails
 
-To test the actual booking confirmation email with real booking data:
-
+#### Test Customer Confirmation Email
 ```
 https://admin.tfcmockup.com/test-booking-email.php?email=your-email@example.com
 ```
+Sends the same email customers receive, using the most recent booking in the database.
 
-This sends the same email customers receive, using the most recent booking in the database.
+#### Test Admin Notification Email
+```
+https://admin.tfcmockup.com/test-admin-email.php?email=admin@example.com
+```
+Sends the admin notification email with full booking details (what admins receive for every booking).
 
 ## Testing in Development
 

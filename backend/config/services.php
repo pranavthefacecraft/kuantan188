@@ -56,4 +56,8 @@ return [
         'api_key' => env('BREVO_API_KEY'),
     ],
 
+    'admin' => [
+        'notification_emails' => env('ADMIN_NOTIFICATION_EMAILS', 'admin@kuantan188.com,yusri@thefacecraft.com'),
+    ],
+
 ];

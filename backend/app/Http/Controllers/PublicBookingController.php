@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Mail\BookingConfirmation;
+use App\Mail\AdminBookingNotification;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
@@ -278,16 +279,34 @@ class PublicBookingController extends Controller
             $bookingForEmail = $booking;
             app()->terminating(function () use ($bookingForEmail) {
                 try {
+                    // Send to customer
                     $recipientEmail = $bookingForEmail->email ?? $bookingForEmail->customer_email;
-                    $this->safeLog('info', '[BOOKING_API] Attempting to send confirmation email to: ' . ($recipientEmail ?? 'NO EMAIL'));
+                    $this->safeLog('info', '[BOOKING_API] Attempting to send confirmation email to customer: ' . ($recipientEmail ?? 'NO EMAIL'));
                     if ($recipientEmail) {
-                        Mail::to($recipientEmail)->send(new BookingConfirmation($bookingForEmail));
-                        $this->safeLog('info', '[BOOKING_API] Confirmation email sent successfully to: ' . $recipientEmail);
+                        Mail::to($recipientEmail, $bookingForEmail->customer_name)
+                            ->send(new BookingConfirmation($bookingForEmail));
+                        $this->safeLog('info', '[BOOKING_API] Customer confirmation email sent successfully to: ' . $recipientEmail);
                     } else {
-                        $this->safeLog('warning', '[BOOKING_API] No recipient email found, skipping email');
+                        $this->safeLog('warning', '[BOOKING_API] No customer email found, skipping customer notification');
+                    }
+
+                    // Send to admins
+                    $adminEmails = config('services.admin.notification_emails');
+                    if ($adminEmails) {
+                        $adminEmailArray = array_map('trim', explode(',', $adminEmails));
+                        $this->safeLog('info', '[BOOKING_API] Attempting to send admin notifications to: ' . implode(', ', $adminEmailArray));
+                        
+                        foreach ($adminEmailArray as $adminEmail) {
+                            if (filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
+                                Mail::to($adminEmail)->send(new AdminBookingNotification($bookingForEmail));
+                                $this->safeLog('info', '[BOOKING_API] Admin notification sent to: ' . $adminEmail);
+                            }
+                        }
+                    } else {
+                        $this->safeLog('warning', '[BOOKING_API] No admin notification emails configured');
                     }
                 } catch (\Throwable $emailException) {
-                    $this->safeLog('error', '[BOOKING_API] Failed to send confirmation email: ' . $emailException->getMessage());
+                    $this->safeLog('error', '[BOOKING_API] Failed to send emails: ' . $emailException->getMessage());
                     $this->safeLog('error', '[BOOKING_API] Email error trace: ' . $emailException->getTraceAsString());
                 }
             });
