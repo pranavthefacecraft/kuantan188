@@ -60,7 +60,7 @@
         }
 
         .auth-card {
-            background: var(--glassmorphism);
+            background: var(--surface);
             backdrop-filter: blur(20px);
             border-radius: 1.5rem;
             box-shadow: var(--shadow-lg);
@@ -207,7 +207,8 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: #ff014a;
+               
             color: white;
             box-shadow: var(--shadow);
         }
@@ -400,11 +401,7 @@
     @yield('styles')
 </head>
 <body>
-    <div class="floating-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
+   
 
     <div class="auth-container">
         <div class="auth-card">

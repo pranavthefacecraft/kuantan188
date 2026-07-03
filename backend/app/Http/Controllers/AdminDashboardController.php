@@ -815,8 +815,15 @@ class AdminDashboardController extends Controller
             if ($request->hasFile('ticket_image')) {
                 $image = $request->file('ticket_image');
                 $imageName = 'ticket_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $image->move(public_path('storage/tickets'), $imageName);
-                $imageUrl = 'storage/tickets/' . $imageName;
+                
+                // Ensure uploads/tickets directory exists
+                $uploadPath = public_path('uploads/tickets');
+                if (!file_exists($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+                
+                $image->move($uploadPath, $imageName);
+                $imageUrl = 'uploads/tickets/' . $imageName;
             }
 
             $isAllDayPass = $request->is_all_day_pass === '1';
@@ -989,8 +996,15 @@ class AdminDashboardController extends Controller
                 // Upload new image
                 $image = $request->file('ticket_image');
                 $imageName = 'ticket_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $image->move(public_path('storage/tickets'), $imageName);
-                $updateData['image_url'] = 'storage/tickets/' . $imageName;
+                
+                // Ensure uploads/tickets directory exists
+                $uploadPath = public_path('uploads/tickets');
+                if (!file_exists($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+                
+                $image->move($uploadPath, $imageName);
+                $updateData['image_url'] = 'uploads/tickets/' . $imageName;
             }
 
             // Update the ticket with all data
