@@ -45,25 +45,95 @@ if (!is_dir($oldPath)) {
     echo "3. Images were deleted\n\n";
     
     echo "Checking database for image paths:\n";
-    include __DIR__ . '/../vendor/autoload.php';
-    $app = require_once __DIR__ . '/../bootstrap/app.php';
-    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-    $kernel->bootstrap();
-    
-    $tickets = \App\Models\Ticket::whereNotNull('image_url')->get(['id', 'ticket_name', 'image_url']);
-    
-    echo "\nTickets with images in database:\n";
-    foreach ($tickets as $ticket) {
-        echo "ID: {$ticket->id} | {$ticket->ticket_name}\n";
-        echo "  Path: {$ticket->image_url}\n";
+    try {
+        include __DIR__ . '/../vendor/autoload.php';
+        $app = require_once __DIR__ . '/../bootstrap/app.php';
+        $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+        $kernel->bootstrap();
         
-        $fullPath = __DIR__ . '/' . $ticket->image_url;
-        if (file_exists($fullPath)) {
-            echo "  ✅ File exists at: $fullPath\n";
-        } else {
-            echo "  ❌ File NOT found at: $fullPath\n";
+        $tickets = \App\Models\Ticket::whereNotNull('image_url')->get(['id', 'ticket_name', 'image_url']);
+        
+        echo "\nTickets with images in database: " . $tickets->count() . "\n\n";
+        
+        $foundCount = 0;
+        $missingCount = 0;
+        
+        foreach ($tickets as $ticket) {
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+            echo "ID: {$ticket->id} | {$ticket->ticket_name}\n";
+            echo "DB Path: {$ticket->image_url}\n";
+            
+            // Check multiple possible locations
+            $possiblePaths = [
+                __DIR__ . '/' . $ticket->image_url,
+                __DIR__ . '/../' . $ticket->image_url,
+                __DIR__ . '/../../' . $ticket->image_url,
+            ];
+            
+            $found = false;
+            foreach ($possiblePaths as $testPath) {
+                if (file_exists($testPath)) {
+                    echo "  ✅ FOUND at: $testPath\n";
+                    echo "     Size: " . filesize($testPath) . " bytes\n";
+                    echo "     Modified: " . date('Y-m-d H:i:s', filemtime($testPath)) . "\n";
+                    $found = true;
+                    $foundCount++;
+                    break;
+                }
+            }
+            
+            if (!$found) {
+                echo "  ❌ NOT FOUND\n";
+                echo "     Expected: " . __DIR__ . '/' . $ticket->image_url . "\n";
+                echo "     Full URL: https://admin.tfcmockup.com/{$ticket->image_url}\n";
+                $missingCount++;
+            }
+            echo "\n";
         }
-        echo "\n";
+        
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+        echo "SUMMARY:\n";
+        echo "  ✅ Files found: $foundCount\n";
+        echo "  ❌ Files missing: $missingCount\n\n";
+        
+        if ($missingCount > 0) {
+            echo "⚠️  ACTION REQUIRED:\n";
+            echo "The image files need to be re-uploaded through the admin panel.\n";
+            echo "Go to: https://admin.tfcmockup.com/admin/tickets\n";
+            echo "Edit each ticket and upload the images again.\n\n";
+        }
+        
+        // Check what directories exist
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+        echo "DIRECTORY STRUCTURE:\n";
+        echo "Current directory: " . __DIR__ . "\n\n";
+        
+        $dirsToCheck = [
+            'uploads/tickets',
+            'uploads/events',
+            'storage/tickets',
+            'storage'
+        ];
+        
+        foreach ($dirsToCheck as $dir) {
+            $fullDir = __DIR__ . '/' . $dir;
+            if (is_dir($fullDir)) {
+                echo "✅ $dir/ exists\n";
+                $files = array_diff(scandir($fullDir), ['.', '..']);
+                $fileCount = count($files);
+                echo "   Files: $fileCount\n";
+                if ($fileCount > 0 && $fileCount <= 5) {
+                    foreach ($files as $file) {
+                        echo "   - $file\n";
+                    }
+                }
+            } else {
+                echo "❌ $dir/ does not exist\n";
+            }
+        }
+        
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage() . "\n";
     }
     
     exit;
