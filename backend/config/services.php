@@ -52,4 +52,8 @@ return [
         'redirect_url' => env('BILLPLZ_REDIRECT_URL'),
     ],
 
+    'brevo' => [
+        'api_key' => env('BREVO_API_KEY'),
+    ],
+
 ];
