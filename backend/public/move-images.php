@@ -5,11 +5,22 @@
  * Or run via CLI: php public/move-images.php
  */
 
+// Clear any opcode cache
+if (function_exists('opcache_reset')) {
+    opcache_reset();
+}
+
 // Define paths
 $oldPath = __DIR__ . '/storage/tickets';
 $newPath = __DIR__ . '/uploads/tickets';
 
-echo "<h1>Ticket Image Migration</h1>";
+$version = '2.0';
+$lastUpdated = '2026-07-03 18:00:00';
+
+echo "<h1>Ticket Image Migration v{$version}</h1>";
+echo "<p style='color: #666;'>Last Updated: {$lastUpdated} UTC</p>";
+echo "<p style='color: #666;'>Current Server Time: " . date('Y-m-d H:i:s') . "</p>";
+echo "<hr>";
 echo "<pre>";
 
 // Check if old directory exists
